@@ -12,9 +12,9 @@ import {
 } from "react-admin";
 import { BrowserRouter } from 'react-router-dom';
 
-import polyglotI18nProvider from 'ra-i18n-polyglot';
 import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";
+import CustomLoginPage from "./components/CustomLoginPage";
 
 
 
@@ -22,7 +22,12 @@ import authProvider from "./lib/authProvider";
 
 const AdminApp = () => (
   <BrowserRouter>
-    <Admin dataProvider={dataProvider} authProvider={authProvider} theme={radiantLightTheme} >
+    <Admin 
+      dataProvider={dataProvider} 
+      authProvider={authProvider} 
+      theme={radiantLightTheme}
+      loginPage={CustomLoginPage}
+    >
 
       <Resource
         name="users"

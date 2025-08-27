@@ -28,7 +28,7 @@ export const requester = async (url: string, options: any = {}) => {
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    window.location.href = "/login";
+    // window.location.href = "/login";
     return Promise.reject({
       message: "인증이 만료되었습니다. 다시 로그인해주세요.",
       status: 401
@@ -42,7 +42,7 @@ export const requester = async (url: string, options: any = {}) => {
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      window.location.href = "/login";
+    //   window.location.href = "/login";
       Promise.resolve();
     }
 

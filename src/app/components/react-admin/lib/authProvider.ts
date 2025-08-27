@@ -10,34 +10,43 @@ const url = process.env.ADMIN_SERVER_URL || '(PLEASE-SET-ADMIN_SERVER_URL-ENV)';
 
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
-        const response = await requester(`${url}/sign/in`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            }),
-        });
+        try {
+            const response = await requester(`${url}/sign/in`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                }),
+            });
 
-        if (!response) {
-            return Promise.reject();
-        }
+            if (!response) {
+                return Promise.reject(new Error('서버 응답이 없습니다.'));
+            }
 
-        if (response.status == 200) {
-            const { data } = response.body;
-            const user = {
-                id: data.id,
-                ...data.attributes
-            };
+            if (response.status === 200) {
+                const { data } = response.body;
+                const user = {
+                    id: data.id,
+                    ...data.attributes
+                };
 
-            // JWT 토큰들을 저장
-            localStorage.setItem("user", JSON.stringify(user));
-            localStorage.setItem("accessToken", data.attributes.accessToken);
-            localStorage.setItem("refreshToken", data.attributes.refreshToken);
+                // JWT 토큰들을 저장
+                localStorage.setItem("user", JSON.stringify(user));
+                localStorage.setItem("accessToken", data.attributes.accessToken);
+                localStorage.setItem("refreshToken", data.attributes.refreshToken);
 
-            return Promise.resolve();
+                return Promise.resolve();
+            } else if (response.status === 401) {
+                return Promise.reject(new Error('아이디 또는 비밀번호가 잘못되었습니다.'));
+            } else {
+                return Promise.reject(new Error(`로그인 실패: ${response.status}`));
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return Promise.reject(new Error('로그인 중 오류가 발생했습니다.'));
         }
     },
     logout: () => {
