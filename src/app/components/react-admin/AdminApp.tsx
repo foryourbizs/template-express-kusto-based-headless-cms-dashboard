@@ -10,7 +10,7 @@ import {
   EditGuesser,
   Admin
 } from "react-admin";
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 
 import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";
@@ -21,7 +21,7 @@ import CustomLoginPage from "./components/CustomLoginPage";
 
 
 const AdminApp = () => (
-  <BrowserRouter>
+  <HashRouter>
     <Admin 
       dataProvider={dataProvider} 
       authProvider={authProvider} 
@@ -46,7 +46,7 @@ const AdminApp = () => (
       <Resource name="comments" list={ListGuesser} edit={EditGuesser} />
 
     </Admin>
-  </BrowserRouter>
+  </HashRouter>
 
 );
 
