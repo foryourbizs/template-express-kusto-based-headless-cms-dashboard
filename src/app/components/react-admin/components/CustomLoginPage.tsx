@@ -2,24 +2,21 @@ import React from 'react';
 import { useState } from 'react';
 import { useLogin, useNotify, useAuthProvider } from 'react-admin';
 import {
-    Avatar,
     Button,
-    Card,
-    CardActions,
-    CardContent,
     TextField,
     Typography,
     Box,
     Container,
     Paper,
     InputAdornment,
-    IconButton
+    IconButton,
+    Divider
 } from '@mui/material';
 import {
-    LockOutlined as LockIcon,
     Visibility,
     VisibilityOff,
-    Person as PersonIcon
+    Email as EmailIcon,
+    Lock as LockIcon
 } from '@mui/icons-material';
 
 const CustomLoginPage = () => {
@@ -53,22 +50,24 @@ const CustomLoginPage = () => {
             component="main" 
             maxWidth="sm"
             sx={{
-                height: '100vh',
+                minHeight: '100vh',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                backgroundColor: '#f8fafc',
+                py: 4
             }}
         >
             <Paper 
-                elevation={6}
+                elevation={0}
                 sx={{
-                    padding: 4,
-                    borderRadius: 3,
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
+                    padding: { xs: 3, sm: 6 },
+                    borderRadius: 2,
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
                     width: '100%',
-                    maxWidth: 400
+                    maxWidth: 480,
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                 }}
             >
                 <Box
@@ -78,37 +77,62 @@ const CustomLoginPage = () => {
                         alignItems: 'center',
                     }}
                 >
-                    <Avatar 
-                        sx={{ 
-                            m: 1, 
-                            bgcolor: 'primary.main',
-                            width: 56,
-                            height: 56
+                    {/* 브랜드 로고 영역 */}
+                    <Box
+                        sx={{
+                            width: 120,
+                            height: 60,
+                            backgroundColor: '#f1f5f9',
+                            border: '2px dashed #cbd5e1',
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mb: 4,
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                                backgroundColor: '#e2e8f0',
+                                borderColor: '#94a3b8'
+                            }
                         }}
                     >
-                        <LockIcon fontSize="large" />
-                    </Avatar>
-                    
+                        <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ 
+                                fontSize: '0.75rem',
+                                textAlign: 'center',
+                                px: 1
+                            }}
+                        >
+                            브랜드 로고
+                        </Typography>
+                    </Box>
+
                     <Typography 
                         component="h1" 
                         variant="h4" 
-                        gutterBottom
                         sx={{ 
-                            fontWeight: 'bold',
-                            color: 'primary.main',
-                            mb: 3
+                            fontWeight: 600,
+                            color: '#1e293b',
+                            mb: 1,
+                            fontSize: { xs: '1.75rem', sm: '2rem' }
                         }}
                     >
-                        관리자 로그인
+                        로그인
                     </Typography>
 
                     <Typography 
-                        variant="body2" 
+                        variant="body1" 
                         color="text.secondary" 
                         align="center"
-                        sx={{ mb: 3 }}
+                        sx={{ 
+                            mb: 4,
+                            fontSize: '0.95rem',
+                            lineHeight: 1.5
+                        }}
                     >
-                        관리자 계정으로 로그인하여 시스템을 관리하세요.
+                        계정에 로그인하여 시스템에 액세스하세요
                     </Typography>
 
                     <Box 
@@ -121,7 +145,7 @@ const CustomLoginPage = () => {
                             required
                             fullWidth
                             id="username"
-                            label="사용자 이름"
+                            label="이메일 또는 사용자명"
                             name="username"
                             autoComplete="username"
                             autoFocus
@@ -130,11 +154,33 @@ const CustomLoginPage = () => {
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <PersonIcon color="action" />
+                                        <EmailIcon sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
                                     </InputAdornment>
                                 ),
                             }}
-                            sx={{ mb: 2 }}
+                            sx={{ 
+                                mb: 2,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1.5,
+                                    backgroundColor: '#f8fafc',
+                                    '& fieldset': {
+                                        borderColor: '#e2e8f0',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#cbd5e1',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#3b82f6',
+                                        borderWidth: 2,
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: '#64748b',
+                                    '&.Mui-focused': {
+                                        color: '#3b82f6',
+                                    },
+                                },
+                            }}
                         />
                         
                         <TextField
@@ -151,7 +197,7 @@ const CustomLoginPage = () => {
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <LockIcon color="action" />
+                                        <LockIcon sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
                                     </InputAdornment>
                                 ),
                                 endAdornment: (
@@ -160,13 +206,36 @@ const CustomLoginPage = () => {
                                             aria-label="toggle password visibility"
                                             onClick={handleClickShowPassword}
                                             edge="end"
+                                            sx={{ color: '#94a3b8' }}
                                         >
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            {showPassword ? <VisibilityOff sx={{ fontSize: '1.1rem' }} /> : <Visibility sx={{ fontSize: '1.1rem' }} />}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
                             }}
-                            sx={{ mb: 3 }}
+                            sx={{ 
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 1.5,
+                                    backgroundColor: '#f8fafc',
+                                    '& fieldset': {
+                                        borderColor: '#e2e8f0',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#cbd5e1',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#3b82f6',
+                                        borderWidth: 2,
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: '#64748b',
+                                    '&.Mui-focused': {
+                                        color: '#3b82f6',
+                                    },
+                                },
+                            }}
                         />
                         
                         <Button
@@ -176,24 +245,36 @@ const CustomLoginPage = () => {
                             disabled={loading}
                             sx={{ 
                                 mt: 2, 
-                                mb: 2, 
+                                mb: 3, 
                                 py: 1.5,
-                                borderRadius: 2,
-                                fontSize: '1.1rem',
-                                fontWeight: 'bold',
-                                background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-                                boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                                borderRadius: 1.5,
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                backgroundColor: '#3b82f6',
+                                textTransform: 'none',
+                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                                 '&:hover': {
-                                    background: 'linear-gradient(45deg, #FE5B7B 30%, #FF7E43 90%)',
+                                    backgroundColor: '#2563eb',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                },
+                                '&:disabled': {
+                                    backgroundColor: '#94a3b8',
+                                    color: 'white',
                                 }
                             }}
                         >
                             {loading ? '로그인 중...' : '로그인'}
                         </Button>
 
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Typography variant="body2" color="text.secondary">
-                                © 2025 관리자 시스템. All rights reserved.
+                        <Divider sx={{ my: 2 }} />
+
+                        <Box sx={{ textAlign: 'center' }}>
+                            <Typography 
+                                variant="body2" 
+                                color="text.secondary"
+                                sx={{ fontSize: '0.875rem' }}
+                            >
+                                © 2025 All rights reserved.
                             </Typography>
                         </Box>
                     </Box>
