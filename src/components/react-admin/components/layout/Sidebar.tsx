@@ -129,9 +129,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
         notify(`데이터 프로바이더 리소스 호출에 예외가 발생하였습니다 : ${resourceName}`, {
           type: 'error'
         });
-        
-        // fallback: 직접 URL 변경
-        window.location.href = `${window.location.origin}${window.location.pathname}#/${resourceName}`;
+
       }
     } else {
       // 기타 경로는 navigate 사용

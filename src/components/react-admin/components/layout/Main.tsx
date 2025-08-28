@@ -48,14 +48,26 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile }) => {
           flex: 1,
           py: 3,
           px: { xs: 2, sm: 3 },
+          position: 'relative', // Notification 위치 조정을 위해 추가
         }}
       >
+        {/* React Admin Notification 컴포넌트 - 콘텐츠 영역 내부로 이동 */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            zIndex: theme.zIndex.snackbar,
+            maxWidth: '400px',
+            width: '100%',
+          }}
+        >
+          <Notification />
+        </Box>
+
         {/* React Admin 페이지들이 여기에 렌더링됩니다 */}
         <Outlet />
       </Container>
-
-      {/* React Admin Notification 컴포넌트 */}
-      <Notification />
     </Box>
   );
 };
