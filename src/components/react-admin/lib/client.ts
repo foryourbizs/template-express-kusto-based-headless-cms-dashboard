@@ -35,8 +35,8 @@ export const requester = async (url: string, options: any = {}) => {
     
     let responseBody;
     try {
-      // JSON 응답이 아닌 경우 처리
-      if (!contentType || !contentType.includes("application/json")) {
+      // JSON 응답이 아닌 경우 처리 - JSON API 형식(application/vnd.api+json)도 허용
+      if (!contentType || (!contentType.includes("application/json") && !contentType.includes("application/vnd.api+json"))) {
         const textResponse = await response.text();
         
         // HTML 페이지를 받은 경우 (보통 404, 500 페이지)

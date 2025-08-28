@@ -17,7 +17,7 @@ const api = {
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
         // ====== 테스트용 로그인 (서버 연결 문제 해결용) ======
-        if (username === 'test' && password === '1234') {
+        if (username === 'test' && password === '1234' && false) {
             const testUser = {
                 id: '999',
                 username: 'test',
