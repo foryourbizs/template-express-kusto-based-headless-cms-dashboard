@@ -1,6 +1,6 @@
 import { provider } from "./client";
 
-const url = process.env.ADMIN_SERVER_URL || '(PLEASE-SET-ADMIN_SERVER_URL-ENV)';
+const url = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || 'http://localhost:4000/api';
 
 const settings = {
     total: "total",
@@ -9,6 +9,6 @@ const settings = {
 };
 
 export const dataProvider = provider({
-    url: url || 'http://localhost:4000',
+    url: url,
     settings,
 });

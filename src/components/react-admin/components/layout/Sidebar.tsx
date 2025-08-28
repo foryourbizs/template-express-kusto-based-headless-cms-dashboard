@@ -105,14 +105,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
     // 대시보드인 경우
     if (path === '/') {
       redirect('/');
-      notify('대시보드로 이동', { type: 'info' });
+      // notify('대시보드로 이동', { type: 'info' });
       return;
     }
 
     // 리소스 페이지인 경우 - React Admin이 자동으로 에러 처리
     if (resourceName) {
       redirect('list', resourceName);
-      notify(`${resourceName} 페이지로 이동`, { type: 'info' });
+      // notify(`${resourceName} 페이지로 이동`, { type: 'info' });
     } else {
       // 기타 경로는 navigate 사용
       navigate(path);

@@ -19,21 +19,63 @@ export const requester = async (url: string, options: any = {}) => {
     ...options.headers,
   };
 
-  const response = await fetch(url, options);
+  try {
+    const response = await fetch(url, options);
+    
+    // 네트워크 에러나 서버 연결 실패 체크
+    if (!response.ok && (response.status >= 500 || response.status === 0)) {
+      return Promise.reject({
+        message: `서버 연결에 실패했습니다. (상태 코드: ${response.status})`,
+        status: response.status || 500
+      });
+    }
 
-  const responseBody = await response.json();
+    // Content-Type 체크
+    const contentType = response.headers.get("content-type");
+    
+    let responseBody;
+    try {
+      // JSON 응답이 아닌 경우 처리
+      if (!contentType || !contentType.includes("application/json")) {
+        const textResponse = await response.text();
+        
+        // HTML 페이지를 받은 경우 (보통 404, 500 페이지)
+        if (textResponse.includes("<!DOCTYPE") || textResponse.includes("<html")) {
+          return Promise.reject({
+            message: `API 엔드포인트를 찾을 수 없습니다. URL을 확인해주세요: ${url}`,
+            status: response.status || 404
+          });
+        }
+        
+        // 그 외 텍스트 응답
+        return Promise.reject({
+          message: `서버에서 올바르지 않은 응답을 받았습니다: ${textResponse.substring(0, 100)}...`,
+          status: response.status || 500
+        });
+      }
+      
+      responseBody = await response.json();
+    } catch (jsonError) {
+      // JSON 파싱 에러 처리
+      const textResponse = await response.text();
+      return Promise.reject({
+        message: `서버 응답을 파싱할 수 없습니다. JSON 형식이 아닙니다.`,
+        status: response.status || 500,
+        details: textResponse.substring(0, 200)
+      });
+    }
 
-  // 401 에러 시 토큰 만료로 처리
-  if (response.status === 401) {
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    // window.location.href = "/login";
-    return Promise.reject({
-      message: "인증이 만료되었습니다. 다시 로그인해주세요.",
-      status: 401
-    });
-  }
+    // 401 에러 시 토큰 만료로 처리
+    if (response.status === 401) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      // window.location.href = "/login";
+      return Promise.reject({
+        message: "인증이 만료되었습니다. 다시 로그인해주세요.",
+        status: 401
+      });
+    }
 
   // 200대 상태 코드를 성공으로 처리 (200, 201, 204 등)
   if (response.status < 200 || response.status >= 300) {
@@ -110,11 +152,18 @@ export const requester = async (url: string, options: any = {}) => {
 
   }
 
-  return {
-    status: response.status,
-    headers: response.headers,
-    body: responseBody,
-    json: responseBody,
+    return {
+      status: response.status,
+      headers: response.headers,
+      body: responseBody,
+      json: responseBody,
+    }
+  } catch (networkError) {
+    // 네트워크 에러나 기타 예외 처리
+    return Promise.reject({
+      message: `네트워크 오류가 발생했습니다: ${networkError instanceof Error ? networkError.message : '알 수 없는 오류'}`,
+      status: 0
+    });
   }
 }
 

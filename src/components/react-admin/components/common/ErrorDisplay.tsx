@@ -34,8 +34,45 @@ export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
   const notify = useNotify();
   const refresh = useRefresh();
   
-  const errorMessage = typeof error === 'string' ? error : error.message;
-  const errorStack = typeof error === 'object' && error.stack ? error.stack : undefined;
+  // 에러 메시지를 더 상세하게 처리
+  const getErrorMessage = (error: Error | string): string => {
+    if (typeof error === 'string') {
+      return error;
+    }
+    
+    // React Admin에서 받은 에러 객체 처리
+    if (error && typeof error === 'object') {
+      const errorObj = error as any;
+      
+      // message 속성이 있는 경우
+      if (errorObj.message) {
+        return errorObj.message;
+      }
+      
+      // status가 있는 경우
+      if (errorObj.status) {
+        switch (errorObj.status) {
+          case 404:
+            return 'API 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.';
+          case 500:
+            return '서버 내부 오류가 발생했습니다.';
+          case 0:
+            return '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.';
+          default:
+            return `서버 오류 (상태 코드: ${errorObj.status})`;
+        }
+      }
+    }
+    
+    return error?.toString() || '알 수 없는 오류가 발생했습니다.';
+  };
+  
+  const errorMessage = getErrorMessage(error);
+  const errorDetails = typeof error === 'object' ? {
+    stack: error.stack,
+    status: (error as any).status,
+    details: (error as any).details
+  } : undefined;
 
   const handleRetry = () => {
     if (onRetry) {
@@ -81,7 +118,7 @@ export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
           다시 시도
         </Button>
         
-        {errorStack && (
+        {errorDetails?.stack && (
           <Button
             variant="outlined"
             size="large"
@@ -94,7 +131,7 @@ export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
       </Stack>
 
       {/* 세부사항 */}
-      {errorStack && (
+      {errorDetails?.stack && (
         <Collapse in={showDetails} sx={{ width: '100%', maxWidth: 800 }}>
           <Paper
             sx={{
@@ -121,7 +158,7 @@ export const ErrorBoundary: React.FC<ErrorBoundaryProps> = ({
                 textAlign: 'left',
               }}
             >
-              {errorStack}
+              {errorDetails.stack}
             </Box>
           </Paper>
         </Collapse>
