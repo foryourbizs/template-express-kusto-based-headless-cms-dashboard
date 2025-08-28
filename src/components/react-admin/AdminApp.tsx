@@ -4,7 +4,6 @@
 
 
 import {
-  radiantLightTheme,
   Resource,
   ListGuesser,
   EditGuesser,
@@ -14,7 +13,8 @@ import { BrowserRouter } from "react-router-dom";
 
 import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";
-import CustomLoginPage from "./components/CustomLoginPage";
+import LoginPage from "./components/LoginPage";
+import { simpleGrayTheme } from "./config/theme";
 
 
 
@@ -25,8 +25,8 @@ const AdminApp = () => (
     <Admin 
       dataProvider={dataProvider} 
       authProvider={authProvider} 
-      theme={radiantLightTheme}
-      loginPage={CustomLoginPage}
+      theme={simpleGrayTheme}
+      loginPage={LoginPage}
     >
 
     <Resource

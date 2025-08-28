@@ -189,6 +189,8 @@ const CustomLoginPage = () => {
                             fullWidth
                             name="password"
                             label="비밀번호"
+                            autoCapitalize='off'
+                            aria-autocomplete='none'
                             type={showPassword ? 'text' : 'password'}
                             id="password"
                             autoComplete="current-password"
