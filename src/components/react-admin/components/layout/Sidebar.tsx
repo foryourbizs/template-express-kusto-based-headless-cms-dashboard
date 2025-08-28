@@ -22,7 +22,7 @@ import {
   ViewList,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useResourceDefinitions, useRedirect, useNotify, useRefresh, useDataProvider } from 'react-admin';
+import { useResourceDefinitions, useRedirect, useNotify } from 'react-admin';
 import { DRAWER_WIDTH } from '../../constants/layout';
 
 interface SidebarProps {
@@ -62,9 +62,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const resourceDefinitions = useResourceDefinitions();
   const redirect = useRedirect();
   const notify = useNotify();
-  const refresh = useRefresh();
-  const dataProvider = useDataProvider();
-
 
   // React Admin에 등록된 리소스들을 기반으로 메뉴 생성
   const generateMenuItems = (): MenuItem[] => {
@@ -99,7 +96,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
 
   const menuItems = generateMenuItems();
 
-  const handleNavigation = async (path: string, resourceName?: string) => {
+  // React Admin 표준 방식의 간단한 네비게이션
+  const handleNavigation = (path: string, resourceName?: string) => {
     if (isMobile) {
       onClose();
     }
@@ -111,32 +109,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       return;
     }
 
-    // 리소스 페이지인 경우
+    // 리소스 페이지인 경우 - React Admin이 자동으로 에러 처리
     if (resourceName) {
-      try {
-        // 1. 먼저 redirect로 경로 변경
-        redirect('list', resourceName);
-        
-        // 2. 데이터 프로바이더로 실제 데이터 요청 (프리로드)
-        await dataProvider.getList(resourceName, {
-          pagination: { page: 1, perPage: 10 },
-          sort: { field: 'id', order: 'ASC' },
-          filter: {},
-        });
-        
-        // 3. refresh로 UI 업데이트 트리거
-        refresh();
-        
-        notify(`${resourceName} loaded successfully`, {
-          type: 'success'
-        });
-      } catch (error) {
-        console.error('Navigation error:', error);
-        notify(`데이터 프로바이더 리소스 호출에 예외가 발생하였습니다 : ${resourceName}`, {
-          type: 'error'
-        });
-
-      }
+      redirect('list', resourceName);
+      notify(`${resourceName} 페이지로 이동`, { type: 'info' });
     } else {
       // 기타 경로는 navigate 사용
       navigate(path);
