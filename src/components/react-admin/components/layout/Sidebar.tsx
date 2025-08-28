@@ -91,6 +91,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       }
     });
 
+    // 구분선과 커스텀 페이지들 추가
+    items.push({
+      id: 'divider-1',
+      label: '',
+      icon: null,
+      path: '',
+      divider: true,
+    });
+
+    // 환경설정 페이지 추가
+    items.push({
+      id: 'settings',
+      label: '환경설정',
+      icon: <Settings />,
+      path: '/settings',
+    });
+
     return items;
   };
 
@@ -106,6 +123,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
     if (path === '/') {
       redirect('/');
       // notify('대시보드로 이동', { type: 'info' });
+      return;
+    }
+
+    // 커스텀 페이지인 경우 (환경설정 등)
+    if (path === '/settings') {
+      navigate('/settings');
+      // notify('환경설정 페이지로 이동', { type: 'info' });
       return;
     }
 
@@ -149,47 +173,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       <List sx={{ pt: 1 }}>
         {menuItems.map((item) => (
           <React.Fragment key={item.id}>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleNavigation(item.path, item.resourceName)}
-                selected={isSelected(item.path)}
-                sx={{
-                  mx: 1,
-                  borderRadius: 1,
-                  '&.Mui-selected': {
-                    backgroundColor: theme.palette.primary.main,
-                    color: theme.palette.primary.contrastText,
-                    '& .MuiListItemIcon-root': {
+            {item.divider ? (
+              <Divider sx={{ my: 1, mx: 2 }} />
+            ) : (
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => handleNavigation(item.path, item.resourceName)}
+                  selected={isSelected(item.path)}
+                  sx={{
+                    mx: 1,
+                    borderRadius: 1,
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.primary.main,
                       color: theme.palette.primary.contrastText,
+                      '& .MuiListItemIcon-root': {
+                        color: theme.palette.primary.contrastText,
+                      },
+                      '&:hover': {
+                        backgroundColor: theme.palette.primary.dark,
+                      },
                     },
                     '&:hover': {
-                      backgroundColor: theme.palette.primary.dark,
+                      backgroundColor: theme.palette.action.hover,
                     },
-                  },
-                  '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
-                  },
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    color: isSelected(item.path)
-                      ? theme.palette.primary.contrastText
-                      : theme.palette.text.secondary,
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  primaryTypographyProps={{
-                    fontSize: '0.875rem',
-                    fontWeight: isSelected(item.path) ? 600 : 400,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-            {item.divider && <Divider sx={{ my: 1 }} />}
+                  <ListItemIcon
+                    sx={{
+                      color: isSelected(item.path)
+                        ? theme.palette.primary.contrastText
+                        : theme.palette.text.secondary,
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    primaryTypographyProps={{
+                      fontSize: '0.875rem',
+                      fontWeight: isSelected(item.path) ? 600 : 400,
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            )}
           </React.Fragment>
         ))}
       </List>
