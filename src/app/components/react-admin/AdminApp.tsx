@@ -21,30 +21,29 @@ import CustomLoginPage from "./components/CustomLoginPage";
 
 
 const AdminApp = () => (
-  <BrowserRouter>
+  <BrowserRouter basename="/admin">
     <Admin 
       dataProvider={dataProvider} 
       authProvider={authProvider} 
       theme={radiantLightTheme}
       loginPage={CustomLoginPage}
-      basename=""
     >
 
-      <Resource
-        name="users"
-        list={ListGuesser}
-        edit={EditGuesser}
-        recordRepresentation="name"
-      />
+    <Resource
+      name="users"
+      list={ListGuesser}
+      edit={EditGuesser}
+      recordRepresentation="name"
+    />
 
-      <Resource
-        name="posts"
-        list={ListGuesser}
-        edit={EditGuesser}
-        recordRepresentation="title"
-      />
+    <Resource
+      name="posts"
+      list={ListGuesser}
+      edit={EditGuesser}
+      recordRepresentation="title"
+    />
 
-      <Resource name="comments" list={ListGuesser} edit={EditGuesser} />
+    <Resource name="comments" list={ListGuesser} edit={EditGuesser} />
 
     </Admin>
   </BrowserRouter>
