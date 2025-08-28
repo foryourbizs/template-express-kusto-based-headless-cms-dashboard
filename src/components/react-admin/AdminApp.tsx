@@ -15,6 +15,7 @@ import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";
 import LoginPage from "./components/LoginPage";
 import { simpleGrayTheme } from "./config/theme";
+import Layout from "./components/Layout";
 
 
 
@@ -27,6 +28,7 @@ const AdminApp = () => (
       authProvider={authProvider} 
       theme={simpleGrayTheme}
       loginPage={LoginPage}
+      layout={Layout}
     >
 
     <Resource
