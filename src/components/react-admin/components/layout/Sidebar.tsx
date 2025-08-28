@@ -19,8 +19,10 @@ import {
   Comment,
   Settings,
   Analytics,
+  ViewList,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useResourceDefinitions } from 'react-admin';
 
 interface SidebarProps {
   open: boolean;
@@ -36,45 +38,16 @@ interface MenuItem {
   divider?: boolean;
 }
 
-const menuItems: MenuItem[] = [
-  {
-    id: 'dashboard',
-    label: '대시보드',
-    icon: <Dashboard />,
-    path: '/admin',
-  },
-  {
-    id: 'users',
-    label: '사용자',
-    icon: <People />,
-    path: '/admin/users',
-  },
-  {
-    id: 'posts',
-    label: '게시물',
-    icon: <Article />,
-    path: '/admin/posts',
-  },
-  {
-    id: 'comments',
-    label: '댓글',
-    icon: <Comment />,
-    path: '/admin/comments',
-    divider: true,
-  },
-  {
-    id: 'analytics',
-    label: '분석',
-    icon: <Analytics />,
-    path: '/admin/analytics',
-  },
-  {
-    id: 'settings',
-    label: '설정',
-    icon: <Settings />,
-    path: '/admin/settings',
-  },
-];
+// 리소스별 아이콘 매핑
+const resourceIcons: Record<string, React.ReactNode> = {
+  users: <People />,
+  posts: <Article />,
+  comments: <Comment />,
+  analytics: <Analytics />,
+  settings: <Settings />,
+  // 기본 아이콘
+  default: <ViewList />,
+};
 
 const DRAWER_WIDTH = 240;
 
@@ -86,6 +59,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const resourceDefinitions = useResourceDefinitions();
+
+  // React Admin에 등록된 리소스들을 기반으로 메뉴 생성
+  const generateMenuItems = (): MenuItem[] => {
+    const items: MenuItem[] = [
+      // 대시보드는 항상 첫 번째
+      // {
+      //   id: 'dashboard',
+      //   label: '대시보드',
+      //   icon: <Dashboard />,
+      //   path: '/admin',
+      // },
+    ];
+
+    // 등록된 리소스들을 메뉴에 추가
+    Object.keys(resourceDefinitions).forEach((resourceName) => {
+      const resource = resourceDefinitions[resourceName];
+      
+      // list 페이지가 있는 리소스만 메뉴에 추가
+      if (resource.hasList) {
+        items.push({
+          id: resourceName,
+          label: resource.options?.label || resourceName,
+          icon: resourceIcons[resourceName] || resourceIcons.default,
+          path: `/admin/${resourceName}`,
+        });
+      }
+    });
+
+    return items;
+  };
+
+  const menuItems = generateMenuItems();
 
   const handleNavigation = (path: string) => {
     navigate(path);

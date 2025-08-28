@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Toolbar, Container, useTheme } from '@mui/material';
 import { Outlet } from 'react-router-dom';
+import { Notification } from 'react-admin';
 
 interface MainProps {
   sidebarOpen: boolean;
