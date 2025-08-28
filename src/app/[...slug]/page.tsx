@@ -1,6 +1,5 @@
-'use client';
-import AdminApp from "../../components/react-admin/AdminApp";
+import Admin from "../../components/react-admin/Admin";
 
 export default function CatchAllPage() {
-  return <AdminApp />;
+  return <Admin />;
 }

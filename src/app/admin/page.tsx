@@ -1,6 +1,6 @@
 
-import AdminApp from "../../components/react-admin/AdminApp";
+import Admin from "../../components/react-admin/Admin";
 
 export default function AdminPage() {
-  return <AdminApp />;
+  return <Admin />;
 }
