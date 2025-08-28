@@ -1,7 +1,7 @@
 const convertDatum = (datum: any) => {
   return {
     id: datum.id,
-    type: datum.type,
+    // type: datum.type, // JSON API의 type 필드는 React Admin에서 불필요하므로 제외
     ...datum.attributes,
   };
 };
