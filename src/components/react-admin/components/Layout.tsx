@@ -11,7 +11,7 @@ import { LayoutProvider, useLayout } from './layout/LayoutProvider';
  * 커스텀 레이아웃 컴포넌트
  * React Admin의 기본 레이아웃 대신 각 영역을 직접 구현
  */
-const LayoutContent: React.FC = () => {
+const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const { sidebarOpen, toggleSidebar } = useLayout();
   const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
   
@@ -42,7 +42,9 @@ const LayoutContent: React.FC = () => {
       <Main 
         sidebarOpen={sidebarOpen}
         isMobile={isMobile}
-      />
+      >
+        {children}
+      </Main>
       
       {/* 푸터 */}
       <Footer />
@@ -54,10 +56,10 @@ const LayoutContent: React.FC = () => {
  * 레이아웃 래퍼 컴포넌트
  * LayoutProvider로 상태 관리
  */
-export const Layout: React.FC = () => {
+export const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
     <LayoutProvider>
-      <LayoutContent />
+      <LayoutContent>{children}</LayoutContent>
     </LayoutProvider>
   );
 };

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Toolbar, Container, useTheme } from '@mui/material';
-import { Outlet } from 'react-router-dom';
 import { Notification } from 'react-admin';
 
 interface MainProps {
   sidebarOpen: boolean;
   isMobile: boolean;
+  children?: React.ReactNode;
 }
 
 const DRAWER_WIDTH = 240;
@@ -14,7 +14,7 @@ const DRAWER_WIDTH = 240;
  * 메인 콘텐츠 영역 컴포넌트
  * React Admin의 페이지들이 렌더링되는 영역
  */
-export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile }) => {
+export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) => {
   const theme = useTheme();
 
   return (
@@ -66,7 +66,7 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile }) => {
         </Box>
 
         {/* React Admin 페이지들이 여기에 렌더링됩니다 */}
-        <Outlet />
+        {children}
       </Container>
     </Box>
   );
