@@ -43,6 +43,7 @@ interface MenuItem {
 // 리소스별 아이콘 매핑
 const resourceIcons: Record<string, React.ReactNode> = {
   users: <People />,
+  'privates/users': <People />,
   posts: <Article />,
   comments: <Comment />,
   'system.analytics': <Analytics />,

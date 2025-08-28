@@ -42,24 +42,11 @@ const AdminApp = () => (
       name="privates/users"
       list={ListGuesser}
       edit={EditGuesser}
-      recordRepresentation="name"
+      recordRepresentation="username"
       options={{ label: '사용자' }}
     />
 
-    <Resource
-      name="posts"
-      list={ListGuesser}
-      edit={EditGuesser}
-      recordRepresentation="title"
-      options={{ label: '게시물' }}
-    />
-
-    <Resource 
-      name="comments" 
-      list={ListGuesser} 
-      edit={EditGuesser} 
-      options={{ label: '댓글' }}
-    />
+    {/* posts와 comments는 서버에 없으므로 제거 */}
 
     {/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
     <Resource

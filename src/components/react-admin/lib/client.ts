@@ -57,11 +57,10 @@ export const requester = async (url: string, options: any = {}) => {
       responseBody = await response.json();
     } catch (jsonError) {
       // JSON 파싱 에러 처리
-      const textResponse = await response.text();
       return Promise.reject({
         message: `서버 응답을 파싱할 수 없습니다. JSON 형식이 아닙니다.`,
         status: response.status || 500,
-        details: textResponse.substring(0, 200)
+        details: `JSON 파싱 에러: ${jsonError instanceof Error ? jsonError.message : '알 수 없는 오류'}`
       });
     }
 

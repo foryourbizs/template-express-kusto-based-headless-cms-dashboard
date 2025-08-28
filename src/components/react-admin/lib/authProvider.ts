@@ -16,25 +16,25 @@ const api = {
 
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
-        // ====== 테스트용 로그인 (나중에 제거 필요) ======
-        // if (username === 'test' && password === '1234') {
-        //     const testUser = {
-        //         id: '999',
-        //         username: 'test',
-        //         email: 'test@example.com',
-        //         name: '테스트 관리자',
-        //         role: 'admin',
-        //         avatar: null,
-        //         accessToken: 'test-access-token-12345',
-        //         refreshToken: 'test-refresh-token-67890'
-        //     };
+        // ====== 테스트용 로그인 (서버 연결 문제 해결용) ======
+        if (username === 'test' && password === '1234') {
+            const testUser = {
+                id: '999',
+                username: 'test',
+                email: 'test@example.com',
+                name: '테스트 관리자',
+                role: 'admin',
+                avatar: null,
+                accessToken: 'test-access-token-12345',
+                refreshToken: 'test-refresh-token-67890'
+            };
 
-        //     localStorage.setItem("user", JSON.stringify(testUser));
-        //     localStorage.setItem("accessToken", testUser.accessToken);
-        //     localStorage.setItem("refreshToken", testUser.refreshToken);
+            localStorage.setItem("user", JSON.stringify(testUser));
+            localStorage.setItem("accessToken", testUser.accessToken);
+            localStorage.setItem("refreshToken", testUser.refreshToken);
 
-        //     return Promise.resolve();
-        // }
+            return Promise.resolve();
+        }
         // ====== 테스트용 로그인 끝 ======
 
         try {
