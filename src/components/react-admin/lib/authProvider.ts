@@ -5,40 +5,46 @@ import { requester } from "./client";
  * This authProvider is only for test purposes. Don't use it in production.
  */
 
-const url = process.env.ADMIN_SERVER_URL || '(PLEASE-SET-ADMIN_SERVER_URL-ENV)';
+const url = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
+
+
+const api = {
+    signin: `${url}/users/sign/in`,
+    signout: `${url}/users/sign/out`,
+};
 
 
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
         // ====== 테스트용 로그인 (나중에 제거 필요) ======
-        if (username === 'test' && password === '1234') {
-            const testUser = {
-                id: '999',
-                username: 'test',
-                email: 'test@example.com',
-                name: '테스트 관리자',
-                role: 'admin',
-                avatar: null,
-                accessToken: 'test-access-token-12345',
-                refreshToken: 'test-refresh-token-67890'
-            };
+        // if (username === 'test' && password === '1234') {
+        //     const testUser = {
+        //         id: '999',
+        //         username: 'test',
+        //         email: 'test@example.com',
+        //         name: '테스트 관리자',
+        //         role: 'admin',
+        //         avatar: null,
+        //         accessToken: 'test-access-token-12345',
+        //         refreshToken: 'test-refresh-token-67890'
+        //     };
 
-            localStorage.setItem("user", JSON.stringify(testUser));
-            localStorage.setItem("accessToken", testUser.accessToken);
-            localStorage.setItem("refreshToken", testUser.refreshToken);
+        //     localStorage.setItem("user", JSON.stringify(testUser));
+        //     localStorage.setItem("accessToken", testUser.accessToken);
+        //     localStorage.setItem("refreshToken", testUser.refreshToken);
 
-            return Promise.resolve();
-        }
+        //     return Promise.resolve();
+        // }
         // ====== 테스트용 로그인 끝 ======
 
         try {
-            const response = await requester(`${url}/sign/in`, {
+            const response = await requester(api.signin, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    username: username,
+                    id: username,
                     password: password
                 }),
             });
@@ -71,7 +77,7 @@ export const authProvider: AuthProvider = {
         }
     },
     logout: () => {
-        requester(`${url}/sign/out`, {
+        requester(api.signout, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

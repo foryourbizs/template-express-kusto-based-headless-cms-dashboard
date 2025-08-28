@@ -39,7 +39,7 @@ const AdminApp = () => (
     >
 
     <Resource
-      name="users"
+      name="privates/users"
       list={ListGuesser}
       edit={EditGuesser}
       recordRepresentation="name"
