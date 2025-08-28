@@ -71,12 +71,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const generateMenuItems = (): MenuItem[] => {
     const items: MenuItem[] = [
       // 대시보드는 항상 첫 번째
-      // {
-      //   id: 'dashboard',
-      //   label: '대시보드',
-      //   icon: <Dashboard />,
-      //   path: '/admin',
-      // },
+      {
+        id: 'dashboard',
+        label: '대시보드',
+        icon: <Dashboard />,
+        path: '/',
+      },
     ];
 
     // 등록된 리소스들을 메뉴에 추가
@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
           id: resourceName,
           label: resource.options?.label || resourceName,
           icon: resourceIcons[resourceName] || resourceIcons.default,
-          path: `/admin/${resourceName}`,
+          path: `/${resourceName}`,
           resourceName: resourceName,
         });
       }
@@ -103,6 +103,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const handleNavigation = async (path: string, resourceName?: string) => {
     if (isMobile) {
       onClose();
+    }
+
+    // 대시보드인 경우
+    if (path === '/') {
+      redirect('/');
+      notify('대시보드로 이동', { type: 'info' });
+      return;
     }
 
     // 리소스 페이지인 경우
@@ -138,8 +145,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   };
 
   const isSelected = (path: string) => {
-    if (path === '/admin') {
-      return location.pathname === path;
+    if (path === '/') {
+      return location.pathname === '/' || location.pathname === '';
     }
     return location.pathname.startsWith(path);
   };

@@ -16,6 +16,7 @@ import authProvider from "./lib/authProvider";
 import LoginPage from "./components/LoginPage";
 import { simpleGrayTheme } from "./config/theme";
 import Layout from "./components/Layout";
+import Dashboard from "./components/Dashboard";
 
 
 
@@ -29,6 +30,7 @@ const AdminApp = () => (
       theme={simpleGrayTheme}
       loginPage={LoginPage}
       layout={Layout}
+      dashboard={Dashboard}
     >
 
     <Resource
@@ -36,6 +38,7 @@ const AdminApp = () => (
       list={ListGuesser}
       edit={EditGuesser}
       recordRepresentation="name"
+      options={{ label: '사용자' }}
     />
 
     <Resource
@@ -43,9 +46,15 @@ const AdminApp = () => (
       list={ListGuesser}
       edit={EditGuesser}
       recordRepresentation="title"
+      options={{ label: '게시물' }}
     />
 
-    <Resource name="comments" list={ListGuesser} edit={EditGuesser} />
+    <Resource 
+      name="comments" 
+      list={ListGuesser} 
+      edit={EditGuesser} 
+      options={{ label: '댓글' }}
+    />
 
     </Admin>
   </BrowserRouter>
