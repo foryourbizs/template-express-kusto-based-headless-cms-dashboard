@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useResourceDefinitions, useRedirect, useNotify, useRefresh, useDataProvider } from 'react-admin';
+import { DRAWER_WIDTH } from '../../constants/layout';
 
 interface SidebarProps {
   open: boolean;
@@ -49,8 +50,6 @@ const resourceIcons: Record<string, React.ReactNode> = {
   // 기본 아이콘
   default: <ViewList />,
 };
-
-const DRAWER_WIDTH = 240;
 
 /**
  * 사이드바 컴포넌트

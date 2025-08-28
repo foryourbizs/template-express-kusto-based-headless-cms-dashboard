@@ -8,8 +8,6 @@ interface MainProps {
   children?: React.ReactNode;
 }
 
-const DRAWER_WIDTH = 240;
-
 /**
  * 메인 콘텐츠 영역 컴포넌트
  * React Admin의 페이지들이 렌더링되는 영역
@@ -22,15 +20,10 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
       component="main"
       sx={{
         flexGrow: 1,
-        width: {
-          md: sidebarOpen ? `calc(100% - ${DRAWER_WIDTH}px)` : '100%',
-        },
-        ml: {
-          md: sidebarOpen ? `${DRAWER_WIDTH}px` : 0,
-        },
-        transition: theme.transitions.create(['margin', 'width'], {
+        width: '100%', // 항상 전체 너비 사용
+        transition: theme.transitions.create(['margin'], {
           easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.leavingScreen,
+          duration: theme.transitions.duration.enteringScreen,
         }),
         backgroundColor: theme.palette.background.default,
         minHeight: '100vh',
@@ -47,8 +40,8 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
         sx={{
           flex: 1,
           py: 3,
-          px: { xs: 2, sm: 3 },
-          position: 'relative', // Notification 위치 조정을 위해 추가
+          px: { xs: 2, sm: 3, md: 4 },
+          position: 'relative',
         }}
       >
         {/* React Admin Notification 컴포넌트 - 콘텐츠 영역 내부로 이동 */}

@@ -22,7 +22,12 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
   const refresh = useRefresh();
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      minHeight: '100vh',
+      width: '100%',
+      overflow: 'hidden' // 전체 레이아웃에서 스크롤 방지
+    }}>
       <CssBaseline />
       
       {/* 헤더 */}
