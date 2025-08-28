@@ -19,8 +19,9 @@ import LoginPage from "./components/LoginPage";
 import { simpleGrayTheme } from "./config/theme";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
-import { Settings } from "./components/pages/Settings";
+import { Settings } from "./components/pages/SettingsSimple";
 import { SystemMenuList } from "./components/resources/MenuRedirects";
+import { Analytics, SystemLogs } from "./components/pages/SystemPages";
 
 
 
@@ -60,10 +61,34 @@ const AdminApp = () => (
       options={{ label: '댓글' }}
     />
 
-    {/* 커스텀 라우트 - 리소스가 아닌 별도 페이지들 */}
-    <CustomRoutes>
-      <Route path="/settings" element={<Settings />} />
-    </CustomRoutes>
+    {/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
+    <Resource
+      name="system.settings"
+      list={Settings}
+      options={{ 
+        label: '환경설정',
+      }}
+    />
+
+    {/* 가상 Resource - 분석 페이지 */}
+    <Resource
+      name="system.analytics"
+      list={Analytics}
+      options={{ 
+        label: '데이터 분석',
+      }}
+    />
+
+    {/* 가상 Resource - 시스템 로그 페이지 */}
+    <Resource
+      name="system.logs"
+      list={SystemLogs}
+      options={{ 
+        label: '시스템 로그',
+      }}
+    />
+
+    {/* 커스텀 라우트는 이제 필요 없음 - Resource로 자동 처리 */}
 
     </Admin>
   </BrowserRouter>

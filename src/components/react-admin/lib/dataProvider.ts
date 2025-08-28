@@ -1,6 +1,6 @@
 import { provider } from "./client";
 
-const url = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || 'http://localhost:4000/api';
+const url = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
 
 const settings = {
     total: "total",

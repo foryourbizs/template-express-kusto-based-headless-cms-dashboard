@@ -45,8 +45,9 @@ const resourceIcons: Record<string, React.ReactNode> = {
   users: <People />,
   posts: <Article />,
   comments: <Comment />,
-  analytics: <Analytics />,
-  settings: <Settings />,
+  'system.analytics': <Analytics />,
+  'system.settings': <Settings />,
+  'system.logs': <ViewList />,
   // 기본 아이콘
   default: <ViewList />,
 };
@@ -81,32 +82,46 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       
       // list 페이지가 있는 리소스만 메뉴에 추가
       if (resource.hasList) {
+        // 시스템 관련 리소스는 나중에 따로 그룹화
+        if (!resourceName.startsWith('system.')) {
+          items.push({
+            id: resourceName,
+            label: resource.options?.label || resourceName,
+            icon: resourceIcons[resourceName] || resourceIcons.default,
+            path: `/${resourceName}`,
+            resourceName: resourceName,
+          });
+        }
+      }
+    });
+
+    // 시스템 관련 메뉴 그룹 추가
+    const systemResources = Object.keys(resourceDefinitions).filter(name => 
+      name.startsWith('system.') && resourceDefinitions[name].hasList
+    );
+
+    if (systemResources.length > 0) {
+      // 구분선 추가
+      items.push({
+        id: 'divider-system',
+        label: '',
+        icon: null,
+        path: '',
+        divider: true,
+      });
+
+      // 시스템 메뉴들 추가
+      systemResources.forEach((resourceName) => {
+        const resource = resourceDefinitions[resourceName];
         items.push({
           id: resourceName,
-          label: resource.options?.label || resourceName,
+          label: resource.options?.label || resourceName.replace('system.', ''),
           icon: resourceIcons[resourceName] || resourceIcons.default,
           path: `/${resourceName}`,
           resourceName: resourceName,
         });
-      }
-    });
-
-    // 구분선과 커스텀 페이지들 추가
-    items.push({
-      id: 'divider-1',
-      label: '',
-      icon: null,
-      path: '',
-      divider: true,
-    });
-
-    // 환경설정 페이지 추가
-    items.push({
-      id: 'settings',
-      label: '환경설정',
-      icon: <Settings />,
-      path: '/settings',
-    });
+      });
+    }
 
     return items;
   };
@@ -127,9 +142,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
     }
 
     // 커스텀 페이지인 경우 (환경설정 등)
-    if (path === '/settings') {
-      navigate('/settings');
-      // notify('환경설정 페이지로 이동', { type: 'info' });
+    if (path.startsWith('/system.')) {
+      navigate(path);
       return;
     }
 
