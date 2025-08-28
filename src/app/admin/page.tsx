@@ -1,4 +1,3 @@
-"use client";
 
 import AdminApp from "../../components/react-admin/AdminApp";
 
