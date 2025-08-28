@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import Admin from "../components/react-admin/Admin";
 
-export default function Page() {
-  redirect('/admin');
+export default function AdminPage() {
+  return <Admin />;
 }

@@ -23,7 +23,7 @@ import Dashboard from "./components/Dashboard";
 
 
 const AdminApp = () => (
-  <BrowserRouter basename="/admin">
+  <BrowserRouter>
     <Admin 
       dataProvider={dataProvider} 
       authProvider={authProvider} 
