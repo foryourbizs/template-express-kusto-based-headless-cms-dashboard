@@ -53,6 +53,9 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile }) => {
         {/* React Admin 페이지들이 여기에 렌더링됩니다 */}
         <Outlet />
       </Container>
+
+      {/* React Admin Notification 컴포넌트 */}
+      <Notification />
     </Box>
   );
 };

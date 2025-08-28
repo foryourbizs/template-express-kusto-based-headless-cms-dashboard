@@ -22,7 +22,7 @@ import {
   ViewList,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useResourceDefinitions } from 'react-admin';
+import { useResourceDefinitions, useRedirect, useNotify } from 'react-admin';
 
 interface SidebarProps {
   open: boolean;
@@ -35,6 +35,7 @@ interface MenuItem {
   label: string;
   icon: React.ReactNode;
   path: string;
+  resourceName?: string;
   divider?: boolean;
 }
 
@@ -60,6 +61,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const navigate = useNavigate();
   const location = useLocation();
   const resourceDefinitions = useResourceDefinitions();
+  const redirect = useRedirect();
+  const notify = useNotify();
+
 
   // React Admin에 등록된 리소스들을 기반으로 메뉴 생성
   const generateMenuItems = (): MenuItem[] => {
@@ -84,6 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
           label: resource.options?.label || resourceName,
           icon: resourceIcons[resourceName] || resourceIcons.default,
           path: `/admin/${resourceName}`,
+          resourceName: resourceName,
         });
       }
     });
@@ -93,10 +98,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
 
   const menuItems = generateMenuItems();
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
+  const handleNavigation = (path: string, resourceName?: string) => {
     if (isMobile) {
       onClose();
+    }
+
+    // 대시보드인 경우
+    // if (path === '/admin') {
+    //   redirect('/');
+    //   return;
+    // }
+
+    // 리소스 페이지인 경우
+    if (resourceName) {
+      redirect('list', resourceName);
+      notify(`resourceName: ${resourceName}`, {multiLine: true})
+    } else {
+      // 기타 경로는 navigate 사용
+      navigate(path);
+      notify(`navigate: ${path}`, {multiLine: true})
     }
   };
 
@@ -132,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
           <React.Fragment key={item.id}>
             <ListItem disablePadding>
               <ListItemButton
-                onClick={() => handleNavigation(item.path)}
+                onClick={() => handleNavigation(item.path, item.resourceName)}
                 selected={isSelected(item.path)}
                 sx={{
                   mx: 1,
