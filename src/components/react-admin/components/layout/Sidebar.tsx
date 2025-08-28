@@ -112,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
     // 리소스 페이지인 경우
     if (resourceName) {
       redirect('list', resourceName);
-      notify(`resourceName: ${resourceName}`, {multiLine: true})
+      notify(`resourceName: ${resourceName}`, {multiLine: true, undoable: false, type: 'info'})
     } else {
       // 기타 경로는 navigate 사용
       navigate(path);
