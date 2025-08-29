@@ -38,7 +38,6 @@ interface MenuGroup {
   id: string;
   label: string;
   items: MenuItem[];
-  order: number;
 }
 
 /**
@@ -100,15 +99,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       }
     });
 
-    // 그룹을 정렬하여 반환
-    const groups: MenuGroup[] = Array.from(groupMap.entries())
-      .map(([groupId, groupData]) => ({
-        id: groupId,
-        label: groupData.label,
-        items: groupData.items.sort((a, b) => a.label.localeCompare(b.label)),
-        order: groupData.order,
-      }))
-      .sort((a, b) => a.order - b.order);
+    // 그룹 처리: 2개 이상의 아이템이 있는 경우만 그룹으로, 1개면 ungrouped로 이동
+    const groups: MenuGroup[] = [];
+    
+    Array.from(groupMap.entries()).forEach(([groupId, groupData]) => {
+      const sortedItems = groupData.items.sort((a, b) => a.label.localeCompare(b.label));
+      
+      if (sortedItems.length >= 2) {
+        // 2개 이상이면 그룹으로 표시
+        groups.push({
+          id: groupId,
+          label: groupData.label,
+          items: sortedItems,
+        });
+      } else {
+        // 1개뿐이면 ungrouped로 이동
+        ungrouped.push(...sortedItems);
+      }
+    });
+
+    // 그룹들을 순서대로 정렬
+    groups.sort((a, b) => {
+      const groupDataA = groupMap.get(a.id);
+      const groupDataB = groupMap.get(b.id);
+      const orderA = groupDataA?.order || 999;
+      const orderB = groupDataB?.order || 999;
+      return orderA - orderB;
+    });
 
     return { ungrouped, groups };
   };
@@ -130,12 +147,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
     }
   };
 
-  // 선택 상태 확인
+  // 선택 상태 확인 - 정확한 경로 매칭
   const isSelected = (path: string): boolean => {
     if (path === '/') {
       return location.pathname === '/' || location.pathname === '';
     }
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+    
+    const currentPath = location.pathname;
+    
+    // 정확히 일치하는 경우
+    if (currentPath === path) {
+      return true;
+    }
+    
+    // 하위 경로인 경우 (예: /privates/users/123/edit)
+    if (currentPath.startsWith(path + '/')) {
+      // 단, 다른 더 구체적인 리소스 경로가 있는지 확인
+      const allResourcePaths = Object.keys(resourceDefinitions)
+        .filter(name => resourceDefinitions[name].hasList)
+        .map(name => `/${name}`)
+        .filter(resourcePath => resourcePath !== path && resourcePath.startsWith(path));
+      
+      // 현재 경로가 더 구체적인 리소스와 일치하는지 확인
+      const hasMoreSpecificMatch = allResourcePaths.some(resourcePath => 
+        currentPath === resourcePath || currentPath.startsWith(resourcePath + '/')
+      );
+      
+      return !hasMoreSpecificMatch;
+    }
+    
+    return false;
   };
 
   // 메뉴 아이템 렌더링
