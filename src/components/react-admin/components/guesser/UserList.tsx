@@ -14,7 +14,10 @@ import {
   BooleanInput,
   FilterButton,
   SelectInput,
+  BulkDeleteButton,
+  BulkExportButton,
 } from "react-admin";
+import { Box } from "@mui/material";
 
 const UserListActions = () => (
   <TopToolbar>
@@ -83,9 +86,52 @@ const userFilters = [
 ];
 
 
+const UserBulkActionButtons = () => (
+  <>
+    <BulkExportButton />
+    <BulkDeleteButton />
+  </>
+);
+
 export const UserList = () => (
   <List actions={<UserListActions />} filters={userFilters}>
-    <Datagrid rowClick="edit">
+    
+    <Datagrid 
+      rowClick="edit"
+      bulkActionButtons={<UserBulkActionButtons />}
+      sx={{
+        width: '100%',
+        overflowX: 'auto',
+        
+        '& .RaDatagrid-table': {
+          minWidth: '1000px',
+          tableLayout: 'auto',
+        },
+        '& .RaDatagrid-headerRow th': {
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          padding: '8px 16px',
+        },
+        '& .RaDatagrid-rowCell': {
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          padding: '8px 16px',
+        },
+        '& .RaDatagrid-checkbox': {
+          width: '48px',
+          minWidth: '48px',
+          maxWidth: '48px',
+          padding: '8px !important',
+        },
+        '& .RaDatagrid-expandIconCell': {
+          width: '48px',
+          minWidth: '48px',
+          maxWidth: '48px',
+        },
+      }}
+    >
       <TextField source="id" label="ID" />
       <TextField source="username" label="사용자명" />
       <TextField source="firstName" label="이름" />
