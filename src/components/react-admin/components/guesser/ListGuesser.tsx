@@ -13,22 +13,19 @@ import {
   TopToolbar,
   CreateButton,
   ExportButton,
-  FilterButton,
   RefreshButton,
   BulkDeleteButton,
   BulkExportButton,
   useListContext,
   FunctionField,
-  TextInput,
   useDataProvider,
   useNotify,
   Loading,
 } from 'react-admin';
 
 // 삭제 기능이 제거된 커스텀 액션 컴포넌트
-const ListActionsWithoutDelete = ({ hasFilters, hasCreate }: { hasFilters: boolean; hasCreate: boolean }) => (
+const ListActionsWithoutDelete = ({ hasCreate }: { hasCreate: boolean }) => (
   <TopToolbar>
-    {hasFilters && <FilterButton />}
     <RefreshButton />
     {hasCreate && <CreateButton />}
     <ExportButton />
@@ -150,13 +147,12 @@ const ConditionalDatagrid: React.FC<{
 interface ListGuesserProps {
   resource?: string;
   children?: React.ReactNode;
-  filters?: React.ReactElement[];
-  hasEdit?: boolean;       // Edit 버튼 표시 여부
-  hasShow?: boolean;       // Show 버튼 표시 여부
-  hasDelete?: boolean;     // Delete 버튼 표시 여부 (기본값: false)
-  hasCreate?: boolean;     // Create 버튼 표시 여부
-  hasBulkDelete?: boolean; // Bulk Delete 버튼 표시 여부 (기본값: false)
-  checkPermissions?: boolean;  // 권한 체크 여부 (기본값: permissions 포함 리소스는 자동 활성화)
+  hasEdit?: boolean;          // Edit 버튼 표시 여부
+  hasShow?: boolean;          // Show 버튼 표시 여부
+  hasDelete?: boolean;        // Delete 버튼 표시 여부 (기본값: false)
+  hasCreate?: boolean;        // Create 버튼 표시 여부
+  hasBulkDelete?: boolean;    // Bulk Delete 버튼 표시 여부 (기본값: false)
+  checkPermissions?: boolean; // 권한 체크 여부 (기본값: permissions 포함 리소스는 자동 활성화)
   [key: string]: any;
 }
 
@@ -210,7 +206,6 @@ const usePermissionCheck = (resource: string, enabled: boolean = true) => {
 // 조건부 삭제 기능을 포함한 ListGuesser 컴포넌트
 const ListGuesser: React.FC<ListGuesserProps> = ({ 
   children, 
-  filters, 
   hasEdit = false, 
   hasShow = false, 
   hasDelete = false,
@@ -234,23 +229,10 @@ const ListGuesser: React.FC<ListGuesserProps> = ({
     return null; // 아무것도 렌더링하지 않음
   }
 
-  // 기본 검색 필터 (filters가 제공되지 않은 경우)
-  const defaultFilters = filters || [
-    <TextInput
-      key="search"
-      label="검색"
-      source="q"
-      placeholder="검색어를 입력하세요..."
-    />
-  ];
-
-  const hasFilters = defaultFilters && defaultFilters.length > 0;
-
   return (
     <List 
       resource={resource}
-      actions={<ListActionsWithoutDelete hasFilters={hasFilters} hasCreate={hasCreate} />} 
-      filters={hasFilters ? defaultFilters : undefined}
+      actions={<ListActionsWithoutDelete hasCreate={hasCreate} />} 
       {...props}
     >
       <ConditionalDatagrid 
