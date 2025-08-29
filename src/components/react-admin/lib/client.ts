@@ -3,8 +3,35 @@ import pluralize from "pluralize";
 import { CreateParams, DataProvider, DeleteManyParams, DeleteParams, GetListParams, GetManyParams, GetManyReferenceParams, GetOneParams, UpdateManyParams, UpdateParams } from "react-admin";
 import { includeAndConvert } from './util';
 
+// 토큰 자동 갱신을 위한 변수
+let isRefreshing = false;
+let refreshPromise: Promise<any> | null = null;
+
 export const requester = async (url: string, options: any = {}) => {
   options.credentials = "include";
+  
+  // 토큰 만료 체크 및 자동 갱신
+  const accessTokenExpiresAt = localStorage.getItem("accessTokenExpiresAt");
+  const refreshTokenExpiresAt = localStorage.getItem("refreshTokenExpiresAt");
+  
+  if (accessTokenExpiresAt && refreshTokenExpiresAt) {
+    const now = new Date().getTime();
+    const accessTokenExpires = new Date(accessTokenExpiresAt).getTime();
+    const refreshTokenExpires = new Date(refreshTokenExpiresAt).getTime();
+    
+    // Access Token이 5분 이내에 만료되고, Refresh Token이 아직 유효한 경우
+    const fiveMinutes = 5 * 60 * 1000;
+    if (accessTokenExpires - now < fiveMinutes && refreshTokenExpires > now) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshPromise = refreshTokensInternal();
+      }
+      
+      if (refreshPromise) {
+        await refreshPromise;
+      }
+    }
+  }
   
   // JWT 토큰을 헤더에 추가
   const accessToken = localStorage.getItem("accessToken");
@@ -450,4 +477,59 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
       return { data: updatedIds };
     },
   };
+};
+
+// 내부용 토큰 갱신 함수
+const refreshTokensInternal = async (): Promise<void> => {
+  try {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+    
+    if (!accessToken || !refreshToken) {
+      throw new Error('Access Token 또는 Refresh Token이 없습니다.');
+    }
+
+    const refreshUrl = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || 'http://localhost:3001';
+    const response = await fetch(`${refreshUrl}/users/sign/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        refreshToken: refreshToken
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`토큰 갱신 실패: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.data?.attributes) {
+      // 새로운 토큰들과 만료시간 저장
+      localStorage.setItem("accessToken", result.data.attributes.accessToken);
+      localStorage.setItem("refreshToken", result.data.attributes.refreshToken);
+      
+      if (result.data.attributes.accessTokenExpiresAt) {
+        localStorage.setItem("accessTokenExpiresAt", result.data.attributes.accessTokenExpiresAt);
+      }
+      if (result.data.attributes.refreshTokenExpiresAt) {
+        localStorage.setItem("refreshTokenExpiresAt", result.data.attributes.refreshTokenExpiresAt);
+      }
+    }
+  } catch (error) {
+    console.error('Internal token refresh error:', error);
+    // 갱신 실패 시 로그아웃 처리
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("accessTokenExpiresAt");
+    localStorage.removeItem("refreshTokenExpiresAt");
+    throw error;
+  } finally {
+    isRefreshing = false;
+    refreshPromise = null;
+  }
 };

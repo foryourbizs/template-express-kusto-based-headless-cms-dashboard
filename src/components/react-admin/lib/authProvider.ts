@@ -11,6 +11,7 @@ const url = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER
 const api = {
     signin: `${url}/users/sign/in`,
     signout: `${url}/users/sign/out`,
+    refresh: `${url}/users/sign/refresh`,
 };
 
 
@@ -60,10 +61,18 @@ export const authProvider: AuthProvider = {
                     ...data.attributes
                 };
 
-                // JWT 토큰들을 저장
+                // JWT 토큰들과 만료시간 저장
                 localStorage.setItem("user", JSON.stringify(user));
                 localStorage.setItem("accessToken", data.attributes.accessToken);
                 localStorage.setItem("refreshToken", data.attributes.refreshToken);
+                
+                // 만료시간 저장 (ISO 문자열로 저장)
+                if (data.attributes.accessTokenExpiresAt) {
+                    localStorage.setItem("accessTokenExpiresAt", data.attributes.accessTokenExpiresAt);
+                }
+                if (data.attributes.refreshTokenExpiresAt) {
+                    localStorage.setItem("refreshTokenExpiresAt", data.attributes.refreshTokenExpiresAt);
+                }
 
                 return Promise.resolve();
             } else if (response.status === 401) {
@@ -87,6 +96,8 @@ export const authProvider: AuthProvider = {
         localStorage.removeItem("user");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("accessTokenExpiresAt");
+        localStorage.removeItem("refreshTokenExpiresAt");
         return Promise.resolve();
     },
     checkError: () => Promise.resolve(),
@@ -104,6 +115,100 @@ export const authProvider: AuthProvider = {
 
         return Promise.resolve(user);
     },
+};
+
+// JWT 토큰 갱신 함수 (React Admin 외부에서도 사용 가능)
+export const refreshTokens = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const accessToken = localStorage.getItem("accessToken");
+        const refreshToken = localStorage.getItem("refreshToken");
+        
+        if (!accessToken || !refreshToken) {
+            return { success: false, error: 'Access Token 또는 Refresh Token이 없습니다.' };
+        }
+
+        const response = await requester(api.refresh, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({
+                refreshToken: refreshToken
+            }),
+        });
+
+        if (!response) {
+            return { success: false, error: '서버 응답이 없습니다.' };
+        }
+
+        if (response.status === 200) {
+            const { data } = response.body;
+            
+            // 새로운 토큰들과 만료시간 저장
+            localStorage.setItem("accessToken", data.attributes.accessToken);
+            localStorage.setItem("refreshToken", data.attributes.refreshToken);
+            
+            if (data.attributes.accessTokenExpiresAt) {
+                localStorage.setItem("accessTokenExpiresAt", data.attributes.accessTokenExpiresAt);
+            }
+            if (data.attributes.refreshTokenExpiresAt) {
+                localStorage.setItem("refreshTokenExpiresAt", data.attributes.refreshTokenExpiresAt);
+            }
+
+            return { success: true };
+        } else if (response.status === 401) {
+            // Refresh Token도 만료된 경우 - 재로그인 필요
+            localStorage.removeItem("user");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("accessTokenExpiresAt");
+            localStorage.removeItem("refreshTokenExpiresAt");
+            return { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' };
+        } else {
+            return { success: false, error: `토큰 갱신 실패: ${response.status}` };
+        }
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        return { success: false, error: '토큰 갱신 중 오류가 발생했습니다.' };
+    }
+};
+
+// 토큰 만료시간까지 남은 시간을 계산하는 함수
+export const getTokenTimeRemaining = (): { 
+    accessToken: { remaining: number; expired: boolean; expiresAt: string | null };
+    refreshToken: { remaining: number; expired: boolean; expiresAt: string | null };
+} => {
+    const now = new Date().getTime();
+    
+    const accessTokenExpiresAt = localStorage.getItem("accessTokenExpiresAt");
+    const refreshTokenExpiresAt = localStorage.getItem("refreshTokenExpiresAt");
+    
+    const accessToken = {
+        remaining: 0,
+        expired: true,
+        expiresAt: accessTokenExpiresAt
+    };
+    
+    const refreshToken = {
+        remaining: 0,
+        expired: true,
+        expiresAt: refreshTokenExpiresAt
+    };
+    
+    if (accessTokenExpiresAt) {
+        const expiresAt = new Date(accessTokenExpiresAt).getTime();
+        accessToken.remaining = Math.max(0, expiresAt - now);
+        accessToken.expired = accessToken.remaining <= 0;
+    }
+    
+    if (refreshTokenExpiresAt) {
+        const expiresAt = new Date(refreshTokenExpiresAt).getTime();
+        refreshToken.remaining = Math.max(0, expiresAt - now);
+        refreshToken.expired = refreshToken.remaining <= 0;
+    }
+    
+    return { accessToken, refreshToken };
 };
 
 export default authProvider;
