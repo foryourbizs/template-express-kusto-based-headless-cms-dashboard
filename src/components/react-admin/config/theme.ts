@@ -4,7 +4,7 @@ export const simpleGrayTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#6b7280', // Gray-500
+      main: '#AD8992FF', // Gray-500
       light: '#9ca3af', // Gray-400
       dark: '#4b5563', // Gray-600
       contrastText: '#ffffff',
@@ -21,7 +21,7 @@ export const simpleGrayTheme = createTheme({
     },
     text: {
       primary: '#111827', // Gray-900
-      secondary: '#6b7280', // Gray-500
+      secondary: '#4A505CFF', // Gray-500
     },
     divider: '#e5e7eb', // Gray-200
     action: {
@@ -93,7 +93,7 @@ export const simpleGrayTheme = createTheme({
     },
     body1: {
       fontSize: '0.875rem',
-      color: '#374151',
+      color: '#474F5EFF',
     },
     body2: {
       fontSize: '0.75rem',
@@ -128,7 +128,7 @@ export const simpleGrayTheme = createTheme({
         },
         outlined: {
           borderColor: '#d1d5db',
-          color: '#374151',
+          color: '#514A37FF',
           '&:hover': {
             backgroundColor: '#f9fafb',
             borderColor: '#9ca3af',

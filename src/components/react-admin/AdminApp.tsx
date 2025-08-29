@@ -69,6 +69,39 @@ const AdminApp = () => (
           icon: <ViewList />
         }}
       />
+      <Resource
+        name="privates/users/roles"
+        list={ListGuesser}
+        options={{ 
+          label: '규칙',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+        
+      />
+
+      <Resource
+        name="privates/users/permissions"
+        list={ListGuesser}
+        options={{ 
+          label: '권한',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+      />
+
+      <Resource
+        name="privates/users/ratelimits"
+        list={ListGuesser}
+        options={{ 
+          label: '레이트 리밋',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+      />
 
       <Resource
         name="privates/users/audits"

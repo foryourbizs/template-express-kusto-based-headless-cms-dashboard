@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Lock } from '@mui/icons-material';
 import { useLogin, useNotify } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
 
 interface ReauthModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ export const ReauthModal: React.FC<ReauthModalProps> = ({
 
   const login = useLogin();
   const notify = useNotify();
+  const navigate = useNavigate();
 
   // 입력값 변경 처리
   const handleInputChange = (field: 'username' | 'password') => (
@@ -64,6 +66,14 @@ export const ReauthModal: React.FC<ReauthModalProps> = ({
     try {
       await login(credentials);
       notify('재인증이 완료되었습니다.', { type: 'success' });
+      
+      // 재인증 성공 후 저장된 페이지로 리다이렉트
+      const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
+      if (redirectAfterLogin) {
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectAfterLogin);
+      }
+      
       onClose();
       // 입력값 초기화
       setCredentials({ username: '', password: '' });

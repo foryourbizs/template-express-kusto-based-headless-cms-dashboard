@@ -27,56 +27,55 @@ const UserListActions = () => (
   </TopToolbar>
 );
 
-
 const userFilters = [
-  <TextInput 
+  <TextInput
     key="username"
-    label="사용자명" 
-    source="username" 
-    placeholder="사용자명 검색..."  
+    label="사용자명"
+    source="username"
+    placeholder="사용자명 검색..."
   />,
-  <TextInput 
+  <TextInput
     key="email"
-    label="이메일" 
-    source="email" 
-    placeholder="이메일 검색..." 
+    label="이메일"
+    source="email"
+    placeholder="이메일 검색..."
   />,
-  <TextInput 
+  <TextInput
     key="firstName"
-    label="이름" 
-    source="firstName" 
-    placeholder="이름 검색..." 
+    label="이름"
+    source="firstName"
+    placeholder="이름 검색..."
   />,
-  <TextInput 
+  <TextInput
     key="lastName"
-    label="성" 
-    source="lastName" 
-    placeholder="성 검색..." 
+    label="성"
+    source="lastName"
+    placeholder="성 검색..."
   />,
-  <SelectInput 
+  <SelectInput
     key="isActive"
-    label="활성 상태" 
-    source="isActive" 
+    label="활성 상태"
+    source="isActive"
     choices={[
       { id: true, name: '활성' },
       { id: false, name: '비활성' },
     ]}
     emptyText="전체"
   />,
-  <SelectInput 
+  <SelectInput
     key="isVerified"
-    label="인증 상태" 
-    source="isVerified" 
+    label="인증 상태"
+    source="isVerified"
     choices={[
       { id: true, name: '인증됨' },
       { id: false, name: '미인증' },
     ]}
     emptyText="전체"
   />,
-  <SelectInput 
+  <SelectInput
     key="isSuspended"
-    label="정지 상태" 
-    source="isSuspended" 
+    label="정지 상태"
+    source="isSuspended"
     choices={[
       { id: true, name: '정지됨' },
       { id: false, name: '정상' },
@@ -85,7 +84,7 @@ const userFilters = [
   />
 ];
 
-
+// 간단한 bulk actions 컴포넌트
 const UserBulkActionButtons = () => (
   <>
     <BulkExportButton />
@@ -94,15 +93,16 @@ const UserBulkActionButtons = () => (
 );
 
 export const UserList = () => (
-  <List actions={<UserListActions />} filters={userFilters}>
-    
-    <Datagrid 
+  <List 
+    actions={<UserListActions />} 
+    filters={userFilters}
+  >
+    <Datagrid
       rowClick="edit"
       bulkActionButtons={<UserBulkActionButtons />}
+      isRowSelectable={() => true}
       sx={{
         width: '100%',
-        overflowX: 'auto',
-        
         '& .RaDatagrid-table': {
           minWidth: '1000px',
           tableLayout: 'auto',
@@ -118,12 +118,6 @@ export const UserList = () => (
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           padding: '8px 16px',
-        },
-        '& .RaDatagrid-checkbox': {
-          width: '48px',
-          minWidth: '48px',
-          maxWidth: '48px',
-          padding: '8px !important',
         },
         '& .RaDatagrid-expandIconCell': {
           width: '48px',

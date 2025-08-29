@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { useLogin, useNotify, useAuthProvider } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
 import {
     Button,
     TextField,
@@ -27,6 +28,7 @@ const CustomLoginPage = () => {
     
     const login = useLogin();
     const notify = useNotify();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,6 +36,13 @@ const CustomLoginPage = () => {
 
         try {
             await login({ username, password });
+            
+            // 로그인 성공 후 저장된 페이지로 리다이렉트
+            const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
+            if (redirectAfterLogin) {
+                localStorage.removeItem('redirectAfterLogin');
+                navigate(redirectAfterLogin);
+            }
         } catch (error) {
             notify('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.', { type: 'warning' });
         } finally {

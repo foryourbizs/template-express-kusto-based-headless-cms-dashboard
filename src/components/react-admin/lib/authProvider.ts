@@ -18,6 +18,12 @@ const api = {
 
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
+        // 현재 페이지 정보 저장 (로그인 페이지가 아닌 경우에만)
+        const currentPath = window.location.pathname + window.location.search + window.location.hash;
+        if (currentPath !== '/login' && !currentPath.includes('/login')) {
+            localStorage.setItem("redirectAfterLogin", currentPath);
+        }
+
         // ====== 테스트용 로그인 (서버 연결 문제 해결용) ======
         if (username === 'test' && password === '1234' && false) {
             const testUser = {
@@ -99,15 +105,32 @@ export const authProvider: AuthProvider = {
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("accessTokenExpiresAt");
         localStorage.removeItem("refreshTokenExpiresAt");
+        localStorage.removeItem("redirectAfterLogin"); // 리다이렉트 정보도 제거
         return Promise.resolve();
     },
-    checkError: () => Promise.resolve(),
+    checkError: (error) => {
+        const status = error.status;
+        if (status === 401 || status === 403) {
+            // 현재 페이지 정보 저장
+            const currentPath = window.location.pathname + window.location.search + window.location.hash;
+            if (currentPath !== '/login' && !currentPath.includes('/login')) {
+                localStorage.setItem("redirectAfterLogin", currentPath);
+            }
+            return Promise.reject();
+        }
+        return Promise.resolve();
+    },
     checkAuth: async () => {
         const user = localStorage.getItem("user");
         const accessToken = localStorage.getItem("accessToken");
         
         // 로컬 토큰이 없으면 바로 인증 실패
         if (!user || !accessToken) {
+            // 현재 페이지 정보 저장
+            const currentPath = window.location.pathname + window.location.search + window.location.hash;
+            if (currentPath !== '/login' && !currentPath.includes('/login')) {
+                localStorage.setItem("redirectAfterLogin", currentPath);
+            }
             return Promise.reject({ message: 'No authentication token found' });
         }
 
@@ -130,7 +153,12 @@ export const authProvider: AuthProvider = {
                 localStorage.setItem("user", JSON.stringify(updatedUser));
                 return Promise.resolve();
             } else {
-                // 인증 실패
+                // 인증 실패 - 현재 페이지 정보 저장
+                const currentPath = window.location.pathname + window.location.search + window.location.hash;
+                if (currentPath !== '/login' && !currentPath.includes('/login')) {
+                    localStorage.setItem("redirectAfterLogin", currentPath);
+                }
+                
                 localStorage.removeItem("user");
                 localStorage.removeItem("accessToken");
                 localStorage.removeItem("refreshToken");
@@ -141,6 +169,11 @@ export const authProvider: AuthProvider = {
         } catch (error) {
             console.error('Auth check error:', error);
             // 네트워크 오류나 401 등의 경우 인증 실패로 처리
+            const currentPath = window.location.pathname + window.location.search + window.location.hash;
+            if (currentPath !== '/login' && !currentPath.includes('/login')) {
+                localStorage.setItem("redirectAfterLogin", currentPath);
+            }
+            
             localStorage.removeItem("user");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
