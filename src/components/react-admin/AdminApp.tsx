@@ -11,7 +11,6 @@ import {
   CustomRoutes
 } from "react-admin";
 import { BrowserRouter } from "react-router-dom";
-import { Route } from "react-router-dom";
 
 import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";

@@ -26,7 +26,7 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
       display: 'flex', 
       minHeight: '100vh',
       width: '100%',
-      overflow: 'hidden' // 전체 레이아웃에서 스크롤 방지
+      overflow: 'auto' 
     }}>
       <CssBaseline />
       
@@ -45,9 +45,7 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
       
       {/* 메인 콘텐츠 영역 */}
       <Main 
-        sidebarOpen={sidebarOpen}
-        isMobile={isMobile}
-      >
+        sidebarOpen={sidebarOpen} isMobile={isMobile}>
         {children}
       </Main>
       
