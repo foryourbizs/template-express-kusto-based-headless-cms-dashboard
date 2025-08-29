@@ -9,11 +9,14 @@ import {
   BooleanField,
   EditButton,
   ShowButton,
+  DeleteButton,
   TopToolbar,
   CreateButton,
   ExportButton,
   FilterButton,
   RefreshButton,
+  BulkDeleteButton,
+  BulkExportButton,
   useListContext,
   FunctionField,
   TextInput,
@@ -32,10 +35,24 @@ const ListActionsWithoutDelete = ({ hasFilters, hasCreate }: { hasFilters: boole
   </TopToolbar>
 );
 
-// 조건부 행 액션 컴포넌트 (Edit, Show 설정에 따라 버튼 표시)
-const RowActionsWithoutDelete = ({ hasEdit = false, hasShow = false }: { hasEdit?: boolean; hasShow?: boolean }) => {
-  // 둘 다 없으면 아무것도 렌더링하지 않음
-  if (!hasEdit && !hasShow) {
+// 조건부 벌크 액션 버튼 컴포넌트
+const BulkActionButtons = ({ hasBulkDelete = false }: { hasBulkDelete?: boolean }) => {
+  if (!hasBulkDelete) {
+    return false; // 벌크 액션 완전히 제거
+  }
+  
+  return (
+    <>
+      <BulkExportButton />
+      <BulkDeleteButton />
+    </>
+  );
+};
+
+// 조건부 행 액션 컴포넌트 (Edit, Show, Delete 설정에 따라 버튼 표시)
+const RowActions = ({ hasEdit = false, hasShow = false, hasDelete = false }: { hasEdit?: boolean; hasShow?: boolean; hasDelete?: boolean }) => {
+  // 아무 액션도 없으면 아무것도 렌더링하지 않음
+  if (!hasEdit && !hasShow && !hasDelete) {
     return null;
   }
   
@@ -43,6 +60,7 @@ const RowActionsWithoutDelete = ({ hasEdit = false, hasShow = false }: { hasEdit
     <>
       {hasEdit && <EditButton />}
       {hasShow && <ShowButton />}
+      {hasDelete && <DeleteButton />}
     </>
   );
 };
@@ -79,21 +97,23 @@ const guessFields = (records: any[]) => {
   return fields;
 };
 
-// 조건부 Datagrid 컴포넌트 (벌크 삭제 기능 제거, 조건부 액션 버튼)
-const DatagridWithoutDelete: React.FC<{ 
+// 조건부 Datagrid 컴포넌트 (삭제 기능 옵션 포함)
+const ConditionalDatagrid: React.FC<{ 
   children?: React.ReactNode; 
   hasEdit?: boolean; 
   hasShow?: boolean; 
-}> = ({ children, hasEdit = false, hasShow = false }) => {
+  hasDelete?: boolean;
+  hasBulkDelete?: boolean;
+}> = ({ children, hasEdit = false, hasShow = false, hasDelete = false, hasBulkDelete = false }) => {
   const { data } = useListContext();
   
   if (children) {
     return (
       <Datagrid
-        bulkActionButtons={false} // 벌크 액션 버튼 완전히 제거
+        bulkActionButtons={<BulkActionButtons hasBulkDelete={hasBulkDelete} />}
       >
         {children}
-        <RowActionsWithoutDelete hasEdit={hasEdit} hasShow={hasShow} />
+        <RowActions hasEdit={hasEdit} hasShow={hasShow} hasDelete={hasDelete} />
       </Datagrid>
     );
   }
@@ -102,10 +122,10 @@ const DatagridWithoutDelete: React.FC<{
   
   return (
     <Datagrid
-      bulkActionButtons={false} // 벌크 액션 버튼 완전히 제거
+      bulkActionButtons={<BulkActionButtons hasBulkDelete={hasBulkDelete} />}
     >
       {fields}
-      <RowActionsWithoutDelete hasEdit={hasEdit} hasShow={hasShow} />
+      <RowActions hasEdit={hasEdit} hasShow={hasShow} hasDelete={hasDelete} />
     </Datagrid>
   );
 };
@@ -114,9 +134,11 @@ interface ListGuesserProps {
   resource?: string;
   children?: React.ReactNode;
   filters?: React.ReactElement[];
-  hasEdit?: boolean;    // Edit 버튼 표시 여부
-  hasShow?: boolean;    // Show 버튼 표시 여부
-  hasCreate?: boolean;  // Create 버튼 표시 여부
+  hasEdit?: boolean;       // Edit 버튼 표시 여부
+  hasShow?: boolean;       // Show 버튼 표시 여부
+  hasDelete?: boolean;     // Delete 버튼 표시 여부 (기본값: false)
+  hasCreate?: boolean;     // Create 버튼 표시 여부
+  hasBulkDelete?: boolean; // Bulk Delete 버튼 표시 여부 (기본값: false)
   checkPermissions?: boolean;  // 권한 체크 여부 (기본값: permissions 포함 리소스는 자동 활성화)
   [key: string]: any;
 }
@@ -168,13 +190,15 @@ const usePermissionCheck = (resource: string, enabled: boolean = true) => {
   return hasPermission;
 };
 
-// 삭제 기능이 제거된 ListGuesser 컴포넌트
+// 조건부 삭제 기능을 포함한 ListGuesser 컴포넌트
 const ListGuesser: React.FC<ListGuesserProps> = ({ 
   children, 
   filters, 
   hasEdit = false, 
   hasShow = false, 
+  hasDelete = false,
   hasCreate = false,
+  hasBulkDelete = false,
   checkPermissions,
   resource,
   ...props 
@@ -212,9 +236,14 @@ const ListGuesser: React.FC<ListGuesserProps> = ({
       filters={hasFilters ? defaultFilters : undefined}
       {...props}
     >
-      <DatagridWithoutDelete hasEdit={hasEdit} hasShow={hasShow}>
+      <ConditionalDatagrid 
+        hasEdit={hasEdit} 
+        hasShow={hasShow} 
+        hasDelete={hasDelete}
+        hasBulkDelete={hasBulkDelete}
+      >
         {children}
-      </DatagridWithoutDelete>
+      </ConditionalDatagrid>
     </List>
   );
 };

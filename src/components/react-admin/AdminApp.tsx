@@ -33,8 +33,9 @@ import { SystemMenuList } from "./components/resources/MenuRedirects";
 import { Analytics as AnalyticsPage, SystemLogs } from "./components/pages/SystemPages";
 import { UserSessionList } from "./components/guesser/UserSessionList";
 import { UserList } from "./components/guesser/UserList";
-import { UserPermissions } from "./components/guesser/UserPermissions";
+
 import { CreateUserPermissions } from "./components/guesser/CreateUserPermissions";
+import { PermissionsListWithDelete, } from "./components/guesser/PermissionsList";
 
 
 
@@ -81,6 +82,7 @@ const AdminApp = () => (
           label: '규칙',
           menuGroup: 'users',
           menuGroupLabel: '사용자 관리',
+          BulkDeleteButton: false,
           icon: <Article />
         }}
         
@@ -88,7 +90,7 @@ const AdminApp = () => (
 
       <Resource
         name="privates/users/permissions"
-        list={ListGuesserEx}
+        list={PermissionsListWithDelete}
         create={CreateUserPermissions}
         options={{ 
           label: '권한',
@@ -100,7 +102,7 @@ const AdminApp = () => (
 
       <Resource
         name="privates/users/ratelimits"
-        list={ListGuesser}
+        list={ListGuesserEx}
         options={{ 
           label: '레이트 리밋',
           menuGroup: 'users',
