@@ -15,3 +15,8 @@ export const LAYOUT_CONSTANTS = {
   SIDEBAR_COLLAPSED_WIDTH: 56,
   MOBILE_BREAKPOINT: 'md' as const,
 } as const;
+
+// 메뉴 구분선을 위한 키워드
+export const GNB_GROUP_KEYWORKDS = [
+    "system."
+];
