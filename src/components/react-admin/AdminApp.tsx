@@ -33,6 +33,8 @@ import { SystemMenuList } from "./components/resources/MenuRedirects";
 import { Analytics as AnalyticsPage, SystemLogs } from "./components/pages/SystemPages";
 import { UserSessionList } from "./components/guesser/UserSessionList";
 import { UserList } from "./components/guesser/UserList";
+import { UserPermissions } from "./components/guesser/UserPermissions";
+import { CreateUserPermissions } from "./components/guesser/CreateUserPermissions";
 
 
 
@@ -86,7 +88,8 @@ const AdminApp = () => (
 
       <Resource
         name="privates/users/permissions"
-        list={ListGuesser}
+        list={ListGuesserEx}
+        create={CreateUserPermissions}
         options={{ 
           label: '권한',
           menuGroup: 'users',
@@ -157,9 +160,6 @@ const AdminApp = () => (
           icon: <ViewList />
         }}
       />
-
-      {/* 커스텀 라우트는 이제 필요 없음 - Resource로 자동 처리 */}
-
     </Admin>
   </BrowserRouter>
 );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   List,
   Datagrid,
@@ -17,6 +17,9 @@ import {
   useListContext,
   FunctionField,
   TextInput,
+  useDataProvider,
+  useNotify,
+  Loading,
 } from 'react-admin';
 
 // 삭제 기능이 제거된 커스텀 액션 컴포넌트
@@ -114,8 +117,56 @@ interface ListGuesserProps {
   hasEdit?: boolean;    // Edit 버튼 표시 여부
   hasShow?: boolean;    // Show 버튼 표시 여부
   hasCreate?: boolean;  // Create 버튼 표시 여부
+  checkPermissions?: boolean;  // 권한 체크 여부 (기본값: permissions 포함 리소스는 자동 활성화)
   [key: string]: any;
 }
+
+// 권한 체크 훅
+const usePermissionCheck = (resource: string, enabled: boolean = true) => {
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const dataProvider = useDataProvider();
+  const notify = useNotify();
+
+  useEffect(() => {
+    if (!enabled) {
+      setHasPermission(true);
+      return;
+    }
+
+    const checkPermission = async () => {
+      try {
+        // 권한 리소스가 아닌 경우 바로 허용
+        if (!resource.includes('permissions')) {
+          setHasPermission(true);
+          return;
+        }
+
+        // permissions 리소스인 경우 실제 데이터 확인
+        const response = await dataProvider.getList(resource, {
+          pagination: { page: 1, perPage: 1 },
+          sort: { field: 'id', order: 'ASC' },
+          filter: {},
+        });
+
+        // 데이터가 있으면 권한 있음, 없으면 권한 없음
+        setHasPermission(response.data && response.data.length > 0);
+      } catch (error: any) {
+        console.warn(`Permission check failed for ${resource}:`, error);
+        // 403, 401 에러인 경우 권한 없음으로 처리
+        if (error.status === 403 || error.status === 401) {
+          setHasPermission(false);
+        } else {
+          // 네트워크 오류 등 다른 에러는 허용
+          setHasPermission(true);
+        }
+      }
+    };
+
+    checkPermission();
+  }, [resource, enabled, dataProvider]);
+
+  return hasPermission;
+};
 
 // 삭제 기능이 제거된 ListGuesser 컴포넌트
 const ListGuesser: React.FC<ListGuesserProps> = ({ 
@@ -124,8 +175,24 @@ const ListGuesser: React.FC<ListGuesserProps> = ({
   hasEdit = false, 
   hasShow = false, 
   hasCreate = false,
+  checkPermissions,
+  resource,
   ...props 
 }) => {
+  // permissions가 포함된 리소스는 자동으로 권한 체크 활성화
+  const shouldCheckPermissions = checkPermissions ?? (resource?.includes('permissions') || false);
+  const hasPermission = usePermissionCheck(resource || '', shouldCheckPermissions);
+
+  // 권한 체크가 활성화되어 있고 아직 체크 중인 경우
+  if (shouldCheckPermissions && hasPermission === null) {
+    return <Loading />;
+  }
+
+  // 권한 체크가 활성화되어 있고 권한이 없는 경우
+  if (shouldCheckPermissions && hasPermission === false) {
+    return null; // 아무것도 렌더링하지 않음
+  }
+
   // 기본 검색 필터 (filters가 제공되지 않은 경우)
   const defaultFilters = filters || [
     <TextInput
@@ -140,6 +207,7 @@ const ListGuesser: React.FC<ListGuesserProps> = ({
 
   return (
     <List 
+      resource={resource}
       actions={<ListActionsWithoutDelete hasFilters={hasFilters} hasCreate={hasCreate} />} 
       filters={hasFilters ? defaultFilters : undefined}
       {...props}
