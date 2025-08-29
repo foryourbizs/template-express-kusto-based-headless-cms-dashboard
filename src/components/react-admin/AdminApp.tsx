@@ -29,6 +29,7 @@ import { Settings as SettingsPage } from "./components/pages/SettingsSimple";
 import { SystemMenuList } from "./components/resources/MenuRedirects";
 import { Analytics as AnalyticsPage, SystemLogs } from "./components/pages/SystemPages";
 import { UserSessionList } from "./components/guesser/UserSessionList";
+import { UserList } from "./components/guesser/UserList";
 
 
 
@@ -48,7 +49,7 @@ const AdminApp = () => (
 
       <Resource
         name="privates/users"
-        list={ListGuesser}
+        list={UserList}
         edit={EditGuesser}
         options={{ 
           label: '사용자',

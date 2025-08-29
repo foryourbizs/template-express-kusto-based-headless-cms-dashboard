@@ -6,10 +6,20 @@ import {
   DateField,
   NumberField,
   BooleanField,
+  TopToolbar,
+  ExportButton,
+  RefreshButton,
 } from "react-admin";
 
+const UserListActions = () => (
+  <TopToolbar>
+    <RefreshButton />
+    <ExportButton />
+  </TopToolbar>
+);
+
 export const UserList = () => (
-  <List>
+  <List actions={<UserListActions />}>
     <Datagrid rowClick="edit">
       <TextField source="id" label="ID" />
       <TextField source="username" label="사용자명" />
