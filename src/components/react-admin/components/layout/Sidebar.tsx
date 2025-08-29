@@ -23,7 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useResourceDefinitions, useRedirect, useNotify } from 'react-admin';
-import { DRAWER_WIDTH } from '../../constants/layout';
+import { DRAWER_WIDTH, GNB_GROUP_KEYWORKDS } from '../../constants/layout';
 
 interface SidebarProps {
   open: boolean;
@@ -77,52 +77,73 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       },
     ];
 
-    // 등록된 리소스들을 메뉴에 추가
+    // 일반 리소스들 (그룹 키워드에 해당하지 않는 것들)
+    const regularResources: string[] = [];
+    const groupedResources: { [key: string]: string[] } = {};
+
+    // 리소스들을 그룹별로 분류
     Object.keys(resourceDefinitions).forEach((resourceName) => {
       const resource = resourceDefinitions[resourceName];
       
-      // list 페이지가 있는 리소스만 메뉴에 추가
+      // list 페이지가 있는 리소스만 처리
       if (resource.hasList) {
-        // 시스템 관련 리소스는 나중에 따로 그룹화
-        if (!resourceName.startsWith('system.')) {
-          items.push({
-            id: resourceName,
-            label: resource.options?.label || resourceName,
-            icon: resourceIcons[resourceName] || resourceIcons.default,
-            path: `/${resourceName}`,
-            resourceName: resourceName,
-          });
+        // 그룹 키워드 확인
+        const matchedGroup = GNB_GROUP_KEYWORKDS.find(keyword => 
+          resourceName.startsWith(keyword)
+        );
+
+        if (matchedGroup) {
+          // 그룹에 속하는 리소스
+          if (!groupedResources[matchedGroup]) {
+            groupedResources[matchedGroup] = [];
+          }
+          groupedResources[matchedGroup].push(resourceName);
+        } else {
+          // 일반 리소스
+          regularResources.push(resourceName);
         }
       }
     });
 
-    // 시스템 관련 메뉴 그룹 추가
-    const systemResources = Object.keys(resourceDefinitions).filter(name => 
-      name.startsWith('system.') && resourceDefinitions[name].hasList
-    );
-
-    if (systemResources.length > 0) {
-      // 구분선 추가
+    // 일반 리소스들을 메뉴에 추가
+    regularResources.forEach((resourceName) => {
+      const resource = resourceDefinitions[resourceName];
       items.push({
-        id: 'divider-system',
-        label: '',
-        icon: null,
-        path: '',
-        divider: true,
+        id: resourceName,
+        label: resource.options?.label || resourceName,
+        icon: resourceIcons[resourceName] || resourceIcons.default,
+        path: `/${resourceName}`,
+        resourceName: resourceName,
       });
+    });
 
-      // 시스템 메뉴들 추가
-      systemResources.forEach((resourceName) => {
-        const resource = resourceDefinitions[resourceName];
+    // 그룹화된 리소스들을 메뉴에 추가
+    Object.keys(groupedResources).forEach((groupKeyword) => {
+      const groupResources = groupedResources[groupKeyword];
+      
+      if (groupResources.length > 0) {
+        // 구분선 추가
         items.push({
-          id: resourceName,
-          label: resource.options?.label || resourceName.replace('system.', ''),
-          icon: resourceIcons[resourceName] || resourceIcons.default,
-          path: `/${resourceName}`,
-          resourceName: resourceName,
+          id: `divider-${groupKeyword}`,
+          label: '',
+          icon: null,
+          path: '',
+          divider: true,
         });
-      });
-    }
+
+        // 그룹 내 리소스들 추가
+        groupResources.forEach((resourceName) => {
+          const resource = resourceDefinitions[resourceName];
+          items.push({
+            id: resourceName,
+            label: resource.options?.label || resourceName.replace(groupKeyword, ''),
+            icon: resourceIcons[resourceName] || resourceIcons.default,
+            path: `/${resourceName}`,
+            resourceName: resourceName,
+          });
+        });
+      }
+    });
 
     return items;
   };

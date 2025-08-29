@@ -18,5 +18,7 @@ export const LAYOUT_CONSTANTS = {
 
 // 메뉴 구분선을 위한 키워드
 export const GNB_GROUP_KEYWORKDS = [
-    "system."
+    "system.",
+    "admin.",
+    "user."
 ];
