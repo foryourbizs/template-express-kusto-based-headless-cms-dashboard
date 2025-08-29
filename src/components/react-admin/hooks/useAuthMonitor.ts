@@ -21,12 +21,12 @@ export const useAuthMonitor = () => {
   const authProvider = useAuthProvider();
   const logout = useLogout();
 
-  // 인증 상태 확인 함수
+  // 인증 상태 확인 함수 (로컬 토큰만 체크, 서버 호출 없음)
   const checkAuthStatus = useCallback(async () => {
     if (!authProvider) return;
 
     try {
-      // 1. 토큰 만료시간 확인
+      // 1. 토큰 만료시간 확인 (로컬에서만)
       const { accessToken, refreshToken } = getTokenTimeRemaining();
       
       // Refresh Token이 만료된 경우
@@ -40,10 +40,18 @@ export const useAuthMonitor = () => {
         return;
       }
 
-      // 2. 서버에서 인증 상태 확인
-      await authProvider.checkAuth({});
-      
-      // 인증 성공 - 상태 초기화
+      // Access Token이 만료된 경우 (하지만 Refresh Token은 유효)
+      if (accessToken.expired) {
+        setState(prev => ({ 
+          ...prev, 
+          isAuthExpired: false, 
+          isReauthModalOpen: false,
+          timeRemaining: 0 
+        }));
+        return;
+      }
+
+      // 토큰이 유효한 경우
       setState(prev => ({ 
         ...prev, 
         isAuthExpired: false, 
@@ -54,15 +62,13 @@ export const useAuthMonitor = () => {
     } catch (error: any) {
       console.error('Auth status check failed:', error);
       
-      // 401 에러이거나 인증 실패인 경우
-      if (error?.status === 401 || error?.message?.includes('Authentication')) {
-        setState(prev => ({ 
-          ...prev, 
-          isAuthExpired: true, 
-          isReauthModalOpen: true,
-          timeRemaining: 0 
-        }));
-      }
+      // 로컬 토큰 문제인 경우
+      setState(prev => ({ 
+        ...prev, 
+        isAuthExpired: true, 
+        isReauthModalOpen: true,
+        timeRemaining: 0 
+      }));
     }
   }, [authProvider]);
 
@@ -86,9 +92,9 @@ export const useAuthMonitor = () => {
     logout();
   }, [logout]);
 
-  // 정기적인 인증 상태 확인 (5분마다)
+  // 정기적인 인증 상태 확인 (10분마다로 줄임)
   useEffect(() => {
-    const interval = setInterval(checkAuthStatus, 5 * 60 * 1000); // 5분
+    const interval = setInterval(checkAuthStatus, 10 * 60 * 1000); // 10분
     
     // 초기 확인
     checkAuthStatus();

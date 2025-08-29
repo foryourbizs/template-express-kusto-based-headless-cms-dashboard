@@ -16,6 +16,11 @@ const api = {
 };
 
 
+// 캐시된 인증 확인 (중복 요청 방지)
+let lastCheckTime = 0;
+let lastCheckResult: Promise<void> | null = null;
+const CHECK_CACHE_DURATION = 30 * 1000; // 30초
+
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
         // 현재 페이지 정보 저장 (로그인 페이지가 아닌 경우에만)
@@ -121,6 +126,13 @@ export const authProvider: AuthProvider = {
         return Promise.resolve();
     },
     checkAuth: async () => {
+        const now = Date.now();
+        
+        // 최근 30초 이내에 체크했다면 캐시된 결과 반환
+        if (lastCheckResult && (now - lastCheckTime) < CHECK_CACHE_DURATION) {
+            return lastCheckResult;
+        }
+
         const user = localStorage.getItem("user");
         const accessToken = localStorage.getItem("accessToken");
         
@@ -131,29 +143,51 @@ export const authProvider: AuthProvider = {
             if (currentPath !== '/login' && !currentPath.includes('/login')) {
                 localStorage.setItem("redirectAfterLogin", currentPath);
             }
+            lastCheckTime = 0;
+            lastCheckResult = null;
             return Promise.reject({ message: 'No authentication token found' });
         }
 
-        try {
-            // 서버에서 인증 상태 확인
-            const response = await requester(api.check, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                },
-            });
+        // 새로운 체크 시작
+        lastCheckTime = now;
+        lastCheckResult = (async () => {
+            try {
+                // 서버에서 인증 상태 확인
+                const response = await requester(api.check, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                });
 
-            if (response && response.status === 200) {
-                // 인증 성공 - 사용자 정보 업데이트
-                const { data } = response.body;
-                const updatedUser = {
-                    id: data.id,
-                    ...data.attributes
-                };
-                localStorage.setItem("user", JSON.stringify(updatedUser));
-                return Promise.resolve();
-            } else {
-                // 인증 실패 - 현재 페이지 정보 저장
+                if (response && response.status === 200) {
+                    // 인증 성공 - 사용자 정보 업데이트
+                    const { data } = response.body;
+                    const updatedUser = {
+                        id: data.id,
+                        ...data.attributes
+                    };
+                    localStorage.setItem("user", JSON.stringify(updatedUser));
+                    return;
+                } else {
+                    // 인증 실패 - 현재 페이지 정보 저장
+                    const currentPath = window.location.pathname + window.location.search + window.location.hash;
+                    if (currentPath !== '/login' && !currentPath.includes('/login')) {
+                        localStorage.setItem("redirectAfterLogin", currentPath);
+                    }
+                    
+                    localStorage.removeItem("user");
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
+                    localStorage.removeItem("accessTokenExpiresAt");
+                    localStorage.removeItem("refreshTokenExpiresAt");
+                    lastCheckTime = 0;
+                    lastCheckResult = null;
+                    throw new Error('Authentication failed');
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                // 네트워크 오류나 401 등의 경우 인증 실패로 처리
                 const currentPath = window.location.pathname + window.location.search + window.location.hash;
                 if (currentPath !== '/login' && !currentPath.includes('/login')) {
                     localStorage.setItem("redirectAfterLogin", currentPath);
@@ -164,23 +198,13 @@ export const authProvider: AuthProvider = {
                 localStorage.removeItem("refreshToken");
                 localStorage.removeItem("accessTokenExpiresAt");
                 localStorage.removeItem("refreshTokenExpiresAt");
-                return Promise.reject({ message: 'Authentication failed', status: response?.status });
+                lastCheckTime = 0;
+                lastCheckResult = null;
+                throw new Error('Authentication check failed');
             }
-        } catch (error) {
-            console.error('Auth check error:', error);
-            // 네트워크 오류나 401 등의 경우 인증 실패로 처리
-            const currentPath = window.location.pathname + window.location.search + window.location.hash;
-            if (currentPath !== '/login' && !currentPath.includes('/login')) {
-                localStorage.setItem("redirectAfterLogin", currentPath);
-            }
-            
-            localStorage.removeItem("user");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            localStorage.removeItem("accessTokenExpiresAt");
-            localStorage.removeItem("refreshTokenExpiresAt");
-            return Promise.reject({ message: 'Authentication check failed', error });
-        }
+        })();
+
+        return lastCheckResult;
     },
     getPermissions: () => {
         return Promise.resolve(undefined);

@@ -10,6 +10,9 @@ import {
   Admin,
   CustomRoutes
 } from "react-admin";
+
+import ListGuesserEx from './components/guesser/ListGuesser';
+
 import { BrowserRouter } from "react-router-dom";
 import {
   People,
@@ -71,7 +74,7 @@ const AdminApp = () => (
       />
       <Resource
         name="privates/users/roles"
-        list={ListGuesser}
+        list={ListGuesserEx}
         options={{ 
           label: '규칙',
           menuGroup: 'users',
