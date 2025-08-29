@@ -2,12 +2,16 @@ import _ from 'lodash';
 import pluralize from "pluralize";
 import { CreateParams, DataProvider, DeleteManyParams, DeleteParams, GetListParams, GetManyParams, GetManyReferenceParams, GetOneParams, UpdateManyParams, UpdateParams } from "react-admin";
 import { includeAndConvert } from './util';
+import { authEventEmitter } from '../utils/authEvents';
 
 // 토큰 자동 갱신을 위한 변수
 let isRefreshing = false;
 let refreshPromise: Promise<any> | null = null;
 
 export const requester = async (url: string, options: any = {}) => {
+  // 요청 로깅 추가
+  console.log(`🔄 API Request: ${options.method || 'GET'} ${url}`);
+  
   options.credentials = "include";
   
   // 토큰 만료 체크 및 자동 갱신
@@ -96,7 +100,14 @@ export const requester = async (url: string, options: any = {}) => {
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      // window.location.href = "/login";
+      localStorage.removeItem("accessTokenExpiresAt");
+      localStorage.removeItem("refreshTokenExpiresAt");
+      
+      // 전역 인증 에러 이벤트 발생
+      window.dispatchEvent(new CustomEvent('auth-error', { 
+        detail: { status: 401, message: 'Authentication expired' } 
+      }));
+      
       return Promise.reject({
         message: "인증이 만료되었습니다. 다시 로그인해주세요.",
         status: 401
@@ -110,7 +121,14 @@ export const requester = async (url: string, options: any = {}) => {
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-    //   window.location.href = "/login";
+      localStorage.removeItem("accessTokenExpiresAt");
+      localStorage.removeItem("refreshTokenExpiresAt");
+      
+      // 전역 인증 에러 이벤트 발생
+      window.dispatchEvent(new CustomEvent('auth-error', { 
+        detail: { status: 401, message: 'Authentication expired' } 
+      }));
+      
       Promise.resolve();
     }
 
@@ -212,6 +230,8 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
 
   return {
     getList: async (resource: string, params: GetListParams) => {
+      console.log(`📋 getList called for resource: ${resource}`, params);
+      
       const { page, perPage } = params.pagination ? params.pagination : { page: 1, perPage: 10 };
 
       const searchParams = new URLSearchParams();

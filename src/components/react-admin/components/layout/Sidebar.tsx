@@ -14,16 +14,11 @@ import {
 } from '@mui/material';
 import {
   Dashboard,
-  People,
-  Article,
-  Comment,
-  Settings,
-  Analytics,
   ViewList,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useResourceDefinitions, useRedirect, useNotify } from 'react-admin';
-import { DRAWER_WIDTH, GNB_GROUP_KEYWORKDS } from '../../constants/layout';
+import { useResourceDefinitions, useRedirect } from 'react-admin';
+import { DRAWER_WIDTH } from '../../constants/layout';
 
 interface SidebarProps {
   open: boolean;
@@ -37,21 +32,14 @@ interface MenuItem {
   icon: React.ReactNode;
   path: string;
   resourceName?: string;
-  divider?: boolean;
 }
 
-// 리소스별 아이콘 매핑
-const resourceIcons: Record<string, React.ReactNode> = {
-  users: <People />,
-  'privates/users': <People />,
-  posts: <Article />,
-  comments: <Comment />,
-  'system.analytics': <Analytics />,
-  'system.settings': <Settings />,
-  'system.logs': <ViewList />,
-  // 기본 아이콘
-  default: <ViewList />,
-};
+interface MenuGroup {
+  id: string;
+  label: string;
+  items: MenuItem[];
+  order: number;
+}
 
 /**
  * 사이드바 컴포넌트
@@ -63,12 +51,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const location = useLocation();
   const resourceDefinitions = useResourceDefinitions();
   const redirect = useRedirect();
-  const notify = useNotify();
 
-  // React Admin에 등록된 리소스들을 기반으로 메뉴 생성
-  const generateMenuItems = (): MenuItem[] => {
-    const items: MenuItem[] = [
-      // 대시보드는 항상 첫 번째
+  // 리소스를 메뉴 그룹별로 정리
+  const organizeMenuItems = (): { ungrouped: MenuItem[]; groups: MenuGroup[] } => {
+    const ungrouped: MenuItem[] = [
       {
         id: 'dashboard',
         label: '대시보드',
@@ -77,114 +63,124 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       },
     ];
 
-    // 일반 리소스들 (그룹 키워드에 해당하지 않는 것들)
-    const regularResources: string[] = [];
-    const groupedResources: { [key: string]: string[] } = {};
+    const groupMap = new Map<string, { label: string; items: MenuItem[]; order: number }>();
 
-    // 리소스들을 그룹별로 분류
-    Object.keys(resourceDefinitions).forEach((resourceName) => {
-      const resource = resourceDefinitions[resourceName];
-      
-      // list 페이지가 있는 리소스만 처리
-      if (resource.hasList) {
-        // 그룹 키워드 확인
-        const matchedGroup = GNB_GROUP_KEYWORKDS.find(keyword => 
-          resourceName.startsWith(keyword)
-        );
+    // 리소스들을 순회하며 그룹별로 분류
+    Object.entries(resourceDefinitions).forEach(([resourceName, resource]) => {
+      if (!resource.hasList) return;
 
-        if (matchedGroup) {
-          // 그룹에 속하는 리소스
-          if (!groupedResources[matchedGroup]) {
-            groupedResources[matchedGroup] = [];
-          }
-          groupedResources[matchedGroup].push(resourceName);
-        } else {
-          // 일반 리소스
-          regularResources.push(resourceName);
-        }
-      }
-    });
+      const options = resource.options as any;
+      const menuGroup = options?.menuGroup as string;
+      const menuGroupLabel = options?.menuGroupLabel as string;
+      const icon = options?.icon || <ViewList />;
 
-    // 일반 리소스들을 메뉴에 추가
-    regularResources.forEach((resourceName) => {
-      const resource = resourceDefinitions[resourceName];
-      items.push({
+      const menuItem: MenuItem = {
         id: resourceName,
-        label: resource.options?.label || resourceName,
-        icon: resourceIcons[resourceName] || resourceIcons.default,
+        label: options?.label || resourceName,
+        icon: icon,
         path: `/${resourceName}`,
-        resourceName: resourceName,
-      });
-    });
+        resourceName,
+      };
 
-    // 그룹화된 리소스들을 메뉴에 추가
-    Object.keys(groupedResources).forEach((groupKeyword) => {
-      const groupResources = groupedResources[groupKeyword];
-      
-      if (groupResources.length > 0) {
-        // 구분선 추가
-        items.push({
-          id: `divider-${groupKeyword}`,
-          label: '',
-          icon: null,
-          path: '',
-          divider: true,
-        });
-
-        // 그룹 내 리소스들 추가
-        groupResources.forEach((resourceName) => {
-          const resource = resourceDefinitions[resourceName];
-          items.push({
-            id: resourceName,
-            label: resource.options?.label || resourceName.replace(groupKeyword, ''),
-            icon: resourceIcons[resourceName] || resourceIcons.default,
-            path: `/${resourceName}`,
-            resourceName: resourceName,
+      if (menuGroup && menuGroupLabel) {
+        // 그룹이 있는 경우
+        if (!groupMap.has(menuGroup)) {
+          // 그룹 순서를 동적으로 결정 (users=1, system=2, 기타=999)
+          const order = menuGroup === 'users' ? 1 : menuGroup === 'system' ? 2 : 999;
+          groupMap.set(menuGroup, {
+            label: menuGroupLabel,
+            items: [],
+            order,
           });
-        });
+        }
+        groupMap.get(menuGroup)!.items.push(menuItem);
+      } else {
+        // 그룹이 없는 경우
+        ungrouped.push(menuItem);
       }
     });
 
-    return items;
+    // 그룹을 정렬하여 반환
+    const groups: MenuGroup[] = Array.from(groupMap.entries())
+      .map(([groupId, groupData]) => ({
+        id: groupId,
+        label: groupData.label,
+        items: groupData.items.sort((a, b) => a.label.localeCompare(b.label)),
+        order: groupData.order,
+      }))
+      .sort((a, b) => a.order - b.order);
+
+    return { ungrouped, groups };
   };
 
-  const menuItems = generateMenuItems();
+  const { ungrouped, groups } = organizeMenuItems();
 
-  // React Admin 표준 방식의 간단한 네비게이션
+  // 네비게이션 처리
   const handleNavigation = (path: string, resourceName?: string) => {
-    if (isMobile) {
-      onClose();
-    }
+    if (isMobile) onClose();
 
-    // 대시보드인 경우
     if (path === '/') {
       redirect('/');
-      // notify('대시보드로 이동', { type: 'info' });
-      return;
-    }
-
-    // 커스텀 페이지인 경우 (환경설정 등)
-    if (path.startsWith('/system.')) {
+    } else if (path.startsWith('/system.')) {
       navigate(path);
-      return;
-    }
-
-    // 리소스 페이지인 경우 - React Admin이 자동으로 에러 처리
-    if (resourceName) {
+    } else if (resourceName) {
       redirect('list', resourceName);
-      // notify(`${resourceName} 페이지로 이동`, { type: 'info' });
     } else {
-      // 기타 경로는 navigate 사용
       navigate(path);
     }
   };
 
-  const isSelected = (path: string) => {
+  // 선택 상태 확인
+  const isSelected = (path: string): boolean => {
     if (path === '/') {
       return location.pathname === '/' || location.pathname === '';
     }
-    return location.pathname.startsWith(path);
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
+
+  // 메뉴 아이템 렌더링
+  const renderMenuItem = (item: MenuItem) => (
+    <ListItem key={item.id} disablePadding>
+      <ListItemButton
+        onClick={() => handleNavigation(item.path, item.resourceName)}
+        selected={isSelected(item.path)}
+        sx={{
+          mx: 1,
+          borderRadius: 1,
+          '&.Mui-selected': {
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.primary.contrastText,
+            '& .MuiListItemIcon-root': {
+              color: theme.palette.primary.contrastText,
+            },
+            '&:hover': {
+              backgroundColor: theme.palette.primary.dark,
+            },
+          },
+          '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+          },
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            color: isSelected(item.path)
+              ? theme.palette.primary.contrastText
+              : theme.palette.text.secondary,
+          }}
+        >
+          {item.icon}
+        </ListItemIcon>
+        <ListItemText
+          primary={item.label}
+          primaryTypographyProps={{
+            fontSize: '0.875rem',
+            fontWeight: isSelected(item.path) ? 600 : 400,
+          }}
+        />
+      </ListItemButton>
+    </ListItem>
+  );
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto', height: '100%' }}>
@@ -207,52 +203,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
 
       {/* 메뉴 리스트 */}
       <List sx={{ pt: 1 }}>
-        {menuItems.map((item) => (
-          <React.Fragment key={item.id}>
-            {item.divider ? (
-              <Divider sx={{ my: 1, mx: 2 }} />
-            ) : (
-              <ListItem disablePadding>
-                <ListItemButton
-                  onClick={() => handleNavigation(item.path, item.resourceName)}
-                  selected={isSelected(item.path)}
-                  sx={{
-                    mx: 1,
-                    borderRadius: 1,
-                    '&.Mui-selected': {
-                      backgroundColor: theme.palette.primary.main,
-                      color: theme.palette.primary.contrastText,
-                      '& .MuiListItemIcon-root': {
-                        color: theme.palette.primary.contrastText,
-                      },
-                      '&:hover': {
-                        backgroundColor: theme.palette.primary.dark,
-                      },
-                    },
-                    '&:hover': {
-                      backgroundColor: theme.palette.action.hover,
-                    },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: isSelected(item.path)
-                        ? theme.palette.primary.contrastText
-                        : theme.palette.text.secondary,
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    primaryTypographyProps={{
-                      fontSize: '0.875rem',
-                      fontWeight: isSelected(item.path) ? 600 : 400,
-                    }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            )}
+        {/* 그룹화되지 않은 메뉴들 (대시보드 등) */}
+        {ungrouped.map(renderMenuItem)}
+
+        {/* 그룹화된 메뉴들 */}
+        {groups.map((group) => (
+          <React.Fragment key={group.id}>
+            <Divider sx={{ my: 2, mx: 2 }} />
+            <Typography
+              variant="subtitle2"
+              sx={{
+                px: 2,
+                py: 1,
+                color: theme.palette.text.secondary,
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {group.label}
+            </Typography>
+            {group.items.map(renderMenuItem)}
           </React.Fragment>
         ))}
       </List>

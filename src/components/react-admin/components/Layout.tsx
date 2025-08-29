@@ -6,6 +6,8 @@ import { Sidebar } from './layout/Sidebar';
 import { Main } from './layout/Main';
 import { Footer } from './layout/Footer';
 import { LayoutProvider, useLayout } from './layout/LayoutProvider';
+import { ReauthModal } from './ReauthModal';
+import { useAuthMonitor } from '../hooks/useAuthMonitor';
 
 /**
  * 커스텀 레이아웃 컴포넌트
@@ -20,6 +22,13 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
   const dataProvider = useDataProvider();
   const notify = useNotify();
   const refresh = useRefresh();
+
+  // 인증 모니터링
+  const {
+    isReauthModalOpen,
+    closeReauthModal,
+    forceLogout,
+  } = useAuthMonitor();
 
   return (
     <Box sx={{ 
@@ -51,6 +60,13 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
       
       {/* 푸터 */}
       <Footer />
+      
+      {/* 재인증 모달 */}
+      <ReauthModal
+        open={isReauthModalOpen}
+        onClose={closeReauthModal}
+        onForceLogout={forceLogout}
+      />
     </Box>
   );
 };

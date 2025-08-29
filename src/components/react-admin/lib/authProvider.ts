@@ -12,6 +12,7 @@ const api = {
     signin: `${url}/users/sign/in`,
     signout: `${url}/users/sign/out`,
     refresh: `${url}/users/sign/refresh`,
+    check: `${url}/users/me`
 };
 
 
@@ -101,10 +102,52 @@ export const authProvider: AuthProvider = {
         return Promise.resolve();
     },
     checkError: () => Promise.resolve(),
-    checkAuth: () => {
+    checkAuth: async () => {
         const user = localStorage.getItem("user");
         const accessToken = localStorage.getItem("accessToken");
-        return user && accessToken ? Promise.resolve() : Promise.reject();
+        
+        // 로컬 토큰이 없으면 바로 인증 실패
+        if (!user || !accessToken) {
+            return Promise.reject({ message: 'No authentication token found' });
+        }
+
+        try {
+            // 서버에서 인증 상태 확인
+            const response = await requester(api.check, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                },
+            });
+
+            if (response && response.status === 200) {
+                // 인증 성공 - 사용자 정보 업데이트
+                const { data } = response.body;
+                const updatedUser = {
+                    id: data.id,
+                    ...data.attributes
+                };
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                return Promise.resolve();
+            } else {
+                // 인증 실패
+                localStorage.removeItem("user");
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                localStorage.removeItem("accessTokenExpiresAt");
+                localStorage.removeItem("refreshTokenExpiresAt");
+                return Promise.reject({ message: 'Authentication failed', status: response?.status });
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+            // 네트워크 오류나 401 등의 경우 인증 실패로 처리
+            localStorage.removeItem("user");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("accessTokenExpiresAt");
+            localStorage.removeItem("refreshTokenExpiresAt");
+            return Promise.reject({ message: 'Authentication check failed', error });
+        }
     },
     getPermissions: () => {
         return Promise.resolve(undefined);

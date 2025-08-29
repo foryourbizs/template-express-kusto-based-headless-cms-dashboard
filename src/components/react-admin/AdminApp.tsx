@@ -11,6 +11,13 @@ import {
   CustomRoutes
 } from "react-admin";
 import { BrowserRouter } from "react-router-dom";
+import {
+  People,
+  ViewList,
+  Article,
+  Settings,
+  Analytics,
+} from '@mui/icons-material';
 
 import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";
@@ -18,9 +25,10 @@ import LoginPage from "./components/LoginPage";
 import { simpleGrayTheme } from "./config/theme";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
-import { Settings } from "./components/pages/SettingsSimple";
+import { Settings as SettingsPage } from "./components/pages/SettingsSimple";
 import { SystemMenuList } from "./components/resources/MenuRedirects";
-import { Analytics, SystemLogs } from "./components/pages/SystemPages";
+import { Analytics as AnalyticsPage, SystemLogs } from "./components/pages/SystemPages";
+import { UserSessionList } from "./components/guesser/UserSessionList";
 
 
 
@@ -42,32 +50,62 @@ const AdminApp = () => (
         name="privates/users"
         list={ListGuesser}
         edit={EditGuesser}
-        options={{ label: '사용자' }}
+        options={{ 
+          label: '사용자',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <People />
+        }}
       />
 
       <Resource
         name="privates/users/user-sessions"
-        list={ListGuesser}
-        options={{ label: '세션' }}
+        list={UserSessionList}
+        options={{ 
+          label: '세션',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <ViewList />
+        }}
       />
+
+      <Resource
+        name="privates/users/audits"
+        list={ListGuesser}
+        options={{ 
+          label: '사용자 로그',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+      />
+
+
+
 
       {/* posts와 comments는 서버에 없으므로 제거 */}
 
       {/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
       <Resource
         name="system.settings"
-        list={Settings}
+        list={SettingsPage}
         options={{
           label: '환경설정',
+          menuGroup: 'system',
+          menuGroupLabel: '시스템',
+          icon: <Settings />
         }}
       />
 
       {/* 가상 Resource - 분석 페이지 */}
       <Resource
         name="system.analytics"
-        list={Analytics}
+        list={AnalyticsPage}
         options={{
           label: '데이터 분석',
+          menuGroup: 'system',
+          menuGroupLabel: '시스템',
+          icon: <Analytics />
         }}
       />
 
@@ -77,6 +115,9 @@ const AdminApp = () => (
         list={SystemLogs}
         options={{
           label: '시스템 로그',
+          menuGroup: 'system',
+          menuGroupLabel: '시스템',
+          icon: <ViewList />
         }}
       />
 
