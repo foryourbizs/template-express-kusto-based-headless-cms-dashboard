@@ -14,69 +14,35 @@ import {
   ExportButton,
   FilterButton,
   RefreshButton,
-  useResourceContext,
   useListContext,
   FunctionField,
   TextInput,
-  Filter,
 } from 'react-admin';
-import { TableHead, TableRow, TableCell } from '@mui/material';
-
-// 기본 필터 정의 (공통으로 사용할 수 있는 필터들)
-const getDefaultFilters = (data: any[]) => {
-  if (!data || data.length === 0) return [];
-
-  const firstRecord = data[0];
-  const filters = [];
-
-  for (const [key, value] of Object.entries(firstRecord)) {
-    if (key === 'id') continue; // ID는 필터에서 제외
-    
-    if (typeof value === 'string') {
-      if (value.includes('@')) {
-        // 이메일 필드
-        filters.push(
-          <TextInput
-            key={key}
-            label={key}
-            source={key}
-            placeholder={`${key} 검색...`}
-          />
-        );
-      } else {
-        // 일반 텍스트 필드
-        filters.push(
-          <TextInput
-            key={key}
-            label={key}
-            source={key}
-            placeholder={`${key} 검색...`}
-          />
-        );
-      }
-    }
-  }
-
-  return filters;
-};
 
 // 삭제 기능이 제거된 커스텀 액션 컴포넌트
-const ListActionsWithoutDelete = ({ hasFilters }: { hasFilters: boolean }) => (
+const ListActionsWithoutDelete = ({ hasFilters, hasCreate }: { hasFilters: boolean; hasCreate: boolean }) => (
   <TopToolbar>
     {hasFilters && <FilterButton />}
     <RefreshButton />
-    <CreateButton />
+    {hasCreate && <CreateButton />}
     <ExportButton />
   </TopToolbar>
 );
 
-// 삭제 기능이 제거된 커스텀 행 액션 컴포넌트
-const RowActionsWithoutDelete = () => (
-  <>
-    <EditButton />
-    <ShowButton />
-  </>
-);
+// 조건부 행 액션 컴포넌트 (Edit, Show 설정에 따라 버튼 표시)
+const RowActionsWithoutDelete = ({ hasEdit = false, hasShow = false }: { hasEdit?: boolean; hasShow?: boolean }) => {
+  // 둘 다 없으면 아무것도 렌더링하지 않음
+  if (!hasEdit && !hasShow) {
+    return null;
+  }
+  
+  return (
+    <>
+      {hasEdit && <EditButton />}
+      {hasShow && <ShowButton />}
+    </>
+  );
+};
 
 // 데이터를 기반으로 필드를 자동으로 추측하는 함수
 const guessFields = (records: any[]) => {
@@ -110,15 +76,21 @@ const guessFields = (records: any[]) => {
   return fields;
 };
 
-// 삭제 기능이 제거된 Datagrid 컴포넌트
-const DatagridWithoutDelete: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+// 조건부 Datagrid 컴포넌트 (벌크 삭제 기능 제거, 조건부 액션 버튼)
+const DatagridWithoutDelete: React.FC<{ 
+  children?: React.ReactNode; 
+  hasEdit?: boolean; 
+  hasShow?: boolean; 
+}> = ({ children, hasEdit = false, hasShow = false }) => {
   const { data } = useListContext();
   
   if (children) {
     return (
-      <Datagrid>
+      <Datagrid
+        bulkActionButtons={false} // 벌크 액션 버튼 완전히 제거
+      >
         {children}
-        <RowActionsWithoutDelete />
+        <RowActionsWithoutDelete hasEdit={hasEdit} hasShow={hasShow} />
       </Datagrid>
     );
   }
@@ -126,37 +98,12 @@ const DatagridWithoutDelete: React.FC<{ children?: React.ReactNode }> = ({ child
   const fields = guessFields(data || []);
   
   return (
-    <Datagrid>
+    <Datagrid
+      bulkActionButtons={false} // 벌크 액션 버튼 완전히 제거
+    >
       {fields}
-      <RowActionsWithoutDelete />
+      <RowActionsWithoutDelete hasEdit={hasEdit} hasShow={hasShow} />
     </Datagrid>
-  );
-};
-
-// 필터를 동적으로 생성하는 내부 컴포넌트
-const ListGuesserContent: React.FC<{ children?: React.ReactNode; customFilters?: React.ReactElement[] }> = ({ children, customFilters }) => {
-  const { data } = useListContext();
-  
-  // 커스텀 필터가 없고 데이터가 있으면 자동으로 필터 생성
-  const defaultFilters = customFilters || (data && data.length > 0 ? getDefaultFilters(data) : []);
-  const hasFilters = defaultFilters && defaultFilters.length > 0;
-
-  // TopToolbar 컴포넌트 동적 생성
-  const ListActions = () => (
-    <TopToolbar>
-      {hasFilters && <FilterButton />}
-      <RefreshButton />
-      <CreateButton />
-      <ExportButton />
-    </TopToolbar>
-  );
-
-  return (
-    <>
-      <DatagridWithoutDelete>
-        {children}
-      </DatagridWithoutDelete>
-    </>
   );
 };
 
@@ -164,13 +111,23 @@ interface ListGuesserProps {
   resource?: string;
   children?: React.ReactNode;
   filters?: React.ReactElement[];
+  hasEdit?: boolean;    // Edit 버튼 표시 여부
+  hasShow?: boolean;    // Show 버튼 표시 여부
+  hasCreate?: boolean;  // Create 버튼 표시 여부
   [key: string]: any;
 }
 
 // 삭제 기능이 제거된 ListGuesser 컴포넌트
-const ListGuesser: React.FC<ListGuesserProps> = ({ children, filters, ...props }) => {
-  // 미리 정의된 기본 필터들 (데이터가 없어도 사용 가능)
-  const fallbackFilters = [
+const ListGuesser: React.FC<ListGuesserProps> = ({ 
+  children, 
+  filters, 
+  hasEdit = false, 
+  hasShow = false, 
+  hasCreate = false,
+  ...props 
+}) => {
+  // 기본 검색 필터 (filters가 제공되지 않은 경우)
+  const defaultFilters = filters || [
     <TextInput
       key="search"
       label="검색"
@@ -179,16 +136,15 @@ const ListGuesser: React.FC<ListGuesserProps> = ({ children, filters, ...props }
     />
   ];
 
-  const finalFilters = filters || fallbackFilters;
-  const hasFilters = finalFilters && finalFilters.length > 0;
+  const hasFilters = defaultFilters && defaultFilters.length > 0;
 
   return (
     <List 
-      actions={<ListActionsWithoutDelete hasFilters={hasFilters} />} 
-      filters={hasFilters ? finalFilters : undefined}
+      actions={<ListActionsWithoutDelete hasFilters={hasFilters} hasCreate={hasCreate} />} 
+      filters={hasFilters ? defaultFilters : undefined}
       {...props}
     >
-      <DatagridWithoutDelete>
+      <DatagridWithoutDelete hasEdit={hasEdit} hasShow={hasShow}>
         {children}
       </DatagridWithoutDelete>
     </List>
