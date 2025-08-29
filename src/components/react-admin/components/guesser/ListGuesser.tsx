@@ -72,7 +72,23 @@ const guessFields = (records: any[]) => {
   const firstRecord = records[0];
   const fields = [];
 
+  // 제외할 필드들 (내부적으로 사용되거나 표시하지 않을 필드들)
+  const excludeFields = [
+    'relationships', 
+    'type', 
+    'links', 
+    'meta',
+    'included',
+    // 'deletedAt',  // 소프트 삭제 필드
+    // 'uuid'        // 내부 UUID (외부 노출 안함)
+  ];
+
   for (const [key, value] of Object.entries(firstRecord)) {
+    // 제외 필드 체크
+    if (excludeFields.includes(key)) {
+      continue;
+    }
+
     if (key === 'id') {
       fields.push(<TextField key={key} source={key} />);
     } else if (typeof value === 'string') {
@@ -89,7 +105,8 @@ const guessFields = (records: any[]) => {
       fields.push(<BooleanField key={key} source={key} />);
     } else if (value instanceof Date) {
       fields.push(<DateField key={key} source={key} />);
-    } else {
+    } else if (value !== null && value !== undefined) {
+      // null이나 undefined가 아닌 경우에만 표시
       fields.push(<FunctionField key={key} source={key} render={(record: any) => String(record[key])} />);
     }
   }

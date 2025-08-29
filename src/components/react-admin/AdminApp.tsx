@@ -79,7 +79,7 @@ const AdminApp = () => (
         name="privates/users/roles"
         list={ListGuesserEx}
         options={{ 
-          label: '규칙',
+          label: '역할',
           menuGroup: 'users',
           menuGroupLabel: '사용자 관리',
           BulkDeleteButton: false,
@@ -104,7 +104,7 @@ const AdminApp = () => (
         name="privates/users/ratelimits"
         list={ListGuesserEx}
         options={{ 
-          label: '레이트 리밋',
+          label: '처리율 제한 장치',
           menuGroup: 'users',
           menuGroupLabel: '사용자 관리',
           icon: <Article />
@@ -123,9 +123,40 @@ const AdminApp = () => (
       />
 
 
+      <Resource
+        name="privates/users/user-roles"
+        list={ListGuesserEx}
+        options={{ 
+          label: '역할 - 사용자 연결',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+      />
+
+      <Resource
+        name="privates/users/user-permissions"
+        list={ListGuesserEx}
+        options={{ 
+          label: '권한 - 사용자 연결',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+      />
+
+      <Resource
+        name="privates/users/user-security-events"
+        list={ListGuesserEx}
+        options={{ 
+          label: '사용자 보안 이벤트',
+          menuGroup: 'users',
+          menuGroupLabel: '사용자 관리',
+          icon: <Article />
+        }}
+      />
 
 
-      {/* posts와 comments는 서버에 없으므로 제거 */}
 
       {/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
       <Resource
