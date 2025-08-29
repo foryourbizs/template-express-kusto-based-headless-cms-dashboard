@@ -7,7 +7,9 @@ import { Main } from './layout/Main';
 import { Footer } from './layout/Footer';
 import { LayoutProvider, useLayout } from './layout/LayoutProvider';
 import { ReauthModal } from './ReauthModal';
+import { LoadingSpinner } from './LoadingSpinner';
 import { useAuthMonitor } from '../hooks/useAuthMonitor';
+import { useLoadingState } from '../hooks/useLoadingState';
 
 /**
  * 커스텀 레이아웃 컴포넌트
@@ -22,6 +24,9 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
   const dataProvider = useDataProvider();
   const notify = useNotify();
   const refresh = useRefresh();
+
+  // 로딩 상태
+  const { isLoading } = useLoadingState();
 
   // 인증 모니터링
   const {
@@ -60,6 +65,9 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
       
       {/* 푸터 */}
       <Footer />
+      
+      {/* 로딩 스피너 */}
+      <LoadingSpinner open={isLoading} message="페이지를 로딩 중입니다..." />
       
       {/* 재인증 모달 */}
       <ReauthModal

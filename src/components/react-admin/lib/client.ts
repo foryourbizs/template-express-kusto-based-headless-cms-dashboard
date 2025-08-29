@@ -9,8 +9,12 @@ let isRefreshing = false;
 let refreshPromise: Promise<any> | null = null;
 
 export const requester = async (url: string, options: any = {}) => {
-  // 요청 로깅 추가
-  console.log(`🔄 API Request: ${options.method || 'GET'} ${url}`);
+  // 요청 로깅 추가 (더 자세한 정보 포함)
+  const timestamp = new Date().toISOString();
+  const requestId = Math.random().toString(36).substr(2, 9);
+  console.log(`🔄 [${timestamp}][${requestId}] API Request: ${options.method || 'GET'} ${url}`, {
+    stackTrace: new Error().stack?.split('\n').slice(1, 3)
+  });
   
   options.credentials = "include";
   
@@ -230,7 +234,12 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
 
   return {
     getList: async (resource: string, params: GetListParams) => {
-      console.log(`📋 getList called for resource: ${resource}`, params);
+      const timestamp = new Date().toISOString();
+      const requestId = Math.random().toString(36).substr(2, 9);
+      console.log(`📋 [${timestamp}][${requestId}] getList called for resource: ${resource}`, {
+        params,
+        stackTrace: new Error().stack?.split('\n').slice(1, 4)
+      });
       
       const { page, perPage } = params.pagination ? params.pagination : { page: 1, perPage: 10 };
 

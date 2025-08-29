@@ -19,6 +19,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useResourceDefinitions, useRedirect } from 'react-admin';
 import { DRAWER_WIDTH } from '../../constants/layout';
+import { useLoadingState } from '../../hooks/useLoadingState';
 
 interface SidebarProps {
   open: boolean;
@@ -50,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const location = useLocation();
   const resourceDefinitions = useResourceDefinitions();
   const redirect = useRedirect();
+  const { startNavigation, endNavigation } = useLoadingState();
 
   // 리소스를 메뉴 그룹별로 정리
   const organizeMenuItems = (): { ungrouped: MenuItem[]; groups: MenuGroup[] } => {
@@ -133,17 +135,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const { ungrouped, groups } = organizeMenuItems();
 
   // 네비게이션 처리
-  const handleNavigation = (path: string, resourceName?: string) => {
+  const handleNavigation = async (path: string, resourceName?: string) => {
+    // 로딩 상태 시작
+    startNavigation();
+    
+    // 모바일에서 사이드바 닫기
     if (isMobile) onClose();
 
-    if (path === '/') {
-      redirect('/');
-    } else if (path.startsWith('/system.')) {
-      navigate(path);
-    } else if (resourceName) {
-      redirect('list', resourceName);
-    } else {
-      navigate(path);
+    // 로딩 스피너가 보이도록 약간의 지연
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+      if (path === '/') {
+        redirect('/');
+      } else if (path.startsWith('/system.')) {
+        navigate(path);
+      } else if (resourceName) {
+        redirect('list', resourceName);
+      } else {
+        navigate(path);
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      endNavigation();
     }
   };
 
