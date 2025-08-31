@@ -14,6 +14,7 @@ import {
   useNotify,
   useRedirect,
   useCreate,
+  useDataProvider,
 } from 'react-admin';
 import {
   Box,
@@ -27,6 +28,7 @@ import {
   CardActions,
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
+import { requester } from '../../lib/client';
 
 const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
 
@@ -42,39 +44,6 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
   const redirect = useRedirect();
   const [create] = useCreate();
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  const uploadWithProgress = useCallback(async (file: File) => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const progress = (event.loaded / event.total) * 100;
-          setUploadProgress(progress);
-        }
-      });
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const result = JSON.parse(xhr.responseText);
-          resolve(result);
-        } else {
-          reject(new Error(`Upload failed: ${xhr.statusText}`));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error('Upload failed'));
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('filename', file.name);
-      formData.append('originalName', file.name);
-
-      xhr.open('PUT', `${ADMIN_SERVER_URL}/privates/files/upload/direct`);
-      xhr.send(formData);
-    });
-  }, []);
 
   const handleSaveWithUpload = useCallback(async (formData: any) => {
     if (!selectedFile) {
@@ -83,11 +52,18 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
     }
 
     setUploading(true);
-    setUploadProgress(0);
 
     try {
-      // 1. 파일 업로드
-      const uploadResult = await uploadWithProgress(selectedFile);
+      // 1. requester를 사용한 파일 업로드
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', selectedFile);
+      uploadFormData.append('filename', selectedFile.name);
+      uploadFormData.append('originalName', selectedFile.name);
+
+      const uploadResponse = await requester(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
+        method: 'PUT',
+        body: uploadFormData,
+      });
       
       // 2. 업로드 결과와 폼 데이터 합쳐서 저장
       const completeData = {
@@ -98,10 +74,10 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
         fileSize: selectedFile.size,
         extension: selectedFile.name.split('.').pop(),
         uploadSource: formData.uploadSource || 'admin',
-        ...(uploadResult as object)
+        ...uploadResponse.json
       };
 
-      // 3. 데이터베이스에 저장
+      // 3. React Admin의 create 함수로 데이터베이스에 저장
       await create('privates/files', { data: completeData });
       
       notify('파일이 성공적으로 업로드되고 저장되었습니다.', { type: 'success' });
@@ -112,18 +88,17 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
       notify(`저장 중 오류가 발생했습니다: ${error}`, { type: 'error' });
     } finally {
       setUploading(false);
-      setUploadProgress(0);
     }
-  }, [selectedFile, uploadWithProgress, create, notify, redirect]);
+  }, [selectedFile, create, notify, redirect]);
 
   return (
     <Toolbar>
       {uploading && (
         <Box sx={{ width: '100%', mb: 2 }}>
           <Typography variant="body2" gutterBottom>
-            업로드 및 저장 중... {Math.round(uploadProgress)}%
+            업로드 및 저장 중...
           </Typography>
-          <LinearProgress variant="determinate" value={uploadProgress} />
+          <LinearProgress />
         </Box>
       )}
       <SaveButton 

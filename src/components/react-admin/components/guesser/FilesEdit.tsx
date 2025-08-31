@@ -42,6 +42,7 @@ import {
   Description,
   Archive,
 } from '@mui/icons-material';
+import { requester } from '../../lib/client';
 
 const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
 
@@ -94,14 +95,12 @@ const FileUploadComponent = () => {
   const notify = useNotify();
   const refresh = useRefresh();
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-    setUploadProgress(0);
 
     try {
       const formData = new FormData();
@@ -114,17 +113,11 @@ const FileUploadComponent = () => {
         formData.append('fileId', record.id.toString());
       }
 
-      const response = await fetch(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
+      // requester를 사용하여 파일 업로드
+      const result = await requester(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
         method: 'PUT',
         body: formData,
-        // 진행률 추적을 위한 XMLHttpRequest 사용
       });
-
-      if (!response.ok) {
-        throw new Error(`업로드 실패: ${response.statusText}`);
-      }
-
-      const result = await response.json();
       
       notify('파일이 성공적으로 업로드되었습니다.', { type: 'success' });
       refresh();
@@ -134,45 +127,8 @@ const FileUploadComponent = () => {
       notify(`파일 업로드 중 오류가 발생했습니다: ${error}`, { type: 'error' });
     } finally {
       setUploading(false);
-      setUploadProgress(0);
     }
   }, [record, notify, refresh]);
-
-  // 실제 XMLHttpRequest를 사용한 업로드 (진행률 추적)
-  const uploadWithProgress = useCallback(async (file: File) => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const progress = (event.loaded / event.total) * 100;
-          setUploadProgress(progress);
-        }
-      });
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          resolve(JSON.parse(xhr.responseText));
-        } else {
-          reject(new Error(`Upload failed: ${xhr.statusText}`));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error('Upload failed'));
-
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('filename', file.name);
-      formData.append('originalName', file.name);
-      
-      if (record?.id) {
-        formData.append('fileId', record.id.toString());
-      }
-
-      xhr.open('PUT', `${ADMIN_SERVER_URL}/privates/files/upload/direct`);
-      xhr.send(formData);
-    });
-  }, [record]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -223,9 +179,9 @@ const FileUploadComponent = () => {
         {uploading && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" gutterBottom>
-              업로드 중... {Math.round(uploadProgress)}%
+              업로드 중...
             </Typography>
-            <LinearProgress variant="determinate" value={uploadProgress} />
+            <LinearProgress />
           </Box>
         )}
       </CardContent>
