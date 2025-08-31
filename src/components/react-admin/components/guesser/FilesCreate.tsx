@@ -136,7 +136,7 @@ const FileUploadComponent = ({ onFileUploaded }: { onFileUploaded: (fileData: an
         
         {uploadedFile ? (
           <Alert severity="success" sx={{ mb: 2 }}>
-            파일 '{uploadedFile.filename}' ({formatFileSize(uploadedFile.fileSize)})이 업로드되었습니다.
+            파일 &apos;{uploadedFile.filename}&apos; ({formatFileSize(uploadedFile.fileSize)})이 업로드되었습니다.
           </Alert>
         ) : (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
