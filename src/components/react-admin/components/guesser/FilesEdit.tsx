@@ -104,9 +104,9 @@ const FileUploadComponent = () => {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('filename', file.name);
-      formData.append('originalName', file.name);
+      formData.append('files', file); // files 키로 배열에 단일 파일
+    //   formData.append('filename', file.name);
+    //   formData.append('originalName', file.name);
 
       // 파일 ID가 있다면 기존 파일 업데이트
       if (record?.id) {

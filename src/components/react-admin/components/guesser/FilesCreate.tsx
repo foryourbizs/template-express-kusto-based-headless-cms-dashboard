@@ -56,9 +56,9 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
     try {
       // 1. requester를 사용한 파일 업로드
       const uploadFormData = new FormData();
-      uploadFormData.append('file', selectedFile);
-      uploadFormData.append('filename', selectedFile.name);
-      uploadFormData.append('originalName', selectedFile.name);
+      uploadFormData.append('files', selectedFile); // files 키로 배열에 단일 파일
+    //   uploadFormData.append('filename', selectedFile.name);
+    //   uploadFormData.append('originalName', selectedFile.name);
 
       const uploadResponse = await requester(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
         method: 'PUT',
