@@ -12,6 +12,12 @@ import {
 } from "react-admin";
 
 import ListGuesserEx from './components/guesser/ListGuesser';
+import ObjectStoragesList from './components/guesser/ObjectStoragesList';
+import ObjectStoragesEdit from './components/guesser/ObjectStoragesEdit';
+import ObjectStoragesCreate from './components/guesser/ObjectStoragesCreate';
+import FilesList from './components/guesser/FilesList';
+import FilesEdit from './components/guesser/FilesEdit';
+import FilesCreate from './components/guesser/FilesCreate';
 
 import { BrowserRouter } from "react-router-dom";
 import {
@@ -20,6 +26,8 @@ import {
   Article,
   Settings,
   Analytics,
+  Storage,
+  AttachFile,
 } from '@mui/icons-material';
 
 import { dataProvider } from "./lib/dataProvider";
@@ -77,28 +85,6 @@ const AdminApp = () => (
       />
 
 
-
-      <Resource
-        name="privates/objectStorages"
-        list={ListGuesserEx}
-        options={{ 
-          label: '저장소',
-          menuGroup: 'objects',
-          menuGroupLabel: '오브젝트',
-          icon: <Article />
-        }}
-      />
-      
-      <Resource
-        name="privates/files"
-        list={ListGuesserEx}
-        options={{ 
-          label: '파일',
-          menuGroup: 'objects',
-          menuGroupLabel: '오브젝트',
-          icon: <Article />
-        }}
-      />
 
       <Resource
         name="privates/users/roles"
@@ -181,6 +167,36 @@ const AdminApp = () => (
       />
 
 
+
+
+
+
+
+      <Resource
+        name="privates/objectStorages"
+        list={ObjectStoragesList}
+        edit={ObjectStoragesEdit}
+        create={ObjectStoragesCreate}
+        options={{ 
+          label: '저장소',
+          menuGroup: 'objects',
+          menuGroupLabel: '오브젝트',
+          icon: <Storage />
+        }}
+      />
+      
+      <Resource
+        name="privates/files"
+        list={FilesList}
+        edit={FilesEdit}
+        create={FilesCreate}
+        options={{ 
+          label: '파일',
+          menuGroup: 'objects',
+          menuGroupLabel: '오브젝트',
+          icon: <AttachFile />
+        }}
+      />
 
       {/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
       <Resource
