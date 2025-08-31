@@ -43,6 +43,8 @@ import {
   Archive,
 } from '@mui/icons-material';
 
+const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
+
 const EditActions = () => (
   <TopToolbar>
     <ListButton />
@@ -112,7 +114,7 @@ const FileUploadComponent = () => {
         formData.append('fileId', record.id.toString());
       }
 
-      const response = await fetch('/privates/files/upload/direct', {
+      const response = await fetch(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
         method: 'PUT',
         body: formData,
         // 진행률 추적을 위한 XMLHttpRequest 사용
@@ -167,7 +169,7 @@ const FileUploadComponent = () => {
         formData.append('fileId', record.id.toString());
       }
 
-      xhr.open('PUT', '/privates/files/upload/direct');
+      xhr.open('PUT', `${ADMIN_SERVER_URL}/privates/files/upload/direct`);
       xhr.send(formData);
     });
   }, [record]);

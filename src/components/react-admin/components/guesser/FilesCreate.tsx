@@ -13,6 +13,7 @@ import {
   Toolbar,
   useNotify,
   useRedirect,
+  useCreate,
 } from 'react-admin';
 import {
   Box,
@@ -27,24 +28,21 @@ import {
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 
+const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
+
 const CreateActions = () => (
   <TopToolbar>
     <ListButton />
   </TopToolbar>
 );
 
-const CreateToolbar = () => (
-  <Toolbar>
-    <SaveButton />
-  </Toolbar>
-);
-
-// 파일 업로드 컴포넌트
-const FileUploadComponent = ({ onFileUploaded }: { onFileUploaded: (fileData: any) => void }) => {
+// 커스텀 Toolbar with 업로드 + 저장 로직
+const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }) => {
   const notify = useNotify();
+  const redirect = useRedirect();
+  const [create] = useCreate();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedFile, setUploadedFile] = useState<any>(null);
 
   const uploadWithProgress = useCallback(async (file: File) => {
     return new Promise((resolve, reject) => {
@@ -73,51 +71,79 @@ const FileUploadComponent = ({ onFileUploaded }: { onFileUploaded: (fileData: an
       formData.append('filename', file.name);
       formData.append('originalName', file.name);
 
-      xhr.open('PUT', '/privates/files/upload/direct');
+      xhr.open('PUT', `${ADMIN_SERVER_URL}/privates/files/upload/direct`);
       xhr.send(formData);
     });
   }, []);
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleSaveWithUpload = useCallback(async (formData: any) => {
+    if (!selectedFile) {
+      notify('파일을 선택해주세요.', { type: 'error' });
+      return;
+    }
 
     setUploading(true);
     setUploadProgress(0);
 
     try {
-      const result = await uploadWithProgress(file);
+      // 1. 파일 업로드
+      const uploadResult = await uploadWithProgress(selectedFile);
       
-      setUploadedFile({
-        filename: file.name,
-        originalName: file.name,
-        mimeType: file.type,
-        fileSize: file.size,
-        extension: file.name.split('.').pop(),
-        uploadSource: 'admin',
-        ...(result as object)
-      });
+      // 2. 업로드 결과와 폼 데이터 합쳐서 저장
+      const completeData = {
+        ...formData,
+        filename: selectedFile.name,
+        originalName: selectedFile.name,
+        mimeType: selectedFile.type,
+        fileSize: selectedFile.size,
+        extension: selectedFile.name.split('.').pop(),
+        uploadSource: formData.uploadSource || 'admin',
+        ...(uploadResult as object)
+      };
 
-      onFileUploaded({
-        filename: file.name,
-        originalName: file.name,
-        mimeType: file.type,
-        fileSize: file.size,
-        extension: file.name.split('.').pop(),
-        uploadSource: 'admin',
-        ...(result as object)
-      });
+      // 3. 데이터베이스에 저장
+      await create('privates/files', { data: completeData });
       
-      notify('파일이 성공적으로 업로드되었습니다.', { type: 'success' });
+      notify('파일이 성공적으로 업로드되고 저장되었습니다.', { type: 'success' });
+      redirect('list', 'privates/files');
       
     } catch (error) {
-      console.error('Upload error:', error);
-      notify(`파일 업로드 중 오류가 발생했습니다: ${error}`, { type: 'error' });
+      console.error('Save error:', error);
+      notify(`저장 중 오류가 발생했습니다: ${error}`, { type: 'error' });
     } finally {
       setUploading(false);
       setUploadProgress(0);
     }
-  }, [uploadWithProgress, onFileUploaded, notify]);
+  }, [selectedFile, uploadWithProgress, create, notify, redirect]);
+
+  return (
+    <Toolbar>
+      {uploading && (
+        <Box sx={{ width: '100%', mb: 2 }}>
+          <Typography variant="body2" gutterBottom>
+            업로드 및 저장 중... {Math.round(uploadProgress)}%
+          </Typography>
+          <LinearProgress variant="determinate" value={uploadProgress} />
+        </Box>
+      )}
+      <SaveButton 
+        onClick={handleSaveWithUpload}
+        disabled={uploading || !selectedFile}
+        label={uploading ? "저장 중..." : "저장"}
+      />
+    </Toolbar>
+  );
+};
+
+// 파일 선택 컴포넌트 (업로드는 하지 않고 파일만 선택)
+const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File | null) => void }) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFile(file);
+    onFileSelected(file);
+  }, [onFileSelected]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -131,26 +157,19 @@ const FileUploadComponent = ({ onFileUploaded }: { onFileUploaded: (fileData: an
     <Card sx={{ mb: 3 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom color="primary">
-          파일 업로드
+          파일 선택
         </Typography>
         
-        {uploadedFile ? (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            파일 &apos;{uploadedFile.filename}&apos; ({formatFileSize(uploadedFile.fileSize)})이 업로드되었습니다.
+        {selectedFile ? (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            선택된 파일: &apos;{selectedFile.name}&apos; ({formatFileSize(selectedFile.size)})
+            <br />
+            저장 버튼을 누르면 파일이 업로드됩니다.
           </Alert>
         ) : (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            새 파일을 업로드하세요. 업로드된 파일 정보가 자동으로 폼에 채워집니다.
+            업로드할 파일을 선택하세요. 저장 시 파일이 업로드되고 데이터가 저장됩니다.
           </Typography>
-        )}
-
-        {uploading && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" gutterBottom>
-              업로드 중... {Math.round(uploadProgress)}%
-            </Typography>
-            <LinearProgress variant="determinate" value={uploadProgress} />
-          </Box>
         )}
       </CardContent>
 
@@ -158,43 +177,71 @@ const FileUploadComponent = ({ onFileUploaded }: { onFileUploaded: (fileData: an
         <input
           accept="*/*"
           style={{ display: 'none' }}
-          id="file-upload-button"
+          id="file-select-button"
           type="file"
-          onChange={handleFileUpload}
-          disabled={uploading}
+          onChange={handleFileSelect}
         />
-        <label htmlFor="file-upload-button">
+        <label htmlFor="file-select-button">
           <Button
             variant="contained"
             component="span"
             startIcon={<CloudUpload />}
-            disabled={uploading}
           >
             파일 선택
           </Button>
         </label>
+        
+        {selectedFile && (
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setSelectedFile(null);
+              onFileSelected(null);
+              // 파일 input 초기화
+              const input = document.getElementById('file-select-button') as HTMLInputElement;
+              if (input) input.value = '';
+            }}
+          >
+            선택 취소
+          </Button>
+        )}
       </CardActions>
     </Card>
   );
 };
 
 const FilesCreate = () => {
-  const [fileData, setFileData] = useState<any>({});
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleFileUploaded = useCallback((data: any) => {
-    setFileData(data);
+  const handleFileSelected = useCallback((file: File | null) => {
+    setSelectedFile(file);
   }, []);
+
+  // 선택된 파일 기반의 기본값 설정
+  const getDefaultValues = useCallback(() => {
+    if (!selectedFile) return {};
+    
+    return {
+      filename: selectedFile.name,
+      originalName: selectedFile.name,
+      mimeType: selectedFile.type,
+      extension: selectedFile.name.split('.').pop(),
+      uploadSource: 'admin',
+      isPublic: false,
+      isArchived: false,
+    };
+  }, [selectedFile]);
 
   return (
     <Create title="새 파일 추가">
       <SimpleForm 
-        toolbar={<CreateToolbar />}
-        defaultValues={fileData}
+        toolbar={<CreateToolbarWithUpload selectedFile={selectedFile} />}
+        defaultValues={getDefaultValues()}
       >
         <Box sx={{ width: '100%', maxWidth: 800 }}>
           
-          {/* 파일 업로드 섹션 */}
-          <FileUploadComponent onFileUploaded={handleFileUploaded} />
+          {/* 파일 선택 섹션 */}
+          <FileSelectComponent onFileSelected={handleFileSelected} />
 
           {/* 파일 메타데이터 섹션 */}
           <Paper sx={{ p: 3, mb: 3 }}>
