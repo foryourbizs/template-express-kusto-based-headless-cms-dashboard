@@ -75,6 +75,31 @@ const AdminApp = () => (
           icon: <ViewList />
         }}
       />
+
+
+
+      <Resource
+        name="privates/objectStorages"
+        list={ListGuesserEx}
+        options={{ 
+          label: '저장소',
+          menuGroup: 'objects',
+          menuGroupLabel: '오브젝트',
+          icon: <Article />
+        }}
+      />
+      
+      <Resource
+        name="privates/files"
+        list={ListGuesserEx}
+        options={{ 
+          label: '파일',
+          menuGroup: 'objects',
+          menuGroupLabel: '오브젝트',
+          icon: <Article />
+        }}
+      />
+
       <Resource
         name="privates/users/roles"
         list={ListGuesserEx}
@@ -85,7 +110,6 @@ const AdminApp = () => (
           BulkDeleteButton: false,
           icon: <Article />
         }}
-        
       />
 
       <Resource
