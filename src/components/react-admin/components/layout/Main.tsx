@@ -28,9 +28,9 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
             duration: theme.transitions.duration.enteringScreen,
           }),
           backgroundColor: theme.palette.background.default,
-          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'auto', // 내부 스크롤 허용
         }}
       >
         {/* 헤더 높이만큼 여백 */}
@@ -44,17 +44,18 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
             py: 3,
             px: { xs: 2, sm: 3, md: 4 },
             position: 'relative',
+            // 푸터를 위한 하단 여백 제거 (이제 flexbox로 처리)
           }}
         >
           {/* React Admin Notification - 우하단 고정 */}
           <Box
             sx={{
-              position: 'absolute',
-              bottom: 16,
+              position: 'fixed', // fixed로 유지하여 푸터에 가려지지 않도록
+              bottom: { xs: 80, sm: 80 }, // 푸터 높이만큼 여백 추가
               right: 16,
               zIndex: theme.zIndex.snackbar,
               maxWidth: '400px',
-              width: '100%',
+              width: { xs: 'calc(100% - 32px)', sm: '400px' },
             }}
           >
             <Notification />

@@ -45,6 +45,7 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
   return (
     <Box sx={{ 
       display: 'flex', 
+      flexDirection: 'column', // 세로 레이아웃으로 변경
       minHeight: '100vh',
       width: '100%',
       overflow: 'auto' 
@@ -57,18 +58,27 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
         isMobile={isMobile}
       />
       
-      {/* 사이드바 */}
-      <Sidebar 
-        open={sidebarOpen}
-        onClose={() => toggleSidebar(false)}
-        isMobile={isMobile}
-      />
-      
-      {/* 메인 콘텐츠 영역 */}
-      <Main 
-        sidebarOpen={sidebarOpen} isMobile={isMobile}>
-        {children}
-      </Main>
+      {/* 메인 컨텐츠 영역 (사이드바 + 콘텐츠) */}
+      <Box sx={{ 
+        display: 'flex', 
+        flex: 1, // 남은 공간을 모두 차지
+        position: 'relative' 
+      }}>
+        {/* 사이드바 */}
+        <Sidebar 
+          open={sidebarOpen}
+          onClose={() => toggleSidebar(false)}
+          isMobile={isMobile}
+        />
+        
+        {/* 메인 콘텐츠 영역 */}
+        <Main 
+          sidebarOpen={sidebarOpen} 
+          isMobile={isMobile}
+        >
+          {children}
+        </Main>
+      </Box>
       
       {/* 푸터 */}
       <Footer />
