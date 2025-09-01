@@ -79,6 +79,9 @@ const CustomDeleteButton = () => {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // 이미 삭제된 파일인지 확인
+  const isDeleted = !!record?.deletedAt; // deletedAt 기준으로만 판단
+
   const handleDelete = async () => {
     // 디버깅: 레코드 구조 확인
     console.log('Delete - Full record:', record);
@@ -112,6 +115,11 @@ const CustomDeleteButton = () => {
     }
   };
 
+  // 이미 삭제된 파일이면 삭제 버튼을 표시하지 않음
+  if (isDeleted) {
+    return null;
+  }
+
   return (
     <>
       <Button
@@ -141,11 +149,21 @@ const EditActions = () => (
   </TopToolbar>
 );
 
-const EditToolbar = () => (
-  <Toolbar>
-    <SaveButton />
-  </Toolbar>
-);
+const EditToolbar = () => {
+  const record = useRecordContext();
+  const isDeleted = !!record?.deletedAt; // deletedAt 기준으로만 판단
+  
+  // 삭제된 파일의 경우 저장 버튼 숨김
+  if (isDeleted) {
+    return <Toolbar />;
+  }
+  
+  return (
+    <Toolbar>
+      <SaveButton />
+    </Toolbar>
+  );
+};
 
 // 파일 타입 아이콘 컴포넌트
 const FileTypeIcon = ({ mimeType }: { mimeType: string }) => {
@@ -196,20 +214,48 @@ const FileInfoComponent = () => {
             <Typography variant="h6" gutterBottom color="primary">
               파일 정보
             </Typography>
+            
+            {/* 삭제된 파일 경고 표시 */}
+            {record.deletedAt && (
+              <Box sx={{ mb: 2 }}>
+                <Chip 
+                  label="삭제된 파일" 
+                  color="error" 
+                  size="medium" 
+                  sx={{ fontWeight: 'bold' }}
+                />
+                <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                  삭제일: {new Date(record.deletedAt).toLocaleString()}
+                </Typography>
+              </Box>
+            )}
+            
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <FileTypeIcon mimeType={record.mimeType} />
               <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle1" fontWeight="bold">
+                <Typography 
+                  variant="subtitle1" 
+                  fontWeight="bold"
+                  sx={{ 
+                    textDecoration: record.deletedAt ? 'line-through' : 'none',
+                    color: record.deletedAt ? 'text.disabled' : 'text.primary'
+                  }}
+                >
                   {record.filename}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {record.mimeType} • {formatFileSize(record.fileSize)}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                  {record.exists ? (
+                  {record.deletedAt ? (
+                    <Chip label="삭제됨" color="error" size="small" />
+                  ) : record.exists ? (
                     <Chip label="파일 존재" color="success" size="small" />
                   ) : (
                     <Chip label="파일 없음" color="error" size="small" />
+                  )}
+                  {record.isArchived && (
+                    <Chip label="아카이브됨" color="warning" size="small" />
                   )}
                   {record.isPublic ? (
                     <Chip label="공개" color="info" size="small" />
@@ -231,67 +277,90 @@ const FileInfoComponent = () => {
   );
 };
 
-const FilesEdit = () => (
-  <Edit actions={<EditActions />} title="파일 수정">
-    <SimpleForm toolbar={<EditToolbar />}>
-      <Box sx={{ width: '100%', maxWidth: 800 }}>
-        
-        {/* 파일 정보 섹션 */}
-        <FileInfoComponent />
+const FilesEdit = () => {
+  const record = useRecordContext();
+  const isDeleted = !!record?.deletedAt; // deletedAt 기준으로만 판단
+  const title = isDeleted ? "삭제된 파일 조회" : "파일 수정";
 
-        {/* 파일 메타데이터 섹션 */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            파일 정보 (읽기 전용)
-          </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-            <TextInput 
-              source="filename" 
-              label="파일명" 
-              disabled
-              fullWidth
-            />
-            <TextInput 
-              source="originalName" 
-              label="원본 파일명" 
-              disabled
-              fullWidth
-            />
-          </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
-            <TextInput 
-              source="mimeType" 
-              label="MIME 타입" 
-              disabled
-              fullWidth
-            />
-            <TextInput 
-              source="extension" 
-              label="확장자" 
-              disabled
-              fullWidth
-            />
-          </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
-            <TextInput 
-              source="fileSize" 
-              label="파일 크기 (bytes)" 
-              disabled
-              fullWidth
-            />
-            <TextInput 
-              source="uuid" 
-              label="파일 UUID" 
-              disabled
-              fullWidth
-            />
-          </Box>
-        </Paper>
+  // 디버깅: 삭제 상태 확인
+  console.log('FilesEdit - record:', record);
+  console.log('FilesEdit - isDeleted:', isDeleted);
+  console.log('FilesEdit - deletedAt:', record?.deletedAt);
+  console.log('FilesEdit - isArchived:', record?.isArchived);
+
+  return (
+    <Edit actions={<EditActions />} title={title}>
+      <SimpleForm toolbar={<EditToolbar />}>
+        <Box sx={{ width: '100%', maxWidth: 800 }}>
+          
+          {/* 파일 정보 섹션 */}
+          <FileInfoComponent />
+
+          {/* 파일 메타데이터 섹션 */}
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" gutterBottom color="primary">
+              파일 정보 (읽기 전용)
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+              <TextInput 
+                source="filename" 
+                label="파일명" 
+                disabled
+                fullWidth
+              />
+              <TextInput 
+                source="originalName" 
+                label="원본 파일명" 
+                disabled
+                fullWidth
+              />
+            </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
+              <TextInput 
+                source="mimeType" 
+                label="MIME 타입" 
+                disabled
+                fullWidth
+              />
+              <TextInput 
+                source="extension" 
+                label="확장자" 
+                disabled
+                fullWidth
+              />
+            </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
+              <TextInput 
+                source="fileSize" 
+                label="파일 크기 (bytes)" 
+                disabled
+                fullWidth
+              />
+              <TextInput 
+                source="uuid" 
+                label="파일 UUID" 
+                disabled
+                fullWidth
+              />
+            </Box>
+            
+            {/* 삭제 정보 표시 */}
+            {record?.deletedAt && (
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 2, mt: 2 }}>
+                <TextInput 
+                  source="deletedAt" 
+                  label="삭제일" 
+                  disabled
+                  fullWidth
+                />
+              </Box>
+            )}
+          </Paper>
 
         {/* 스토리지 설정 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            스토리지 설정
+            스토리지 설정 {isDeleted && "(읽기 전용)"}
           </Typography>
           <ReferenceInput
             source="storageUuid"
@@ -301,7 +370,8 @@ const FilesEdit = () => (
             <SelectInput 
               optionText="name" 
               optionValue="uuid"
-              validate={required()}
+              validate={isDeleted ? undefined : required()}
+              disabled={isDeleted}
               fullWidth
             />
           </ReferenceInput>
@@ -318,17 +388,19 @@ const FilesEdit = () => (
         {/* 접근 제어 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            접근 제어
+            접근 제어 {isDeleted && "(읽기 전용)"}
           </Typography>
           <Box sx={{ display: 'flex', gap: 4, mb: 2 }}>
             <BooleanInput 
               source="isPublic" 
               label="공개 파일"
+              disabled={isDeleted}
               helperText="공개 파일은 누구나 접근 가능합니다"
             />
             <BooleanInput 
               source="isArchived" 
               label="아카이브"
+              disabled={isDeleted}
               helperText="아카이브된 파일은 삭제 예정입니다"
             />
           </Box>
@@ -341,6 +413,7 @@ const FilesEdit = () => (
             <SelectInput 
               optionText="name" 
               optionValue="uuid"
+              disabled={isDeleted}
               fullWidth
               helperText="NULL이면 공개 파일"
             />
@@ -350,7 +423,7 @@ const FilesEdit = () => (
         {/* 업로드 정보 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            업로드 정보
+            업로드 정보 {isDeleted && "(읽기 전용)"}
           </Typography>
           <SelectInput
             source="uploadSource"
@@ -361,6 +434,7 @@ const FilesEdit = () => (
               { id: 'api', name: 'API' },
               { id: 'admin', name: 'Admin' },
             ]}
+            disabled={isDeleted}
             fullWidth
           />
         </Paper>
@@ -368,13 +442,14 @@ const FilesEdit = () => (
         {/* 메타데이터 섹션 */}
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            추가 정보
+            추가 정보 {isDeleted && "(읽기 전용)"}
           </Typography>
           <TextInput 
             source="metadata" 
             label="메타데이터 (JSON)" 
             multiline
             rows={4}
+            disabled={isDeleted}
             fullWidth
             helperText="이미지 크기, 비디오 길이 등의 추가 정보"
           />
@@ -401,5 +476,6 @@ const FilesEdit = () => (
     </SimpleForm>
   </Edit>
 );
+};
 
 export default FilesEdit;
