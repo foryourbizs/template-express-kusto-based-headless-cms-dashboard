@@ -70,26 +70,31 @@ export const requester = async (url: string, options: any = {}) => {
     
     let responseBody;
     try {
-      // JSON 응답이 아닌 경우 처리 - JSON API 형식(application/vnd.api+json)도 허용
-      if (!contentType || (!contentType.includes("application/json") && !contentType.includes("application/vnd.api+json"))) {
-        const textResponse = await response.text();
-        
-        // HTML 페이지를 받은 경우 (보통 404, 500 페이지)
-        if (textResponse.includes("<!DOCTYPE") || textResponse.includes("<html")) {
+      // 204 No Content인 경우 응답 본문이 없으므로 빈 객체 반환
+      if (response.status === 204) {
+        responseBody = {};
+      } else {
+        // JSON 응답이 아닌 경우 처리 - JSON API 형식(application/vnd.api+json)도 허용
+        if (!contentType || (!contentType.includes("application/json") && !contentType.includes("application/vnd.api+json"))) {
+          const textResponse = await response.text();
+          
+          // HTML 페이지를 받은 경우 (보통 404, 500 페이지)
+          if (textResponse.includes("<!DOCTYPE") || textResponse.includes("<html")) {
+            return Promise.reject({
+              message: `API 엔드포인트를 찾을 수 없습니다. URL을 확인해주세요: ${url}`,
+              status: response.status || 404
+            });
+          }
+          
+          // 그 외 텍스트 응답
           return Promise.reject({
-            message: `API 엔드포인트를 찾을 수 없습니다. URL을 확인해주세요: ${url}`,
-            status: response.status || 404
+            message: `서버에서 올바르지 않은 응답을 받았습니다: ${textResponse.substring(0, 100)}...`,
+            status: response.status || 500
           });
         }
         
-        // 그 외 텍스트 응답
-        return Promise.reject({
-          message: `서버에서 올바르지 않은 응답을 받았습니다: ${textResponse.substring(0, 100)}...`,
-          status: response.status || 500
-        });
+        responseBody = await response.json();
       }
-      
-      responseBody = await response.json();
     } catch (jsonError) {
       // JSON 파싱 에러 처리
       return Promise.reject({
@@ -119,6 +124,7 @@ export const requester = async (url: string, options: any = {}) => {
     }
 
   // 200대 상태 코드를 성공으로 처리 (200, 201, 204 등)
+  // 특히 204 No Content는 DELETE 요청의 성공 응답
   if (response.status < 200 || response.status >= 300) {
     if (responseBody?.errors?.find((error: any) => error.status == 401)) {
       console.log(responseBody?.errors);
