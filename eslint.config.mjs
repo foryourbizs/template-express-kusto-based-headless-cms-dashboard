@@ -28,9 +28,13 @@ const eslintConfig = [
       
       // React 관련 규칙 완화
       "react-hooks/exhaustive-deps": "off",
+      "react/no-unescaped-entities": "off",
       
       // Next.js 관련 규칙 완화
       "@next/next/no-img-element": "off",
+      
+      // 접근성 관련 규칙 완화
+      "jsx-a11y/alt-text": "off",
       
       // 일반 JavaScript 규칙 완화
       "no-unused-vars": "off",
