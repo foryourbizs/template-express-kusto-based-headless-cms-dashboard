@@ -80,15 +80,24 @@ const CustomDeleteButton = () => {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!record?.uuid) {
-      notify('파일 UUID가 없습니다.', { type: 'error' });
+    // 디버깅: 레코드 구조 확인
+    console.log('Delete - Full record:', record);
+    console.log('Delete - record.uuid:', record?.uuid);
+    console.log('Delete - record.id:', record?.id);
+    
+    // uuid 필드가 없으면 id 필드를 사용해보기
+    const fileUuid = record?.uuid || record?.id;
+    
+    if (!fileUuid) {
+      notify('파일 UUID 또는 ID가 없습니다.', { type: 'error' });
       setOpen(false);
       return;
     }
 
     setDeleting(true);
     try {
-      await requester(`${ADMIN_SERVER_URL}/privates/files/delete?fileUuid=${record.uuid}`, {
+      console.log('Deleting file with UUID:', fileUuid);
+      await requester(`${ADMIN_SERVER_URL}/privates/files/delete?fileUuid=${fileUuid}`, {
         method: 'DELETE',
       });
       

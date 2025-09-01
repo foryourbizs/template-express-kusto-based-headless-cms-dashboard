@@ -6,7 +6,6 @@ import {
   BooleanField,
   DateField,
   EditButton,
-  DeleteButton,
   TopToolbar,
   CreateButton,
   ExportButton,
@@ -214,7 +213,6 @@ const FilesList = () => (
       />
       <DateField source="createdAt" label="업로드일" showTime />
       <EditButton />
-      <DeleteButton />
     </Datagrid>
   </List>
 );
