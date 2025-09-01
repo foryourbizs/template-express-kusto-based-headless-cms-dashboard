@@ -71,6 +71,18 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 		}
 	};
 
+	// 테스트용: 토큰을 수동으로 만료시키는 함수
+	const expireTokensForTest = () => {
+		const now = new Date();
+		const expiredTime = new Date(now.getTime() - 1000).toISOString(); // 1초 전으로 설정
+		
+		localStorage.setItem("accessTokenExpiresAt", expiredTime);
+		localStorage.setItem("refreshTokenExpiresAt", expiredTime);
+		
+		setTokenInfo(getTokenTimeRemaining());
+		notify('테스트용으로 토큰을 만료시켰습니다.', { type: 'info' });
+	};
+
 	// 시간을 사람이 읽기 쉬운 형태로 변환 (초단위까지 표시)
 	const formatTimeRemaining = (milliseconds: number): string => {
 		if (milliseconds <= 0) return '만료됨';
@@ -331,6 +343,17 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 							<Settings sx={{ mr: 1 }} />
 							설정
 						</MenuItem> */}
+						{/* 개발용 테스트 버튼 */}
+						<MenuItem 
+							onClick={() => {
+								expireTokensForTest();
+								handleUserMenuClose();
+							}}
+							sx={{ color: 'orange' }}
+						>
+							<RefreshIcon sx={{ mr: 1 }} />
+							토큰 만료 테스트
+						</MenuItem>
 						<MenuItem onClick={handleLogout}>
 							<Logout sx={{ mr: 1 }} />
 							로그아웃
@@ -341,3 +364,5 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 		</AppBar>
 	);
 };
+
+export default Header;

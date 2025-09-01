@@ -35,6 +35,13 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
     forceLogout,
   } = useAuthMonitor();
 
+  // 모달 상태 디버깅
+  React.useEffect(() => {
+    console.log('=== Layout Debug ===');
+    console.log('isReauthModalOpen:', isReauthModalOpen);
+    console.log('===================');
+  }, [isReauthModalOpen]);
+
   return (
     <Box sx={{ 
       display: 'flex', 

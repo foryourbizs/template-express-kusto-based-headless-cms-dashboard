@@ -284,6 +284,12 @@ export const getTokenTimeRemaining = (): {
     const accessTokenExpiresAt = localStorage.getItem("accessTokenExpiresAt");
     const refreshTokenExpiresAt = localStorage.getItem("refreshTokenExpiresAt");
     
+    // 디버깅: localStorage 토큰 정보 확인
+    // console.log('=== Token Info Debug ===');
+    // console.log('Current time:', new Date(now).toISOString());
+    // console.log('AccessToken expiresAt from localStorage:', accessTokenExpiresAt);
+    // console.log('RefreshToken expiresAt from localStorage:', refreshTokenExpiresAt);
+    
     const accessToken = {
         remaining: 0,
         expired: true,
@@ -300,13 +306,21 @@ export const getTokenTimeRemaining = (): {
         const expiresAt = new Date(accessTokenExpiresAt).getTime();
         accessToken.remaining = Math.max(0, expiresAt - now);
         accessToken.expired = accessToken.remaining <= 0;
+        console.log('AccessToken expires at:', new Date(expiresAt).toISOString());
+        console.log('AccessToken remaining ms:', accessToken.remaining);
+        console.log('AccessToken expired:', accessToken.expired);
     }
     
     if (refreshTokenExpiresAt) {
         const expiresAt = new Date(refreshTokenExpiresAt).getTime();
         refreshToken.remaining = Math.max(0, expiresAt - now);
         refreshToken.expired = refreshToken.remaining <= 0;
+        console.log('RefreshToken expires at:', new Date(expiresAt).toISOString());
+        console.log('RefreshToken remaining ms:', refreshToken.remaining);
+        console.log('RefreshToken expired:', refreshToken.expired);
     }
+    
+    console.log('========================');
     
     return { accessToken, refreshToken };
 };

@@ -29,8 +29,22 @@ export const useAuthMonitor = () => {
       // 1. 토큰 만료시간 확인 (로컬에서만)
       const { accessToken, refreshToken } = getTokenTimeRemaining();
       
+      // 디버깅 로그 추가
+      console.log('=== Auth Monitor Debug ===');
+      console.log('Access Token:', {
+        remaining: accessToken.remaining,
+        expired: accessToken.expired,
+        expiresAt: accessToken.expiresAt
+      });
+      console.log('Refresh Token:', {
+        remaining: refreshToken.remaining,
+        expired: refreshToken.expired,
+        expiresAt: refreshToken.expiresAt
+      });
+      
       // Refresh Token이 만료된 경우
       if (refreshToken.expired) {
+        console.log('Refresh token expired - showing reauth modal');
         setState(prev => ({ 
           ...prev, 
           isAuthExpired: true, 
@@ -42,10 +56,11 @@ export const useAuthMonitor = () => {
 
       // Access Token이 만료된 경우 (하지만 Refresh Token은 유효)
       if (accessToken.expired) {
+        console.log('Access token expired but refresh token valid - showing reauth modal');
         setState(prev => ({ 
           ...prev, 
-          isAuthExpired: false, 
-          isReauthModalOpen: false,
+          isAuthExpired: true, 
+          isReauthModalOpen: true,
           timeRemaining: 0 
         }));
         return;
@@ -92,9 +107,9 @@ export const useAuthMonitor = () => {
     logout();
   }, [logout]);
 
-  // 정기적인 인증 상태 확인 (10분마다로 줄임)
+  // 정기적인 인증 상태 확인 (1분마다로 변경)
   useEffect(() => {
-    const interval = setInterval(checkAuthStatus, 10 * 60 * 1000); // 10분
+    const interval = setInterval(checkAuthStatus, 1 * 60 * 1000); // 1분마다
     
     // 초기 확인
     checkAuthStatus();
@@ -102,12 +117,12 @@ export const useAuthMonitor = () => {
     return () => clearInterval(interval);
   }, [checkAuthStatus]);
 
-  // 토큰 만료 시간 업데이트 (1분마다)
+  // 토큰 만료 시간 업데이트 (30초마다)
   useEffect(() => {
     const interval = setInterval(() => {
       const { accessToken } = getTokenTimeRemaining();
       setState(prev => ({ ...prev, timeRemaining: accessToken.remaining }));
-    }, 60 * 1000); // 1분
+    }, 30 * 1000); // 30초
 
     return () => clearInterval(interval);
   }, []);
