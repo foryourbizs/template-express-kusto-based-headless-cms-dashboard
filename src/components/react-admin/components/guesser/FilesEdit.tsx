@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Edit,
   SimpleForm,
@@ -9,10 +9,11 @@ import {
   required,
   TopToolbar,
   ListButton,
-  DeleteButton,
   SaveButton,
   Toolbar,
   useRecordContext,
+  useNotify,
+  useRedirect,
 } from 'react-admin';
 import {
   Box,
@@ -23,6 +24,11 @@ import {
   Avatar,
   Card,
   CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   InsertDriveFile,
@@ -32,12 +38,97 @@ import {
   PictureAsPdf,
   Description,
   Archive,
+  Delete,
 } from '@mui/icons-material';
+import { requester } from '../../lib/client';
+
+const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
+
+// 삭제 확인 다이얼로그 컴포넌트
+const DeleteConfirmDialog = ({ open, onClose, onConfirm, fileName }: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  fileName: string;
+}) => (
+  <Dialog open={open} onClose={onClose}>
+    <DialogTitle>파일 삭제 확인</DialogTitle>
+    <DialogContent>
+      <DialogContentText>
+        정말로 파일 "{fileName}"을(를) 삭제하시겠습니까?
+        <br />
+        삭제된 파일은 복구할 수 없습니다.
+      </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} color="primary">
+        취소
+      </Button>
+      <Button onClick={onConfirm} color="error" variant="contained">
+        삭제
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
+// 커스텀 삭제 버튼 컴포넌트
+const CustomDeleteButton = () => {
+  const record = useRecordContext();
+  const notify = useNotify();
+  const redirect = useRedirect();
+  const [open, setOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!record?.uuid) {
+      notify('파일 UUID가 없습니다.', { type: 'error' });
+      setOpen(false);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await requester(`${ADMIN_SERVER_URL}/privates/files/delete?fileUuid=${record.uuid}`, {
+        method: 'DELETE',
+      });
+      
+      notify('파일이 삭제되었습니다.', { type: 'success' });
+      redirect('list', 'privates/files');
+    } catch (error) {
+      console.error('Delete error:', error);
+      notify('파일 삭제 중 오류가 발생했습니다.', { type: 'error' });
+    } finally {
+      setDeleting(false);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        variant="contained"
+        color="error"
+        startIcon={<Delete />}
+        onClick={() => setOpen(true)}
+        disabled={deleting}
+        sx={{ ml: 2 }}
+      >
+        {deleting ? '삭제 중...' : '파일 삭제'}
+      </Button>
+      <DeleteConfirmDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onConfirm={handleDelete}
+        fileName={record?.filename || ''}
+      />
+    </>
+  );
+};
 
 const EditActions = () => (
   <TopToolbar>
     <ListButton />
-    <DeleteButton />
+    <CustomDeleteButton />
   </TopToolbar>
 );
 
