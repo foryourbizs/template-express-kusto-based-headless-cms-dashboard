@@ -221,34 +221,11 @@ const FilesCreate = () => {
           {/* 파일 메타데이터 섹션 */}
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom color="primary">
-              파일 정보
+              파일 정보 (자동 설정됨)
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <TextInput 
-                source="filename" 
-                label="파일명" 
-                validate={required()}
-                fullWidth
-              />
-              <TextInput 
-                source="originalName" 
-                label="원본 파일명" 
-                validate={required()}
-                fullWidth
-              />
-            </Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
-              <TextInput 
-                source="mimeType" 
-                label="MIME 타입" 
-                fullWidth
-              />
-              <TextInput 
-                source="extension" 
-                label="확장자" 
-                fullWidth
-              />
-            </Box>
+            <Typography variant="body2" color="text.secondary">
+              파일명, MIME 타입, 확장자 등은 선택한 파일을 기반으로 자동 설정됩니다.
+            </Typography>
           </Paper>
 
           {/* 스토리지 설정 섹션 */}
@@ -273,7 +250,7 @@ const FilesCreate = () => {
               label="파일 경로" 
               fullWidth
               sx={{ mt: 2 }}
-              helperText="스토리지 내 파일 경로 (자동 생성됨)"
+              helperText="스토리지 내 파일 경로 (비워두면 자동 생성됨)"
             />
           </Paper>
 
@@ -300,6 +277,7 @@ const FilesCreate = () => {
               source="accessPermissionUuid"
               reference="privates/users/permissions"
               label="접근 권한"
+              allowEmpty
             >
               <SelectInput 
                 optionText="name" 

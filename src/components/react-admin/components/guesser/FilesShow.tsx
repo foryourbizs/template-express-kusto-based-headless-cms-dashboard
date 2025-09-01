@@ -6,6 +6,7 @@ import {
   ReferenceField,
   TopToolbar,
   ListButton,
+  EditButton,
   DeleteButton,
   useRecordContext,
   useDelete,
@@ -137,6 +138,7 @@ const CustomDeleteButton = () => {
 const ShowActions = () => (
   <TopToolbar>
     <ListButton />
+    <EditButton />
     <CustomDeleteButton />
   </TopToolbar>
 );

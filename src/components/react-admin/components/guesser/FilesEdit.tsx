@@ -9,7 +9,6 @@ import {
   required,
   TopToolbar,
   ListButton,
-  ShowButton,
   DeleteButton,
   SaveButton,
   Toolbar,
@@ -38,7 +37,6 @@ import {
 const EditActions = () => (
   <TopToolbar>
     <ListButton />
-    <ShowButton />
     <DeleteButton />
   </TopToolbar>
 );
@@ -238,6 +236,7 @@ const FilesEdit = () => (
             source="accessPermissionUuid"
             reference="privates/users/permissions"
             label="접근 권한"
+            allowEmpty
           >
             <SelectInput 
               optionText="name" 
