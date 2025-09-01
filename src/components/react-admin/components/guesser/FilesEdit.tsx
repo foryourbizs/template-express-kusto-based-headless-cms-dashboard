@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import {
   Edit,
   SimpleForm,
@@ -14,26 +14,18 @@ import {
   SaveButton,
   Toolbar,
   useRecordContext,
-  useNotify,
-  useRefresh,
 } from 'react-admin';
 import {
   Box,
   Typography,
   Paper,
   Button,
-  LinearProgress,
-  Alert,
   Chip,
   Avatar,
   Card,
   CardContent,
-  CardActions,
 } from '@mui/material';
 import {
-  CloudUpload,
-  Download,
-  Visibility,
   InsertDriveFile,
   Image,
   VideoFile,
@@ -42,9 +34,6 @@ import {
   Description,
   Archive,
 } from '@mui/icons-material';
-import { requester } from '../../lib/client';
-
-const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
 
 const EditActions = () => (
   <TopToolbar>
@@ -89,46 +78,9 @@ const FileTypeIcon = ({ mimeType }: { mimeType: string }) => {
   );
 };
 
-// 파일 업로드 컴포넌트
-const FileUploadComponent = () => {
+// 파일 정보 표시 컴포넌트
+const FileInfoComponent = () => {
   const record = useRecordContext();
-  const notify = useNotify();
-  const refresh = useRefresh();
-  const [uploading, setUploading] = useState(false);
-
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('files', file); // files 키로 배열에 단일 파일
-    //   formData.append('filename', file.name);
-    //   formData.append('originalName', file.name);
-
-      // 파일 ID가 있다면 기존 파일 업데이트
-      if (record?.id) {
-        formData.append('fileId', record.id.toString());
-      }
-
-      // requester를 사용하여 파일 업로드
-      const result = await requester(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
-        method: 'PUT',
-        body: formData,
-      });
-      
-      notify('파일이 성공적으로 업로드되었습니다.', { type: 'success' });
-      refresh();
-      
-    } catch (error) {
-      console.error('Upload error:', error);
-      notify(`파일 업로드 중 오류가 발생했습니다: ${error}`, { type: 'error' });
-    } finally {
-      setUploading(false);
-    }
-  }, [record, notify, refresh]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -144,7 +96,7 @@ const FileUploadComponent = () => {
         {record?.filename ? (
           <Box>
             <Typography variant="h6" gutterBottom color="primary">
-              현재 파일
+              파일 정보
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <FileTypeIcon mimeType={record.mimeType} />
@@ -169,66 +121,14 @@ const FileUploadComponent = () => {
                 </Box>
               </Box>
             </Box>
+
           </Box>
         ) : (
           <Typography variant="h6" gutterBottom color="primary">
-            새 파일 업로드
+            새 파일
           </Typography>
         )}
-
-        {uploading && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" gutterBottom>
-              업로드 중...
-            </Typography>
-            <LinearProgress />
-          </Box>
-        )}
       </CardContent>
-
-      <CardActions>
-        <input
-          accept="*/*"
-          style={{ display: 'none' }}
-          id="file-upload-button"
-          type="file"
-          onChange={handleFileUpload}
-          disabled={uploading}
-        />
-        <label htmlFor="file-upload-button">
-          <Button
-            variant="contained"
-            component="span"
-            startIcon={<CloudUpload />}
-            disabled={uploading}
-          >
-            {record?.filename ? '파일 교체' : '파일 업로드'}
-          </Button>
-        </label>
-        
-        {record?.filename && record?.exists && (
-          <>
-            <Button
-              startIcon={<Download />}
-              onClick={() => {
-                // 다운로드 로직 구현
-                window.open(`/api/files/${record.uuid}/download`, '_blank');
-              }}
-            >
-              다운로드
-            </Button>
-            <Button
-              startIcon={<Visibility />}
-              onClick={() => {
-                // 미리보기 로직 구현
-                window.open(`/api/files/${record.uuid}/preview`, '_blank');
-              }}
-            >
-              미리보기
-            </Button>
-          </>
-        )}
-      </CardActions>
     </Card>
   );
 };
@@ -238,25 +138,25 @@ const FilesEdit = () => (
     <SimpleForm toolbar={<EditToolbar />}>
       <Box sx={{ width: '100%', maxWidth: 800 }}>
         
-        {/* 파일 업로드 섹션 */}
-        <FileUploadComponent />
+        {/* 파일 정보 섹션 */}
+        <FileInfoComponent />
 
         {/* 파일 메타데이터 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            파일 정보
+            파일 정보 (읽기 전용)
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
             <TextInput 
               source="filename" 
               label="파일명" 
-              validate={required()}
+              disabled
               fullWidth
             />
             <TextInput 
               source="originalName" 
               label="원본 파일명" 
-              validate={required()}
+              disabled
               fullWidth
             />
           </Box>
@@ -264,11 +164,27 @@ const FilesEdit = () => (
             <TextInput 
               source="mimeType" 
               label="MIME 타입" 
+              disabled
               fullWidth
             />
             <TextInput 
               source="extension" 
               label="확장자" 
+              disabled
+              fullWidth
+            />
+          </Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
+            <TextInput 
+              source="fileSize" 
+              label="파일 크기 (bytes)" 
+              disabled
+              fullWidth
+            />
+            <TextInput 
+              source="uuid" 
+              label="파일 UUID" 
+              disabled
               fullWidth
             />
           </Box>
@@ -294,9 +210,10 @@ const FilesEdit = () => (
           <TextInput 
             source="filePath" 
             label="파일 경로" 
+            disabled
             fullWidth
             sx={{ mt: 2 }}
-            helperText="스토리지 내 파일 경로"
+            helperText="스토리지 내 파일 경로 (읽기 전용)"
           />
         </Paper>
 
@@ -362,15 +279,20 @@ const FilesEdit = () => (
             fullWidth
             helperText="이미지 크기, 비디오 길이 등의 추가 정보"
           />
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 2 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ mt: 3, mb: 1 }} color="text.secondary">
+            파일 해시 (읽기 전용)
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
             <TextInput 
               source="md5Hash" 
               label="MD5 해시" 
+              disabled
               fullWidth
             />
             <TextInput 
               source="sha256Hash" 
               label="SHA256 해시" 
+              disabled
               fullWidth
             />
           </Box>
