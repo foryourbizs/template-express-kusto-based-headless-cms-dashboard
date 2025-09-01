@@ -97,7 +97,7 @@ const CustomDeleteButton = () => {
     setDeleting(true);
     try {
       console.log('Deleting file with UUID:', fileUuid);
-      await requester(`${ADMIN_SERVER_URL}/privates/files/delete?fileUuid=${fileUuid}`, {
+      await requester(`${ADMIN_SERVER_URL}/privates/files/delete/${fileUuid}`, {
         method: 'DELETE',
       });
       
