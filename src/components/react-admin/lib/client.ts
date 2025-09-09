@@ -2,44 +2,9 @@ import _ from 'lodash';
 import pluralize from "pluralize";
 import { CreateParams, DataProvider, DeleteManyParams, DeleteParams, GetListParams, GetManyParams, GetManyReferenceParams, GetOneParams, UpdateManyParams, UpdateParams } from "react-admin";
 import { includeAndConvert } from './util';
-import { authEventEmitter } from '../utils/authEvents';
-
-// 토큰 자동 갱신을 위한 변수
-let isRefreshing = false;
-let refreshPromise: Promise<any> | null = null;
 
 export const requester = async (url: string, options: any = {}) => {
-  // 요청 로깅 추가 (더 자세한 정보 포함)
-  const timestamp = new Date().toISOString();
-  const requestId = Math.random().toString(36).substr(2, 9);
-  console.log(`🔄 [${timestamp}][${requestId}] API Request: ${options.method || 'GET'} ${url}`, {
-    stackTrace: new Error().stack?.split('\n').slice(1, 3)
-  });
-  
   options.credentials = "include";
-  
-  // 토큰 만료 체크 및 자동 갱신
-  const accessTokenExpiresAt = localStorage.getItem("accessTokenExpiresAt");
-  const refreshTokenExpiresAt = localStorage.getItem("refreshTokenExpiresAt");
-  
-  if (accessTokenExpiresAt && refreshTokenExpiresAt) {
-    const now = new Date().getTime();
-    const accessTokenExpires = new Date(accessTokenExpiresAt).getTime();
-    const refreshTokenExpires = new Date(refreshTokenExpiresAt).getTime();
-    
-    // Access Token이 5분 이내에 만료되고, Refresh Token이 아직 유효한 경우
-    const fiveMinutes = 5 * 60 * 1000;
-    if (accessTokenExpires - now < fiveMinutes && refreshTokenExpires > now) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        refreshPromise = refreshTokensInternal();
-      }
-      
-      if (refreshPromise) {
-        await refreshPromise;
-      }
-    }
-  }
   
   // JWT 토큰을 헤더에 추가
   const accessToken = localStorage.getItem("accessToken");
@@ -54,91 +19,30 @@ export const requester = async (url: string, options: any = {}) => {
     ...options.headers,
   };
 
-  try {
-    const response = await fetch(url, options);
-    
-    // 네트워크 에러나 서버 연결 실패 체크
-    if (!response.ok && (response.status >= 500 || response.status === 0)) {
-      return Promise.reject({
-        message: `서버 연결에 실패했습니다. (상태 코드: ${response.status})`,
-        status: response.status || 500
-      });
-    }
+  const response = await fetch(url, options);
 
-    // Content-Type 체크
-    const contentType = response.headers.get("content-type");
-    
-    let responseBody;
-    try {
-      // 204 No Content인 경우 응답 본문이 없으므로 빈 객체 반환
-      if (response.status === 204) {
-        responseBody = {};
-      } else {
-        // JSON 응답이 아닌 경우 처리 - JSON API 형식(application/vnd.api+json)도 허용
-        if (!contentType || (!contentType.includes("application/json") && !contentType.includes("application/vnd.api+json"))) {
-          const textResponse = await response.text();
-          
-          // HTML 페이지를 받은 경우 (보통 404, 500 페이지)
-          if (textResponse.includes("<!DOCTYPE") || textResponse.includes("<html")) {
-            return Promise.reject({
-              message: `API 엔드포인트를 찾을 수 없습니다. URL을 확인해주세요: ${url}`,
-              status: response.status || 404
-            });
-          }
-          
-          // 그 외 텍스트 응답
-          return Promise.reject({
-            message: `서버에서 올바르지 않은 응답을 받았습니다: ${textResponse.substring(0, 100)}...`,
-            status: response.status || 500
-          });
-        }
-        
-        responseBody = await response.json();
-      }
-    } catch (jsonError) {
-      // JSON 파싱 에러 처리
-      return Promise.reject({
-        message: `서버 응답을 파싱할 수 없습니다. JSON 형식이 아닙니다.`,
-        status: response.status || 500,
-        details: `JSON 파싱 에러: ${jsonError instanceof Error ? jsonError.message : '알 수 없는 오류'}`
-      });
-    }
+  const responseBody = await response.json();
 
-    // 401 에러 시 토큰 만료로 처리
-    if (response.status === 401) {
-      localStorage.removeItem("user");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("accessTokenExpiresAt");
-      localStorage.removeItem("refreshTokenExpiresAt");
-      
-      // 전역 인증 에러 이벤트 발생
-      window.dispatchEvent(new CustomEvent('auth-error', { 
-        detail: { status: 401, message: 'Authentication expired' } 
-      }));
-      
-      return Promise.reject({
-        message: "인증이 만료되었습니다. 다시 로그인해주세요.",
-        status: 401
-      });
-    }
+  // 401 에러 시 토큰 만료로 처리
+  if (response.status === 401) {
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    window.location.href = "/login";
+    return Promise.reject({
+      message: "인증이 만료되었습니다. 다시 로그인해주세요.",
+      status: 401
+    });
+  }
 
   // 200대 상태 코드를 성공으로 처리 (200, 201, 204 등)
-  // 특히 204 No Content는 DELETE 요청의 성공 응답
   if (response.status < 200 || response.status >= 300) {
     if (responseBody?.errors?.find((error: any) => error.status == 401)) {
       console.log(responseBody?.errors);
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      localStorage.removeItem("accessTokenExpiresAt");
-      localStorage.removeItem("refreshTokenExpiresAt");
-      
-      // 전역 인증 에러 이벤트 발생
-      window.dispatchEvent(new CustomEvent('auth-error', { 
-        detail: { status: 401, message: 'Authentication expired' } 
-      }));
-      
+      window.location.href = "/login";
       Promise.resolve();
     }
 
@@ -206,18 +110,11 @@ export const requester = async (url: string, options: any = {}) => {
 
   }
 
-    return {
-      status: response.status,
-      headers: response.headers,
-      body: responseBody,
-      json: responseBody,
-    }
-  } catch (networkError) {
-    // 네트워크 에러나 기타 예외 처리
-    return Promise.reject({
-      message: `네트워크 오류가 발생했습니다: ${networkError instanceof Error ? networkError.message : '알 수 없는 오류'}`,
-      status: 0
-    });
+  return {
+    status: response.status,
+    headers: response.headers,
+    body: responseBody,
+    json: responseBody,
   }
 }
 
@@ -240,13 +137,6 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
 
   return {
     getList: async (resource: string, params: GetListParams) => {
-      const timestamp = new Date().toISOString();
-      const requestId = Math.random().toString(36).substr(2, 9);
-      console.log(`📋 [${timestamp}][${requestId}] getList called for resource: ${resource}`, {
-        params,
-        stackTrace: new Error().stack?.split('\n').slice(1, 4)
-      });
-      
       const { page, perPage } = params.pagination ? params.pagination : { page: 1, perPage: 10 };
 
       const searchParams = new URLSearchParams();
@@ -259,7 +149,35 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
       searchParams.set("page[size]", String(perPage));
 
       Object.keys(params.filter || {}).forEach((key) => {
-        searchParams.set(`filter[${key}]`, params.filter[key]);
+        const value = params.filter[key];
+        
+        // user 객체 특별 처리
+        if (key === 'user' && typeof value === 'object' && value !== null) {
+          Object.keys(value).forEach((subKey) => {
+            if (value[subKey] !== null && value[subKey] !== undefined) {
+              searchParams.set(`filter[user.${subKey}]`, value[subKey]);
+            }
+          });
+          return;
+        }
+        
+        // 특수한 필터 키 처리 - 여러 패턴 체크
+        if ((key === 'user.name_like' || key === 'user_name_like' || key === 'name_like') && value) {
+          searchParams.set(`filter[user.name_like]`, value);
+          return;
+        }
+        
+        // 값이 객체가 아닌 경우에만 필터 추가
+        if (value !== null && value !== undefined && typeof value !== 'object') {
+          searchParams.set(`filter[${key}]`, value);
+        } else if (typeof value === 'object' && value !== null) {
+          // 객체인 경우 각 속성을 개별 필터로 추가 (일반적인 경우)
+          Object.keys(value).forEach((subKey) => {
+            if (value[subKey] !== null && value[subKey] !== undefined) {
+              searchParams.set(`filter[${subKey}]`, value[subKey]);
+            }
+          });
+        }
       });
 
       if (params.sort && params.sort.field) {
@@ -465,7 +383,35 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
       }
 
       Object.keys(filter || {}).forEach((key) => {
-        searchParams.set(`filter[${key}]`, filter[key]);
+        const value = filter[key];
+        
+        // user 객체 특별 처리
+        if (key === 'user' && typeof value === 'object' && value !== null) {
+          Object.keys(value).forEach((subKey) => {
+            if (value[subKey] !== null && value[subKey] !== undefined) {
+              searchParams.set(`filter[user.${subKey}]`, value[subKey]);
+            }
+          });
+          return;
+        }
+        
+        // 특수한 필터 키 처리
+        if (key === 'user.name_like' && value) {
+          searchParams.set(`filter[user.name_like]`, value);
+          return;
+        }
+        
+        // 값이 객체가 아닌 경우에만 필터 추가
+        if (value !== null && value !== undefined && typeof value !== 'object') {
+          searchParams.set(`filter[${key}]`, value);
+        } else if (typeof value === 'object' && value !== null) {
+          // 객체인 경우 각 속성을 개별 필터로 추가
+          Object.keys(value).forEach((subKey) => {
+            if (value[subKey] !== null && value[subKey] !== undefined) {
+              searchParams.set(`filter[${subKey}]`, value[subKey]);
+            }
+          });
+        }
       });
 
       const response = await requester(
@@ -512,59 +458,4 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
       return { data: updatedIds };
     },
   };
-};
-
-// 내부용 토큰 갱신 함수
-const refreshTokensInternal = async (): Promise<void> => {
-  try {
-    const accessToken = localStorage.getItem("accessToken");
-    const refreshToken = localStorage.getItem("refreshToken");
-    
-    if (!accessToken || !refreshToken) {
-      throw new Error('Access Token 또는 Refresh Token이 없습니다.');
-    }
-
-    const refreshUrl = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || 'http://localhost:3001';
-    const response = await fetch(`${refreshUrl}/users/sign/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: JSON.stringify({
-        refreshToken: refreshToken
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`토큰 갱신 실패: ${response.status}`);
-    }
-
-    const result = await response.json();
-    
-    if (result.data?.attributes) {
-      // 새로운 토큰들과 만료시간 저장
-      localStorage.setItem("accessToken", result.data.attributes.accessToken);
-      localStorage.setItem("refreshToken", result.data.attributes.refreshToken);
-      
-      if (result.data.attributes.accessTokenExpiresAt) {
-        localStorage.setItem("accessTokenExpiresAt", result.data.attributes.accessTokenExpiresAt);
-      }
-      if (result.data.attributes.refreshTokenExpiresAt) {
-        localStorage.setItem("refreshTokenExpiresAt", result.data.attributes.refreshTokenExpiresAt);
-      }
-    }
-  } catch (error) {
-    console.error('Internal token refresh error:', error);
-    // 갱신 실패 시 로그아웃 처리
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("accessTokenExpiresAt");
-    localStorage.removeItem("refreshTokenExpiresAt");
-    throw error;
-  } finally {
-    isRefreshing = false;
-    refreshPromise = null;
-  }
 };
