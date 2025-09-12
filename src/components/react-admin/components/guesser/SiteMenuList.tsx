@@ -21,11 +21,20 @@ import {
   SearchInput,
   TextInput,
   SelectInput,
+  useDelete,
+  useRecordContext,
+  useNotify,
+  useRefresh,
+  Button,
 } from 'react-admin';
 import {
   Box,
   Chip,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   Folder,
@@ -34,6 +43,7 @@ import {
   ExitToApp,
   TouchApp,
   Menu as MenuIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
 
@@ -90,6 +100,7 @@ const getMenuTypeIcon = (type: string) => {
 const HierarchicalTitle = ({ record }: { record: any }) => {
   const depth = record?.depth || 0;
   const hasChildren = record?.hasChildren || false;
+  const title = record?.title || record?.attributes?.title || '-';
   
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -105,35 +116,42 @@ const HierarchicalTitle = ({ record }: { record: any }) => {
       
       {/* 메뉴 제목 */}
       <Typography variant="body2" sx={{ fontWeight: depth === 0 ? 600 : 400 }}>
-        {record?.title}
+        {title}
       </Typography>
     </Box>
   );
 };
 
 // 그룹키 컴포넌트
-const GroupKeyField = ({ record }: { record: any }) => (
-  <Chip
-    label={record?.groupKey}
-    size="small"
-    variant="outlined"
-    color="primary"
-  />
-);
+const GroupKeyField = ({ record }: { record: any }) => {
+  const groupKey = record?.groupKey || record?.attributes?.groupKey || '-';
+  return (
+    <Chip
+      label={groupKey}
+      size="small"
+      variant="outlined"
+      color="primary"
+    />
+  );
+};
 
 // 메뉴 타입 컴포넌트
-const MenuTypeField = ({ record }: { record: any }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-    {getMenuTypeIcon(record?.type)}
-    <Typography variant="body2">
-      {menuTypeChoices.find(choice => choice.id === record?.type)?.name || record?.type}
-    </Typography>
-  </Box>
-);
+const MenuTypeField = ({ record }: { record: any }) => {
+  const type = record?.type || record?.attributes?.type || 'INTERNAL_LINK';
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      {getMenuTypeIcon(type)}
+      <Typography variant="body2">
+        {menuTypeChoices.find(choice => choice.id === type)?.name || type}
+      </Typography>
+    </Box>
+  );
+};
 
 // 접근 권한 표시 컴포넌트
 const AccessControlField = ({ record }: { record: any }) => {
-  const { isPublic, requireLogin } = record || {};
+  const isPublic = record?.isPublic ?? record?.attributes?.isPublic ?? true;
+  const requireLogin = record?.requireLogin ?? record?.attributes?.requireLogin ?? false;
   
   return (
     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
@@ -158,6 +176,57 @@ const ListActions = () => (
   </TopToolbar>
 );
 
+// 커스텀 삭제 버튼
+const CustomDeleteButton = () => {
+  const record = useRecordContext();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [open, setOpen] = React.useState(false);
+  const [deleteOne] = useDelete();
+
+  const handleDelete = () => {
+    deleteOne(
+      'privates/siteMenu',
+      { id: record.id },
+      {
+        onSuccess: () => {
+          notify('메뉴가 삭제되었습니다', { type: 'info' });
+          refresh();
+        },
+        onError: (error: any) => {
+          notify(`오류: ${error?.message || '삭제 중 오류가 발생했습니다'}`, { type: 'error' });
+        },
+      }
+    );
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button
+        onClick={() => setOpen(true)}
+        color="error"
+        size="small"
+        startIcon={<DeleteIcon />}
+      >
+        삭제
+      </Button>
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>메뉴 삭제</DialogTitle>
+        <DialogContent>
+          이 메뉴를 삭제하시겠습니까? 하위 메뉴가 있는 경우 함께 삭제됩니다.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>취소</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            삭제
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+};
+
 // 메뉴 목록 컴포넌트
 export const SiteMenuList = () => {
   return (
@@ -177,7 +246,10 @@ export const SiteMenuList = () => {
       title="메뉴 관리"
     >
       <Datagrid
-        rowClick="edit"
+        rowClick={(id, resource, record) => {
+          console.log('Record data:', record);
+          return 'edit';
+        }}
         sx={{
           '& .RaDatagrid-headerCell': {
             fontWeight: 600,
@@ -189,76 +261,83 @@ export const SiteMenuList = () => {
           },
         }}
       >
-        {/* UUID (숨김, 편집용) */}
-        <TextField source="uuid" sx={{ display: 'none' }} />
-        
         {/* 그룹키 */}
         <FunctionField
           label="그룹"
-          render={GroupKeyField}
-          sortBy="groupKey"
+          render={(record) => {
+            console.log('GroupKey record:', record);
+            return record?.groupKey || record?.attributes?.groupKey || '-';
+          }}
         />
         
-        {/* 계층적 제목 */}
+        {/* 메뉴명 */}
         <FunctionField
           label="메뉴명"
-          render={HierarchicalTitle}
-          sortBy="title"
-          sx={{ minWidth: 250 }}
+          render={(record) => record?.title || record?.attributes?.title || '-'}
         />
         
         {/* 메뉴 타입 */}
         <FunctionField
           label="유형"
-          render={MenuTypeField}
-          sortBy="type"
+          render={(record) => {
+            const type = record?.type || record?.attributes?.type || 'INTERNAL_LINK';
+            const choice = menuTypeChoices.find(choice => choice.id === type);
+            return choice?.name || type;
+          }}
         />
         
         {/* 설명 */}
-        <TextField
-          source="description"
+        <FunctionField
           label="설명"
-          sx={{ maxWidth: 200 }}
-          emptyText="-"
+          render={(record) => record?.description || record?.attributes?.description || '-'}
         />
         
         {/* 표시 순서 */}
-        <NumberField
-          source="displayOrder"
+        <FunctionField
           label="순서"
-          sx={{ textAlign: 'center' }}
+          render={(record) => record?.displayOrder ?? record?.attributes?.displayOrder ?? 0}
         />
         
-        {/* 접근 권한 */}
+        {/* 공개 여부 */}
         <FunctionField
-          label="접근 권한"
-          render={AccessControlField}
-          sortable={false}
+          label="공개"
+          render={(record) => {
+            const isPublic = record?.isPublic ?? record?.attributes?.isPublic ?? true;
+            return isPublic ? '공개' : '비공개';
+          }}
+        />
+        
+        {/* 로그인 필수 */}
+        <FunctionField
+          label="로그인 필수"
+          render={(record) => {
+            const requireLogin = record?.requireLogin ?? record?.attributes?.requireLogin ?? false;
+            return requireLogin ? '필수' : '불필요';
+          }}
         />
         
         {/* 생성일 */}
-        <DateField
-          source="createdAt"
+        <FunctionField
           label="생성일"
-          showTime={false}
+          render={(record) => {
+            const createdAt = record?.createdAt || record?.attributes?.createdAt;
+            return createdAt ? new Date(createdAt).toLocaleDateString() : '-';
+          }}
         />
         
         {/* 수정일 */}
-        <DateField
-          source="updatedAt"
+        <FunctionField
           label="수정일"
-          showTime={false}
+          render={(record) => {
+            const updatedAt = record?.updatedAt || record?.attributes?.updatedAt;
+            return updatedAt ? new Date(updatedAt).toLocaleDateString() : '-';
+          }}
         />
         
         {/* 액션 버튼들 */}
-        <Box sx={{ display: 'flex', gap: 0.5, minWidth: 120 }}>
-          <ShowButton />
-          <EditButton />
-          <DeleteButton
-            confirmTitle="메뉴 삭제"
-            confirmContent="이 메뉴를 삭제하시겠습니까? 하위 메뉴가 있는 경우 함께 삭제됩니다."
-          />
-        </Box>
+        <ShowButton />
+        <EditButton />
+        <CustomDeleteButton />
       </Datagrid>
     </List>
   );
