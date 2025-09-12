@@ -176,7 +176,6 @@ const PostForm = () => {
                 source="postType"
                 label="게시물 타입"
                 choices={postTypeChoices}
-                validate={[required()]}
                 defaultValue="POST"
               />
             </Box>
@@ -185,7 +184,6 @@ const PostForm = () => {
                 source="postStatus"
                 label="상태"
                 choices={postStatusChoices}
-                validate={[required()]}
                 defaultValue="DRAFT"
               />
             </Box>
@@ -197,7 +195,6 @@ const PostForm = () => {
                 source="authorUuid"
                 reference="privates/users"
                 label="작성자"
-                validate={[required()]}
               >
                 <AutocompleteInput
                   optionText="name"
