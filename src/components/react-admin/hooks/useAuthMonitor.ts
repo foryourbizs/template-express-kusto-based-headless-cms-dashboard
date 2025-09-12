@@ -42,7 +42,6 @@ export const useAuthMonitor = () => {
 
       // Access Token이 만료된 경우 (하지만 Refresh Token은 유효)
       if (accessToken.expired) {
-        console.log('Access token expired but refresh token valid - showing reauth modal');
         setState(prev => ({ 
           ...prev, 
           isAuthExpired: true, 

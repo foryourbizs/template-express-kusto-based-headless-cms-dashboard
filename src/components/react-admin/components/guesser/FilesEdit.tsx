@@ -89,11 +89,6 @@ const CustomDeleteButton = () => {
   const isDeleted = !!record.deletedAt; // deletedAt 기준으로만 판단
 
   const handleDelete = async () => {
-    // 디버깅: 레코드 구조 확인
-    console.log('Delete - Full record:', record);
-    console.log('Delete - record.uuid:', record?.uuid);
-    console.log('Delete - record.id:', record?.id);
-    
     // uuid 필드가 없으면 id 필드를 사용해보기
     const fileUuid = record?.uuid || record?.id;
     
@@ -105,7 +100,6 @@ const CustomDeleteButton = () => {
 
     setDeleting(true);
     try {
-      console.log('Deleting file with UUID:', fileUuid);
       await requester(`${ADMIN_SERVER_URL}/privates/files/delete/${fileUuid}`, {
         method: 'DELETE',
       });
