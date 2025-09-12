@@ -44,6 +44,7 @@ import {
   Category,
   Comment,
 } from '@mui/icons-material';
+import { EmptyList } from '../common/EmptyList';
 
 // 게시물 상태 색상 매핑
 const getPostStatusColor = (status: string) => {
@@ -191,6 +192,14 @@ export const PostList = () => (
     actions={<PostListActions />}
     perPage={25}
     sort={{ field: 'createdAt', order: 'DESC' }}
+    empty={
+      <EmptyList
+        title="등록된 게시물이 없습니다"
+        description="첫 번째 게시물을 작성해보세요"
+        icon={<Article sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        createButtonLabel="게시물 작성"
+      />
+    }
   >
     <DatagridConfigurable
       bulkActionButtons={<PostBulkActionButtons />}

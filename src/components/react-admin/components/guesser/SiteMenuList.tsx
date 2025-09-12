@@ -33,7 +33,9 @@ import {
   Link,
   ExitToApp,
   TouchApp,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
+import { EmptyList } from '../common/EmptyList';
 
 // 메뉴 타입 선택지
 const menuTypeChoices = [
@@ -156,26 +158,20 @@ const ListActions = () => (
   </TopToolbar>
 );
 
-// 빈 상태 컴포넌트
-const Empty = () => (
-  <Box sx={{ textAlign: 'center', py: 4 }}>
-    <Typography variant="h6" color="textSecondary" gutterBottom>
-      등록된 메뉴가 없습니다
-    </Typography>
-    <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-      첫 번째 메뉴를 추가해보세요
-    </Typography>
-    <CreateButton />
-  </Box>
-);
-
 // 메뉴 목록 컴포넌트
 export const SiteMenuList = () => {
   return (
     <List
       filters={siteMenuFilters}
       actions={<ListActions />}
-      empty={<Empty />}
+      empty={
+        <EmptyList
+          title="등록된 메뉴가 없습니다"
+          description="첫 번째 메뉴를 추가해보세요"
+          icon={<MenuIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+          createButtonLabel="메뉴 추가"
+        />
+      }
       sort={{ field: 'groupKey', order: 'ASC' }}
       perPage={50}
       title="메뉴 관리"

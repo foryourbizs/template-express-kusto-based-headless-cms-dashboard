@@ -18,6 +18,8 @@ import {
   BulkExportButton,
 } from "react-admin";
 import { Box } from "@mui/material";
+import { Person as PersonIcon } from "@mui/icons-material";
+import { EmptyList } from "../common/EmptyList";
 
 const UserListActions = () => (
   <TopToolbar>
@@ -96,6 +98,14 @@ export const UserList = () => (
   <List 
     actions={<UserListActions />} 
     filters={userFilters}
+    empty={
+      <EmptyList
+        title="등록된 사용자가 없습니다"
+        description="첫 번째 사용자를 추가해보세요"
+        icon={<PersonIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        createButtonLabel="사용자 추가"
+      />
+    }
   >
     <Datagrid
       rowClick="edit"
