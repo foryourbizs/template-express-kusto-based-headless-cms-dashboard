@@ -305,13 +305,6 @@ const FilesEditForm = () => {
   const isDeleted = record ? !!record.deletedAt : false;
 
   // 디버깅: 삭제 상태 확인
-  console.log('=== FilesEdit Debug ===');
-  console.log('FilesEdit - record:', record);
-  console.log('FilesEdit - record.deletedAt:', record?.deletedAt);
-  console.log('FilesEdit - typeof deletedAt:', typeof record?.deletedAt);
-  console.log('FilesEdit - isDeleted:', isDeleted);
-  console.log('========================');
-
   return (
     <SimpleForm toolbar={<EditToolbar />}>
       <Box sx={{ width: '100%', maxWidth: 800 }}>

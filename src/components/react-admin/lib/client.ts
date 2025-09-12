@@ -38,7 +38,6 @@ export const requester = async (url: string, options: any = {}) => {
   // 200대 상태 코드를 성공으로 처리 (200, 201, 204 등)
   if (response.status < 200 || response.status >= 300) {
     if (responseBody?.errors?.find((error: any) => error.status == 401)) {
-      console.log(responseBody?.errors);
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");

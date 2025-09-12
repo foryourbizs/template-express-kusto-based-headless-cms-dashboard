@@ -31,7 +31,6 @@ const createCachedMethod = (methodName: string, originalMethod: any) => {
         
         // 기존 요청이 진행 중인지 확인
         if (requestCache.has(cacheKey)) {
-            console.log(`🔄 Cache hit for ${methodName}:${args[0]} - returning existing promise`);
             return requestCache.get(cacheKey);
         }
         

@@ -306,21 +306,13 @@ export const getTokenTimeRemaining = (): {
         const expiresAt = new Date(accessTokenExpiresAt).getTime();
         accessToken.remaining = Math.max(0, expiresAt - now);
         accessToken.expired = accessToken.remaining <= 0;
-        console.log('AccessToken expires at:', new Date(expiresAt).toISOString());
-        console.log('AccessToken remaining ms:', accessToken.remaining);
-        console.log('AccessToken expired:', accessToken.expired);
     }
     
     if (refreshTokenExpiresAt) {
         const expiresAt = new Date(refreshTokenExpiresAt).getTime();
         refreshToken.remaining = Math.max(0, expiresAt - now);
         refreshToken.expired = refreshToken.remaining <= 0;
-        console.log('RefreshToken expires at:', new Date(expiresAt).toISOString());
-        console.log('RefreshToken remaining ms:', refreshToken.remaining);
-        console.log('RefreshToken expired:', refreshToken.expired);
     }
-    
-    console.log('========================');
     
     return { accessToken, refreshToken };
 };

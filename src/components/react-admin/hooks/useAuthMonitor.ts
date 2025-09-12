@@ -29,22 +29,8 @@ export const useAuthMonitor = () => {
       // 1. 토큰 만료시간 확인 (로컬에서만)
       const { accessToken, refreshToken } = getTokenTimeRemaining();
       
-      // 디버깅 로그 추가
-      console.log('=== Auth Monitor Debug ===');
-      console.log('Access Token:', {
-        remaining: accessToken.remaining,
-        expired: accessToken.expired,
-        expiresAt: accessToken.expiresAt
-      });
-      console.log('Refresh Token:', {
-        remaining: refreshToken.remaining,
-        expired: refreshToken.expired,
-        expiresAt: refreshToken.expiresAt
-      });
-      
       // Refresh Token이 만료된 경우
       if (refreshToken.expired) {
-        console.log('Refresh token expired - showing reauth modal');
         setState(prev => ({ 
           ...prev, 
           isAuthExpired: true, 

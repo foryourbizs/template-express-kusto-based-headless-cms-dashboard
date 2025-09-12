@@ -246,10 +246,7 @@ export const SiteMenuList = () => {
       title="메뉴 관리"
     >
       <Datagrid
-        rowClick={(id, resource, record) => {
-          console.log('Record data:', record);
-          return 'edit';
-        }}
+        rowClick="edit"
         sx={{
           '& .RaDatagrid-headerCell': {
             fontWeight: 600,
@@ -265,7 +262,6 @@ export const SiteMenuList = () => {
         <FunctionField
           label="그룹"
           render={(record) => {
-            console.log('GroupKey record:', record);
             return record?.groupKey || record?.attributes?.groupKey || '-';
           }}
         />

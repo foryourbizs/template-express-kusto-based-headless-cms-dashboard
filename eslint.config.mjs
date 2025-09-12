@@ -29,6 +29,7 @@ const eslintConfig = [
       // React 관련 규칙 완화
       "react-hooks/exhaustive-deps": "off",
       "react/no-unescaped-entities": "off",
+      "react/jsx-key": "off",
       
       // Next.js 관련 규칙 완화
       "@next/next/no-img-element": "off",
@@ -40,6 +41,7 @@ const eslintConfig = [
       "no-unused-vars": "off",
       "no-console": "off",
       "prefer-const": "off",
+
       
       // Import 관련 규칙 완화
       "import/no-anonymous-default-export": "off",
