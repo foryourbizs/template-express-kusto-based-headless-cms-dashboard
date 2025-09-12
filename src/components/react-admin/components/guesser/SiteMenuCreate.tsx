@@ -19,10 +19,10 @@ import {
   CardContent,
   Box,
   Typography,
-  Divider,
+  Alert,
 } from '@mui/material';
 
-// 메뉴 타입 선택지
+// 메뉴 타입 선택지 (스키마의 MenuType enum에 맞춤)
 const menuTypeChoices = [
   { id: 'INTERNAL_LINK', name: '내부 링크' },
   { id: 'EXTERNAL_LINK', name: '외부 링크' },
@@ -42,6 +42,10 @@ export const SiteMenuCreate = () => (
     redirect="list"
   >
     <SimpleForm toolbar={<SiteMenuCreateToolbar />}>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        링크 URL, 타겟 등의 추가 정보는 메뉴 생성 후 메타데이터를 통해 설정할 수 있습니다.
+      </Alert>
+
       <Card sx={{ width: '100%', mb: 2 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
@@ -64,8 +68,8 @@ export const SiteMenuCreate = () => (
                   source="groupKey"
                   label="그룹키"
                   fullWidth
-                  validate={[required(), minLength(1), maxLength(50)]}
-                  helperText="메뉴 그룹을 식별하는 키를 입력하세요"
+                  validate={[required(), minLength(1), maxLength(30)]}
+                  helperText="메뉴 그룹을 식별하는 키 (예: gnb, snb)"
                 />
               </Box>
             </Box>
@@ -76,7 +80,6 @@ export const SiteMenuCreate = () => (
                   source="type"
                   label="메뉴 타입"
                   choices={menuTypeChoices}
-                  validate={[required()]}
                   defaultValue="INTERNAL_LINK"
                 />
               </Box>
@@ -96,8 +99,8 @@ export const SiteMenuCreate = () => (
               multiline
               rows={3}
               fullWidth
-              validate={[maxLength(500)]}
-              helperText="메뉴에 대한 설명을 입력하세요 (최대 500자)"
+              validate={[maxLength(255)]}
+              helperText="메뉴에 대한 설명을 입력하세요 (최대 255자)"
             />
           </Box>
         </CardContent>
@@ -106,27 +109,12 @@ export const SiteMenuCreate = () => (
       <Card sx={{ width: '100%', mb: 2 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            링크 설정
+            메뉴 구조
           </Typography>
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextInput
-              source="href"
-              label="링크 URL"
-              fullWidth
-              helperText="메뉴 클릭 시 이동할 URL을 입력하세요"
-            />
-
-            <TextInput
-              source="target"
-              label="링크 타겟"
-              fullWidth
-              defaultValue="_self"
-              helperText="링크 열기 방식 (_self, _blank 등)"
-            />
-
             <ReferenceInput
-              source="parentUuid"
+              source="parentUUID"
               reference="privates/siteMenu"
               label="부모 메뉴"
             >
