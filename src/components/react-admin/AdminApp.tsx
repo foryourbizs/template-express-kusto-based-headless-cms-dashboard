@@ -47,6 +47,7 @@ import { PermissionsListWithDelete, } from "./components/guesser/PermissionsList
 
 import SiteMenuList from "./components/guesser/SiteMenuList";
 import SiteMenuEdit from "./components/guesser/SiteMenuEdit";
+import SiteMenuCreate from "./components/guesser/SiteMenuCreate";
 import PostList from "./components/guesser/PostList";
 import PostEdit from "./components/guesser/PostEdit";
 
@@ -250,6 +251,7 @@ const AdminApp = () => (
         name="privates/siteMenu"
         list={SiteMenuList}
         edit={SiteMenuEdit}
+        create={SiteMenuCreate}
         options={{ 
           label: '메뉴 관리',
           menuGroup: 'menus',
