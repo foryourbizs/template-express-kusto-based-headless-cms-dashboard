@@ -233,6 +233,44 @@ const AdminApp = () => (
           icon: <ViewList />
         }}
       />
+
+
+
+
+
+
+
+
+      <Resource
+        name="privates/siteMenu"
+        list={ListGuesserEx}
+        edit={EditGuesser}
+        options={{ 
+          label: '메뉴 관리',
+          menuGroup: 'menus',
+          menuGroupLabel: '사이트',
+          icon: <Article />
+        }}
+      />
+
+
+
+      <Resource
+        name="privates/posts"
+        list={ListGuesserEx}
+        edit={EditGuesser}
+        options={{ 
+          label: '게시판 관리',
+          menuGroup: 'posts',
+          menuGroupLabel: '게시판',
+          icon: <Article />
+        }}
+      />
+
+
+
+
+
     </Admin>
   </BrowserRouter>
 );
