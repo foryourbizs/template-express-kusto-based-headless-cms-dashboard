@@ -101,23 +101,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
       }
     });
 
-    // 그룹 처리: 2개 이상의 아이템이 있는 경우만 그룹으로, 1개면 ungrouped로 이동
+    // 그룹 처리: menuGroup이 있는 경우 항상 그룹으로 표시 (1개여도 그룹핑)
     const groups: MenuGroup[] = [];
     
     Array.from(groupMap.entries()).forEach(([groupId, groupData]) => {
       const sortedItems = groupData.items.sort((a, b) => a.label.localeCompare(b.label));
       
-      if (sortedItems.length >= 2) {
-        // 2개 이상이면 그룹으로 표시
-        groups.push({
-          id: groupId,
-          label: groupData.label,
-          items: sortedItems,
-        });
-      } else {
-        // 1개뿐이면 ungrouped로 이동
-        ungrouped.push(...sortedItems);
-      }
+      // menuGroup이 지정된 경우 항상 그룹으로 표시 (아이템이 1개여도 그룹핑)
+      groups.push({
+        id: groupId,
+        label: groupData.label,
+        items: sortedItems,
+      });
     });
 
     // 그룹들을 순서대로 정렬
