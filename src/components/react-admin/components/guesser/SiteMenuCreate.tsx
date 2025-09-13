@@ -117,11 +117,18 @@ export const SiteMenuCreate = () => (
               source="parentUUID"
               reference="privates/siteMenu"
               label="부모 메뉴"
+              filter={{ deletedAt: null }}
             >
               <AutocompleteInput
-                optionText="title"
-                filterToQuery={searchText => ({ title: searchText })}
+                optionText={(choice: any) => 
+                  choice ? `${choice.title} (${choice.groupKey})` : ''
+                }
+                optionValue="uuid"
+                filterToQuery={searchText => ({ 
+                  q: searchText 
+                })}
                 helperText="상위 메뉴를 선택하세요 (선택사항)"
+                clearOnBlur
               />
             </ReferenceInput>
           </Box>

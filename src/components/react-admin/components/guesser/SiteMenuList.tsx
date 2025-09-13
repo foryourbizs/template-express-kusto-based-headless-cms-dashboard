@@ -98,16 +98,27 @@ const getMenuTypeIcon = (type: string) => {
 
 // 계층 구조를 시각적으로 표현하는 컴포넌트
 const HierarchicalTitle = ({ record }: { record: any }) => {
-  const depth = record?.depth || 0;
+  const level = record?.level || 0;
   const hasChildren = record?.hasChildren || false;
   const title = record?.title || record?.attributes?.title || '-';
   
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       {/* 들여쓰기 */}
-      <Box sx={{ width: depth * 20 }} />
+      <Box sx={{ width: level * 24 }} />
       
       {/* 계층 아이콘 */}
+      {level > 0 && (
+        <Box sx={{ width: 16, height: 16, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ 
+            width: 8, 
+            height: 1, 
+            backgroundColor: 'text.secondary',
+            mr: 1 
+          }} />
+        </Box>
+      )}
+      
       {hasChildren ? (
         <FolderOpen fontSize="small" color="primary" />
       ) : (
@@ -115,9 +126,25 @@ const HierarchicalTitle = ({ record }: { record: any }) => {
       )}
       
       {/* 메뉴 제목 */}
-      <Typography variant="body2" sx={{ fontWeight: depth === 0 ? 600 : 400 }}>
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          fontWeight: level === 0 ? 600 : 400,
+          color: level === 0 ? 'primary.main' : 'text.primary'
+        }}
+      >
         {title}
       </Typography>
+      
+      {/* 레벨 표시 */}
+      {level > 0 && (
+        <Chip 
+          label={`L${level}`} 
+          size="small" 
+          variant="outlined" 
+          sx={{ ml: 1, fontSize: '0.75rem', height: 20 }}
+        />
+      )}
     </Box>
   );
 };
@@ -241,8 +268,8 @@ export const SiteMenuList = () => {
           createButtonLabel="메뉴 추가"
         />
       }
-      sort={{ field: 'groupKey', order: 'ASC' }}
-      perPage={50}
+      sort={{ field: 'groupKey,displayOrder', order: 'ASC' }}
+      perPage={100}
       title="메뉴 관리"
     >
       <Datagrid
@@ -266,10 +293,11 @@ export const SiteMenuList = () => {
           }}
         />
         
-        {/* 메뉴명 */}
+        {/* 메뉴명 (계층적 표시) */}
         <FunctionField
           label="메뉴명"
-          render={(record) => record?.title || record?.attributes?.title || '-'}
+          render={(record) => <HierarchicalTitle record={record} />}
+          sx={{ minWidth: 250 }}
         />
         
         {/* 메뉴 타입 */}

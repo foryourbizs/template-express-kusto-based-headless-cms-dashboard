@@ -123,51 +123,71 @@ const MenuInfoSection = () => (
 );
 
 // 계층 구조 섹션
-const HierarchySection = () => (
-  <Card sx={{ mb: 2 }}>
-    <CardContent>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Sort color="primary" />
-        <Typography variant="h6">계층 구조</Typography>
-      </Box>
-      
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-        <Box sx={{ flex: 1, minWidth: 200 }}>
-          <ReferenceInput
-            source="parentUUID"
-            reference="privates/siteMenu"
-            label="상위 메뉴"
-            filter={{ deletedAt: null }}
-          >
-            <AutocompleteInput
-              optionText={(choice: any) => 
-                choice ? `${choice.title} (${choice.groupKey})` : ''
-              }
-              optionValue="uuid"
-              fullWidth
-              helperText="상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
-            />
-          </ReferenceInput>
+const HierarchySection = () => {
+  const { record } = useEditContext();
+  
+  return (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Sort color="primary" />
+          <Typography variant="h6">계층 구조</Typography>
         </Box>
         
-        <Box sx={{ flex: 1, minWidth: 200 }}>
-          <NumberInput
-            source="displayOrder"
-            label="표시 순서"
-            fullWidth
-            helperText="같은 레벨에서의 메뉴 순서 (숫자가 작을수록 먼저 표시)"
-            min={0}
-            defaultValue={0}
-          />
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <ReferenceInput
+              source="parentUUID"
+              reference="privates/siteMenu"
+              label="상위 메뉴"
+              filter={{ 
+                deletedAt: null,
+                // 자기 자신 제외
+                ...(record?.uuid && { uuid_ne: record.uuid })
+              }}
+            >
+              <AutocompleteInput
+                optionText={(choice: any) => 
+                  choice ? `${choice.title} (${choice.groupKey})` : ''
+                }
+                optionValue="uuid"
+                filterToQuery={searchText => ({ 
+                  q: searchText,
+                  // 자기 자신 제외
+                  ...(record?.uuid && { uuid_ne: record.uuid })
+                })}
+                fullWidth
+                helperText="상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
+                clearOnBlur
+              />
+            </ReferenceInput>
+          </Box>
+          
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <NumberInput
+              source="displayOrder"
+              label="표시 순서"
+              fullWidth
+              helperText="같은 레벨에서의 메뉴 순서 (숫자가 작을수록 먼저 표시)"
+              min={0}
+              defaultValue={0}
+            />
+          </Box>
         </Box>
-      </Box>
-      
-      <Alert severity="info" sx={{ mt: 2 }}>
-        계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
-      </Alert>
-    </CardContent>
-  </Card>
-);
+        
+        <Alert severity="info" sx={{ mt: 2 }}>
+          계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
+        </Alert>
+        
+        {record?.parentUUID && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            현재 이 메뉴는 하위 메뉴입니다. 상위 메뉴를 변경하면 계층 구조가 변경됩니다.
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 // 메뉴 타입 섹션
 const MenuTypeSection = () => (

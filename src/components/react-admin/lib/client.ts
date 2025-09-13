@@ -120,13 +120,21 @@ export const requester = async (url: string, options: any = {}) => {
 function extractAttributes(data: any) {
   const attributes = _.omit(data, ["id", "type", "relationships"]);
   
-  // 날짜 필드를 ISO 형식으로 변환
-  if (attributes.birthday && typeof attributes.birthday === 'string') {
-    // YYYY-MM-DD 형식을 ISO 형식으로 변환
-    if (attributes.birthday.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      attributes.birthday = new Date(attributes.birthday + 'T00:00:00.000Z').toISOString();
+  // 모든 필드에 대해 일반적인 처리
+  Object.keys(attributes).forEach(key => {
+    const value = attributes[key];
+    
+    // null이나 빈 문자열인 경우 제거
+    if (value === '' || value === null || value === undefined) {
+      delete attributes[key];
+      return;
     }
-  }
+    
+    // 날짜 형식 문자열을 ISO 형식으로 변환 (YYYY-MM-DD 패턴)
+    if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      attributes[key] = new Date(value + 'T00:00:00.000Z').toISOString();
+    }
+  });
   
   return attributes;
 }
