@@ -16,6 +16,7 @@ import {
   useCreate,
   useDataProvider,
 } from 'react-admin';
+import { useFormContext } from 'react-hook-form';
 import {
   Box,
   Typography,
@@ -44,23 +45,36 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
   const redirect = useRedirect();
   const [create] = useCreate();
   const [uploading, setUploading] = useState(false);
+  const { getValues } = useFormContext(); // 폼 값 가져오기
 
-  const handleSaveWithUpload = useCallback(async (formData: any) => {
+  const handleSaveWithUpload = useCallback(async () => {
     if (!selectedFile) {
       notify('파일을 선택해주세요.', { type: 'error' });
+      return;
+    }
+
+    // 현재 폼의 값들 가져오기
+    const formData = getValues();
+    
+    // storageUuid 확인
+    if (!formData.storageUuid) {
+      notify('오브젝트 스토리지를 선택해주세요.', { type: 'error' });
       return;
     }
 
     setUploading(true);
 
     try {
-      // 1. requester를 사용한 파일 업로드
+      // 1. requester를 사용한 파일 업로드 (storageUuid 쿼리 파라미터 추가)
       const uploadFormData = new FormData();
       uploadFormData.append('files', selectedFile); // files 키로 배열에 단일 파일
     //   uploadFormData.append('filename', selectedFile.name);
     //   uploadFormData.append('originalName', selectedFile.name);
 
-      const uploadResponse = await requester(`${ADMIN_SERVER_URL}/privates/files/upload/direct`, {
+      // storageUuid를 쿼리 파라미터로 추가
+      const uploadUrl = `${ADMIN_SERVER_URL}/privates/files/upload/direct?storageUuid=${formData.storageUuid}`;
+      
+      const uploadResponse = await requester(uploadUrl, {
         method: 'PUT',
         body: uploadFormData,
       });
@@ -89,7 +103,7 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
     } finally {
       setUploading(false);
     }
-  }, [selectedFile, create, notify, redirect]);
+  }, [selectedFile, create, notify, redirect, getValues]);
 
   return (
     <Toolbar>
@@ -223,9 +237,34 @@ const FilesCreate = () => {
             <Typography variant="h6" gutterBottom color="primary">
               파일 정보 (자동 설정됨)
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               파일명, MIME 타입, 확장자 등은 선택한 파일을 기반으로 자동 설정됩니다.
             </Typography>
+            
+            {/* 선택된 파일이 있는 경우 미리보기 정보 표시 */}
+            {selectedFile && (
+              <Box>
+                <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                  미리보기 정보
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <Typography variant="body2">
+                    <strong>파일명:</strong> {selectedFile.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>MIME 타입:</strong> {selectedFile.type}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 1 }}>
+                  <Typography variant="body2">
+                    <strong>파일 크기:</strong> {(selectedFile.size / 1024).toFixed(2)} KB
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>확장자:</strong> {selectedFile.name.split('.').pop()}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
           </Paper>
 
           {/* 스토리지 설정 섹션 */}
@@ -243,15 +282,12 @@ const FilesCreate = () => {
                 optionValue="uuid"
                 validate={required()}
                 fullWidth
+                helperText="파일을 저장할 오브젝트 스토리지를 선택하세요"
               />
             </ReferenceInput>
-            <TextInput 
-              source="filePath" 
-              label="파일 경로" 
-              fullWidth
-              sx={{ mt: 2 }}
-              helperText="스토리지 내 파일 경로 (비워두면 자동 생성됨)"
-            />
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              파일 경로는 업로드 시 자동으로 생성됩니다.
+            </Typography>
           </Paper>
 
           {/* 접근 제어 섹션 */}
@@ -304,6 +340,7 @@ const FilesCreate = () => {
               ]}
               defaultValue="admin"
               fullWidth
+              helperText="파일이 업로드되는 소스를 선택하세요"
             />
           </Paper>
 

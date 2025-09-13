@@ -15,12 +15,13 @@ import {
   useNotify,
   useRedirect,
   Loading,
+  useDelete,
+  Button,
 } from 'react-admin';
 import {
   Box,
   Typography,
   Paper,
-  Button,
   Chip,
   Avatar,
   Card,
@@ -62,12 +63,13 @@ const DeleteConfirmDialog = ({ open, onClose, onConfirm, fileName }: {
       </DialogContentText>
     </DialogContent>
     <DialogActions>
-      <Button onClick={onClose} color="primary">
-        취소
-      </Button>
-      <Button onClick={onConfirm} color="error" variant="contained">
-        삭제
-      </Button>
+      <Button onClick={onClose} label="취소" />
+      <Button 
+        onClick={onConfirm} 
+        label="삭제"
+        variant="text"
+        color="error"
+      />
     </DialogActions>
   </Dialog>
 );
@@ -123,15 +125,13 @@ const CustomDeleteButton = () => {
   return (
     <>
       <Button
-        variant="contained"
+        variant="text"
         color="error"
         startIcon={<Delete />}
         onClick={() => setOpen(true)}
         disabled={deleting}
-        sx={{ ml: 2 }}
-      >
-        {deleting ? '삭제 중...' : '파일 삭제'}
-      </Button>
+        label={deleting ? '삭제 중...' : '삭제'}
+      />
       <DeleteConfirmDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -309,7 +309,10 @@ const FilesEditForm = () => {
         {/* 파일 메타데이터 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
-            파일 정보 (읽기 전용)
+            파일 상세 정보 (읽기 전용)
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            파일의 기본 정보와 메타데이터입니다.
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
             <TextInput 
@@ -383,6 +386,7 @@ const FilesEditForm = () => {
                 optionValue="uuid"
                 validate={required()}
                 fullWidth
+                helperText="파일이 저장된 오브젝트 스토리지"
               />
             </ReferenceInput>
             <TextInput 
@@ -391,7 +395,7 @@ const FilesEditForm = () => {
               disabled
               fullWidth
               sx={{ mt: 2 }}
-              helperText="스토리지 내 파일 경로 (읽기 전용)"
+              helperText="스토리지 내 파일 경로 (자동 생성됨, 읽기 전용)"
             />
           </Paper>
         )}
@@ -446,6 +450,7 @@ const FilesEditForm = () => {
                 { id: 'admin', name: 'Admin' },
               ]}
               fullWidth
+              helperText="파일이 업로드된 소스"
             />
           </Paper>
         )}
