@@ -99,6 +99,33 @@ const ObjectStoragesEdit = () => (
           </Box>
         </Paper>
 
+        {/* 인증 정보 섹션 */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            인증 정보
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            스토리지 서비스 접근을 위한 인증 키를 입력해주세요.
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+            <TextInput 
+              source="accessKey" 
+              label="Access Key" 
+              validate={required()}
+              fullWidth
+              helperText="스토리지 서비스 액세스 키 ID"
+            />
+            <TextInput 
+              source="secretKey" 
+              label="Secret Key" 
+              validate={required()}
+              fullWidth
+              type="password"
+              helperText="스토리지 서비스 시크릿 액세스 키"
+            />
+          </Box>
+        </Paper>
+
         {/* 상태 설정 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">

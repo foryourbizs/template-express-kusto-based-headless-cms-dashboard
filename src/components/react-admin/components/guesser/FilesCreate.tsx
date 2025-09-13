@@ -79,6 +79,26 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
         body: uploadFormData,
       });
       
+      // 업로드 응답 검증
+      const responseData = uploadResponse.json;
+      
+      // 전체 요청이 실패한 경우
+      if (!responseData.success) {
+        notify(`업로드 실패: ${responseData.message || '알 수 없는 오류'}`, { type: 'error' });
+        return;
+      }
+      
+      // results 배열에서 실패한 파일이 있는지 확인
+      if (responseData.results && Array.isArray(responseData.results)) {
+        const failedResult = responseData.results.find((result: any) => !result.success);
+        if (failedResult) {
+          const errorMessage = failedResult.error || '파일 업로드 실패';
+          const fileName = failedResult.originalName || selectedFile.name;
+          notify(`파일 "${fileName}" 업로드 실패: ${errorMessage}`, { type: 'error' });
+          return;
+        }
+      }
+      
       // 2. 업로드 결과와 폼 데이터 합쳐서 저장
       const completeData = {
         ...formData,
@@ -88,7 +108,7 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
         fileSize: selectedFile.size,
         extension: selectedFile.name.split('.').pop(),
         uploadSource: formData.uploadSource || 'admin',
-        ...uploadResponse.json
+        ...responseData
       };
 
       // 3. React Admin의 create 함수로 데이터베이스에 저장
@@ -107,19 +127,23 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
 
   return (
     <Toolbar>
-      {uploading && (
-        <Box sx={{ width: '100%', mb: 2 }}>
-          <Typography variant="body2" gutterBottom>
-            업로드 및 저장 중...
-          </Typography>
-          <LinearProgress />
-        </Box>
-      )}
-      <SaveButton 
-        onClick={handleSaveWithUpload}
-        disabled={uploading || !selectedFile}
-        label={uploading ? "저장 중..." : "저장"}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+        {uploading && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              업로드 및 저장 중...
+            </Typography>
+            <Box sx={{ flex: 1, maxWidth: 200 }}>
+              <LinearProgress sx={{ height: 4 }} />
+            </Box>
+          </Box>
+        )}
+        <SaveButton 
+          onClick={handleSaveWithUpload}
+          disabled={uploading || !selectedFile}
+          label={uploading ? "저장 중..." : "저장"}
+        />
+      </Box>
     </Toolbar>
   );
 };

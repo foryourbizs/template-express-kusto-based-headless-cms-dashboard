@@ -311,7 +311,9 @@ const FilePreviewComponent = () => {
       return (
         <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
           <Typography variant="body2">
-            파일 미리보기를 불러올 수 없습니다.
+            파일 미리보기를 불러올 수 없습니다. 
+            <br /> 
+            {mimeType}
           </Typography>
         </Box>
       );
