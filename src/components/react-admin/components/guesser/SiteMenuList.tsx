@@ -154,8 +154,17 @@ const menuTypeChoices = [
 
 // 검색 필터
 const siteMenuFilters = [
-  <SearchInput source="q" placeholder="메뉴명, 설명 검색" alwaysOn />,
-  <TextInput source="title" label="메뉴명" />,
+  // JSON API 스펙에 맞는 검색을 위해 개별 필드로 검색
+  <TextInput 
+    source="title" 
+    label="메뉴명" 
+    placeholder="메뉴명으로 검색"
+  />,
+  <TextInput 
+    source="description" 
+    label="설명" 
+    placeholder="설명으로 검색"
+  />,
   <ReferenceInput
     source="groupKeyUuid"
     reference="privates/siteMenuGroup"
