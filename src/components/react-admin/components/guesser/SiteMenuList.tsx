@@ -3,31 +3,21 @@ import {
   List,
   Datagrid,
   TextField,
-  SelectField,
   BooleanField,
   NumberField,
   DateField,
   EditButton,
   DeleteButton,
-  ShowButton,
   CreateButton,
   TopToolbar,
-  FilterButton,
   ExportButton,
   useListContext,
-  ReferenceField,
-  ReferenceInput,
   FunctionField,
-  ChipField,
-  SearchInput,
-  TextInput,
-  SelectInput,
   useDelete,
   useRecordContext,
   useNotify,
   useRefresh,
   Button,
-  useGetList,
   useRedirect,
 } from 'react-admin';
 import {
@@ -123,13 +113,10 @@ const buildHierarchicalData = (menuItems: any[]) => {
   return flattenHierarchy(rootItems);
 };
 
-// 커스텀 훅: 계층적 데이터 가져오기
+// 커스텀 훅: 계층적 데이터 가져오기 (List context 활용)
 const useHierarchicalMenuData = () => {
-  const { data: originalData, total, isPending, error, refetch } = useGetList('privates/siteMenu', {
-    pagination: { page: 1, perPage: 1000 },
-    sort: { field: 'displayOrder', order: 'ASC' },
-    filter: {}
-  });
+  const listContext = useListContext();
+  const { data: originalData, total, isPending, error, refetch } = listContext;
 
   const hierarchicalData = React.useMemo(() => {
     if (!originalData || originalData.length === 0) return [];
@@ -150,52 +137,6 @@ const menuTypeChoices = [
   { id: 'INTERNAL_LINK', name: '내부 링크' },
   { id: 'EXTERNAL_LINK', name: '외부 링크' },
   { id: 'BUTTON', name: '버튼' },
-];
-
-// 검색 필터
-const siteMenuFilters = [
-  // JSON API 스펙에 맞는 검색을 위해 개별 필드로 검색
-  <TextInput 
-    source="title" 
-    label="메뉴명" 
-    placeholder="메뉴명으로 검색"
-  />,
-  <TextInput 
-    source="description" 
-    label="설명" 
-    placeholder="설명으로 검색"
-  />,
-  <ReferenceInput
-    source="groupKeyUuid"
-    reference="privates/siteMenuGroup"
-    label="메뉴 그룹"
-  >
-    <SelectInput
-      optionText={(choice: any) => choice ? `${choice.name} (${choice.key})` : ''}
-      optionValue="uuid"
-    />
-  </ReferenceInput>,
-  <SelectInput
-    source="type"
-    label="메뉴 타입"
-    choices={menuTypeChoices}
-  />,
-  <SelectInput
-    source="isPublic"
-    label="공개 여부"
-    choices={[
-      { id: true, name: '공개' },
-      { id: false, name: '비공개' },
-    ]}
-  />,
-  <SelectInput
-    source="requireLogin"
-    label="로그인 필수"
-    choices={[
-      { id: true, name: '필수' },
-      { id: false, name: '불필요' },
-    ]}
-  />,
 ];
 
 // 메뉴 타입 아이콘 매핑
@@ -360,10 +301,9 @@ const AccessControlField = ({ record }: { record: any }) => {
   );
 };
 
-// 상단 툴바
+// 상단 툴바 (필터 버튼 제거)
 const ListActions = () => (
   <TopToolbar>
-    <FilterButton />
     <CreateButton />
     <ExportButton />
   </TopToolbar>
@@ -597,7 +537,6 @@ const HierarchicalDatagrid = () => {
 export const SiteMenuList = () => {
   return (
     <List
-      filters={siteMenuFilters}
       actions={<ListActions />}
       empty={
         <EmptyList
@@ -608,6 +547,8 @@ export const SiteMenuList = () => {
         />
       }
       pagination={false}
+      perPage={10000}
+      sort={{ field: 'displayOrder', order: 'ASC' }}
       title="메뉴 관리 (계층적 보기)"
     >
       <HierarchicalDatagrid />
