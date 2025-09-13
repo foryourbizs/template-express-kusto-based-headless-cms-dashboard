@@ -153,11 +153,7 @@ const HierarchySection = () => {
             />
           </Box>
         </Box>
-        
-        <Alert severity="info" sx={{ mt: 2 }}>
-          계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
-        </Alert>
-        
+
         {!selectedGroupUuid && (
           <Alert severity="warning" sx={{ mt: 1 }}>
             상위 메뉴를 선택하려면 먼저 메뉴 그룹을 선택해야 합니다.
