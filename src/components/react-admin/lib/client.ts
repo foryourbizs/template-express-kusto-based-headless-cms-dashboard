@@ -21,7 +21,21 @@ export const requester = async (url: string, options: any = {}) => {
 
   const response = await fetch(url, options);
 
-  const responseBody = await response.json();
+  // 응답 본문이 비어있는 경우 처리 (주로 DELETE 요청)
+  let responseBody;
+  const responseText = await response.text();
+  
+  if (responseText.trim() === '') {
+    responseBody = {};
+  } else {
+    try {
+      responseBody = JSON.parse(responseText);
+    } catch (error) {
+      // JSON 파싱에 실패한 경우 빈 객체로 처리
+      console.warn('Failed to parse JSON response:', responseText);
+      responseBody = {};
+    }
+  }
 
   // 401 에러 시 토큰 만료로 처리
   if (response.status === 401) {
@@ -328,29 +342,52 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
       };
     },
     delete: async (resource: string, params: DeleteParams) => {
-      await requester(`${url}/${resource}/${params.id}`, {
+      const response = await requester(`${url}/${resource}/${params.id}`, {
         method: "DELETE",
       });
 
-      return { data: params.id };
+      // DELETE 응답이 JSON 데이터를 포함하는 경우 처리
+      if (response.json && response.json.data && Object.keys(response.json.data).length > 0) {
+        const converted = includeAndConvert(
+          response.json.data,
+          response.json.included,
+        );
+        return {
+          data: converted,
+        };
+      }
+
+      // 응답 데이터가 없거나 빈 객체인 경우 ID만 반환
+      return { data: { id: params.id } };
     },
 
     deleteMany: async (resource: string, params: DeleteManyParams) => {
       const { ids } = params;
-      const deletedIds = [];
+      const deletedData = [];
 
       for (const id of ids) {
         try {
-          await requester(`${url}/${resource}/${id}`, {
+          const response = await requester(`${url}/${resource}/${id}`, {
             method: "DELETE",
           });
-          deletedIds.push(id);
+          
+          // DELETE 응답이 JSON 데이터를 포함하는 경우 처리
+          if (response.json && response.json.data && Object.keys(response.json.data).length > 0) {
+            const converted = includeAndConvert(
+              response.json.data,
+              response.json.included,
+            );
+            deletedData.push(converted);
+          } else {
+            // 응답 데이터가 없거나 빈 객체인 경우 ID만 추가
+            deletedData.push({ id });
+          }
         } catch (error) {
           console.error(`Error deleting ${resource} with id ${id}:`, error);
         }
       }
 
-      return { data: deletedIds };
+      return { data: deletedData };
     },
 
     getMany: async (resource: string, params: GetManyParams) => {
