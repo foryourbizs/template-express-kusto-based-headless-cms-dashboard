@@ -101,14 +101,11 @@ const MenuInfoSection = () => (
               reference="privates/siteMenuGroup"
               label="메뉴 그룹"
             >
-              <AutocompleteInput
+              <SelectInput
                 optionText={(choice: any) => 
                   choice ? `${choice.name} (${choice.key})` : ''
                 }
                 optionValue="uuid"
-                filterToQuery={searchText => ({ 
-                  'filter[name]': searchText 
-                })}
                 validate={[required()]}
                 fullWidth
                 helperText="메뉴가 속할 그룹을 선택하세요"
