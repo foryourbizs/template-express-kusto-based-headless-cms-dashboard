@@ -28,6 +28,7 @@ import {
   useRefresh,
   Button,
   useGetList,
+  useRedirect,
 } from 'react-admin';
 import {
   Box,
@@ -46,6 +47,7 @@ import {
   TouchApp,
   Menu as MenuIcon,
   Delete as DeleteIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
 
@@ -358,6 +360,28 @@ const ListActions = () => (
   </TopToolbar>
 );
 
+// 커스텀 편집 버튼
+const CustomEditButton = () => {
+  const record = useRecordContext();
+  const redirect = useRedirect();
+  
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 이벤트 버블링 중단
+    redirect('edit', 'privates/siteMenu', record.id);
+  };
+
+  return (
+    <Button
+      onClick={handleEditClick}
+      color="primary"
+      size="small"
+      startIcon={<EditIcon />}
+    >
+      편집
+    </Button>
+  );
+};
+
 // 커스텀 삭제 버튼
 const CustomDeleteButton = () => {
   const record = useRecordContext();
@@ -383,10 +407,15 @@ const CustomDeleteButton = () => {
     setOpen(false);
   };
 
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 이벤트 버블링 중단
+    setOpen(true);
+  };
+
   return (
     <>
       <Button
-        onClick={() => setOpen(true)}
+        onClick={handleButtonClick}
         color="error"
         size="small"
         startIcon={<DeleteIcon />}
@@ -549,8 +578,7 @@ const HierarchicalDatagrid = () => {
       />
       
       {/* 액션 버튼들 */}
-      <ShowButton />
-      <EditButton />
+      <CustomEditButton />
       <CustomDeleteButton />
     </Datagrid>
   );

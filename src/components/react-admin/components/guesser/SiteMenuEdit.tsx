@@ -20,6 +20,7 @@ import {
   useRedirect,
   useUpdate,
 } from 'react-admin';
+import { useWatch } from 'react-hook-form';
 import {
   Box,
   Typography,
@@ -132,6 +133,7 @@ const MenuInfoSection = () => (
 // 계층 구조 섹션
 const HierarchySection = () => {
   const { record } = useEditContext();
+  const selectedGroupUuid = useWatch({ name: 'groupKeyUuid' });
   
   return (
     <Card sx={{ mb: 2 }}>
@@ -150,21 +152,24 @@ const HierarchySection = () => {
               filter={{ 
                 'filter[deletedAt]': null,
                 // 자기 자신 제외
-                ...(record?.uuid && { 'filter[uuid_ne]': record.uuid })
+                ...(record?.uuid && { 'filter[uuid_ne]': record.uuid }),
+                // 같은 그룹 내 메뉴만
+                ...(selectedGroupUuid && { 'filter[groupKeyUuid]': selectedGroupUuid })
               }}
             >
-              <AutocompleteInput
+              <SelectInput
                 optionText={(choice: any) => 
-                  choice ? `${choice.title} (${choice.groupKeyUuid})` : ''
+                  choice ? `${choice.title}` : ''
                 }
                 optionValue="uuid"
-                filterToQuery={searchText => ({ 
-                  'filter[title]': searchText,
-                  // 자기 자신 제외
-                  ...(record?.uuid && { 'filter[uuid_ne]': record.uuid })
-                })}
                 fullWidth
-                helperText="상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
+                helperText={
+                  selectedGroupUuid 
+                    ? "같은 그룹 내의 상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
+                    : "먼저 메뉴 그룹을 선택해주세요"
+                }
+                disabled={!selectedGroupUuid}
+                emptyText="상위 메뉴 없음 (최상위)"
               />
             </ReferenceInput>
           </Box>
@@ -181,10 +186,19 @@ const HierarchySection = () => {
           </Box>
         </Box>
         
+        <Alert severity="info" sx={{ mt: 2 }}>
+          계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
+        </Alert>
         
         {record?.parentUUID && (
           <Alert severity="warning" sx={{ mt: 1 }}>
             현재 이 메뉴는 하위 메뉴입니다. 상위 메뉴를 변경하면 계층 구조가 변경됩니다.
+          </Alert>
+        )}
+        
+        {!selectedGroupUuid && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            상위 메뉴를 선택하려면 먼저 메뉴 그룹을 선택해야 합니다.
           </Alert>
         )}
       </CardContent>

@@ -14,6 +14,7 @@ import {
   SaveButton,
   Toolbar,
 } from 'react-admin';
+import { useWatch } from 'react-hook-form';
 import {
   Card,
   CardContent,
@@ -102,54 +103,70 @@ const MenuInfoSection = () => (
 );
 
 // 계층 구조 섹션
-const HierarchySection = () => (
-  <Card sx={{ mb: 2 }}>
-    <CardContent>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Sort color="primary" />
-        <Typography variant="h6">계층 구조</Typography>
-      </Box>
-      
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-        <Box sx={{ flex: 1, minWidth: 200 }}>
-          <ReferenceInput
-            source="parentUUID"
-            reference="privates/siteMenu"
-            label="상위 메뉴"
-            filter={{ 'filter[deletedAt]': null }}
-          >
-            <AutocompleteInput
-              optionText={(choice: any) => 
-                choice ? `${choice.title} (그룹: ${choice.groupKeyUuid})` : ''
-              }
-              optionValue="uuid"
-              filterToQuery={searchText => ({ 
-                'filter[title]': searchText 
-              })}
-              fullWidth
-              helperText="상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
-            />
-          </ReferenceInput>
+const HierarchySection = () => {
+  const selectedGroupUuid = useWatch({ name: 'groupKeyUuid' });
+  
+  return (
+    <Card sx={{ mb: 2 }}>
+      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Sort color="primary" />
+          <Typography variant="h6">계층 구조</Typography>
         </Box>
         
-        <Box sx={{ flex: 1, minWidth: 200 }}>
-          <NumberInput
-            source="displayOrder"
-            label="표시 순서"
-            fullWidth
-            helperText="같은 레벨에서의 메뉴 순서 (숫자가 작을수록 먼저 표시)"
-            min={0}
-            defaultValue={0}
-          />
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <ReferenceInput
+              source="parentUUID"
+              reference="privates/siteMenu"
+              label="상위 메뉴"
+              filter={{ 
+                'filter[deletedAt]': null,
+                ...(selectedGroupUuid && { 'filter[groupKeyUuid]': selectedGroupUuid })
+              }}
+            >
+              <SelectInput
+                optionText={(choice: any) => 
+                  choice ? `${choice.title}` : ''
+                }
+                optionValue="uuid"
+                fullWidth
+                helperText={
+                  selectedGroupUuid 
+                    ? "같은 그룹 내의 상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
+                    : "먼저 메뉴 그룹을 선택해주세요"
+                }
+                disabled={!selectedGroupUuid}
+                emptyText="상위 메뉴 없음 (최상위)"
+              />
+            </ReferenceInput>
+          </Box>
+          
+          <Box sx={{ flex: 1, minWidth: 200 }}>
+            <NumberInput
+              source="displayOrder"
+              label="표시 순서"
+              fullWidth
+              helperText="같은 레벨에서의 메뉴 순서 (숫자가 작을수록 먼저 표시)"
+              min={0}
+              defaultValue={0}
+            />
+          </Box>
         </Box>
-      </Box>
-      
-      <Alert severity="info" sx={{ mt: 2 }}>
-        계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
-      </Alert>
-    </CardContent>
-  </Card>
-);
+        
+        <Alert severity="info" sx={{ mt: 2 }}>
+          계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
+        </Alert>
+        
+        {!selectedGroupUuid && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            상위 메뉴를 선택하려면 먼저 메뉴 그룹을 선택해야 합니다.
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 // 메뉴 타입 섹션
 const MenuTypeSection = () => (
