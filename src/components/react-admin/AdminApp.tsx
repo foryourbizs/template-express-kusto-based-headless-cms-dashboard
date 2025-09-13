@@ -48,6 +48,8 @@ import { PermissionsListWithDelete, } from "./components/guesser/PermissionsList
 import SiteMenuList from "./components/guesser/SiteMenuList";
 import SiteMenuEdit from "./components/guesser/SiteMenuEdit";
 import SiteMenuCreate from "./components/guesser/SiteMenuCreate";
+import SiteMenuGroupEdit from "./components/guesser/SiteMenuGroupEdit";
+import SiteMenuGroupCreate from "./components/guesser/SiteMenuGroupCreate";
 import PostList from "./components/guesser/PostList";
 import PostEdit from "./components/guesser/PostEdit";
 
@@ -246,6 +248,18 @@ const AdminApp = () => (
 
 
 
+      <Resource
+        name="privates/siteMenuGroup"
+        list={ListGuesserEx}
+        edit={SiteMenuGroupEdit}
+        create={SiteMenuGroupCreate}
+        options={{ 
+          label: '메뉴 그룹 관리',
+          menuGroup: 'menus',
+          menuGroupLabel: '사이트',
+          icon: <Article />
+        }}
+      />
 
       <Resource
         name="privates/siteMenu"

@@ -96,14 +96,25 @@ const MenuInfoSection = () => (
           </Box>
           
           <Box sx={{ flex: 1, minWidth: 200 }}>
-            <SelectInput
-              source="groupKey"
-              label="그룹 키"
-              choices={groupKeyChoices}
-              validate={[required()]}
-              fullWidth
-              helperText="메뉴가 속할 그룹을 선택하세요"
-            />
+            <ReferenceInput
+              source="groupKeyUuid"
+              reference="privates/siteMenuGroup"
+              label="메뉴 그룹"
+            >
+              <AutocompleteInput
+                optionText={(choice: any) => 
+                  choice ? `${choice.name} (${choice.key})` : ''
+                }
+                optionValue="uuid"
+                filterToQuery={searchText => ({ 
+                  'filter[name]': searchText 
+                })}
+                validate={[required()]}
+                fullWidth
+                helperText="메뉴가 속할 그룹을 선택하세요"
+                clearOnBlur
+              />
+            </ReferenceInput>
           </Box>
         </Box>
         
@@ -141,20 +152,20 @@ const HierarchySection = () => {
               reference="privates/siteMenu"
               label="상위 메뉴"
               filter={{ 
-                deletedAt: null,
+                'filter[deletedAt]': null,
                 // 자기 자신 제외
-                ...(record?.uuid && { uuid_ne: record.uuid })
+                ...(record?.uuid && { 'filter[uuid_ne]': record.uuid })
               }}
             >
               <AutocompleteInput
                 optionText={(choice: any) => 
-                  choice ? `${choice.title} (${choice.groupKey})` : ''
+                  choice ? `${choice.title} (${choice.groupKeyUuid})` : ''
                 }
                 optionValue="uuid"
                 filterToQuery={searchText => ({ 
-                  q: searchText,
+                  'filter[title]': searchText,
                   // 자기 자신 제외
-                  ...(record?.uuid && { uuid_ne: record.uuid })
+                  ...(record?.uuid && { 'filter[uuid_ne]': record.uuid })
                 })}
                 fullWidth
                 helperText="상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"

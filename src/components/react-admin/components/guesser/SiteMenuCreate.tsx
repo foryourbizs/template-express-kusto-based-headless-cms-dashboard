@@ -64,13 +64,24 @@ export const SiteMenuCreate = () => (
                 />
               </Box>
               <Box sx={{ flex: 1 }}>
-                <TextInput
-                  source="groupKey"
-                  label="그룹키"
-                  fullWidth
-                  validate={[required(), minLength(1), maxLength(30)]}
-                  helperText="메뉴 그룹을 식별하는 키 (예: gnb, snb)"
-                />
+                <ReferenceInput
+                  source="groupKeyUuid"
+                  reference="privates/siteMenuGroup"
+                  label="메뉴 그룹"
+                >
+                  <AutocompleteInput
+                    optionText={(choice: any) => 
+                      choice ? `${choice.name} (${choice.key})` : ''
+                    }
+                    optionValue="uuid"
+                    filterToQuery={searchText => ({ 
+                      'filter[name]': searchText 
+                    })}
+                    helperText="메뉴가 속할 그룹을 선택하세요"
+                    clearOnBlur
+                    validate={[required()]}
+                  />
+                </ReferenceInput>
               </Box>
             </Box>
 
@@ -121,11 +132,11 @@ export const SiteMenuCreate = () => (
             >
               <AutocompleteInput
                 optionText={(choice: any) => 
-                  choice ? `${choice.title} (${choice.groupKey})` : ''
+                  choice ? `${choice.title} (${choice.groupKeyUuid})` : ''
                 }
                 optionValue="uuid"
                 filterToQuery={searchText => ({ 
-                  q: searchText 
+                  'filter[title]': searchText 
                 })}
                 helperText="상위 메뉴를 선택하세요 (선택사항)"
                 clearOnBlur
