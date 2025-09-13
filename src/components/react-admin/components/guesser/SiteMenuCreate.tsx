@@ -78,8 +78,9 @@ export const SiteMenuCreate = () => (
                       'filter[name]': searchText 
                     })}
                     helperText="메뉴가 속할 그룹을 선택하세요"
-                    clearOnBlur
                     validate={[required()]}
+                    noOptionsText="검색 결과가 없습니다"
+                    loadingText="로딩 중..."
                   />
                 </ReferenceInput>
               </Box>
@@ -128,7 +129,7 @@ export const SiteMenuCreate = () => (
               source="parentUUID"
               reference="privates/siteMenu"
               label="부모 메뉴"
-              filter={{ deletedAt: null }}
+              filter={{ 'filter[deletedAt]': null }}
             >
               <AutocompleteInput
                 optionText={(choice: any) => 
@@ -139,7 +140,6 @@ export const SiteMenuCreate = () => (
                   'filter[title]': searchText 
                 })}
                 helperText="상위 메뉴를 선택하세요 (선택사항)"
-                clearOnBlur
               />
             </ReferenceInput>
           </Box>

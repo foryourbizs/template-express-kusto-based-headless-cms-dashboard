@@ -112,7 +112,6 @@ const MenuInfoSection = () => (
                 validate={[required()]}
                 fullWidth
                 helperText="메뉴가 속할 그룹을 선택하세요"
-                clearOnBlur
               />
             </ReferenceInput>
           </Box>
@@ -169,7 +168,6 @@ const HierarchySection = () => {
                 })}
                 fullWidth
                 helperText="상위 메뉴를 선택하세요 (최상위 메뉴인 경우 비워두세요)"
-                clearOnBlur
               />
             </ReferenceInput>
           </Box>
@@ -186,9 +184,6 @@ const HierarchySection = () => {
           </Box>
         </Box>
         
-        <Alert severity="info" sx={{ mt: 2 }}>
-          계층 구조는 최대 3단계까지 지원됩니다. 상위 메뉴를 선택하지 않으면 최상위 메뉴가 됩니다.
-        </Alert>
         
         {record?.parentUUID && (
           <Alert severity="warning" sx={{ mt: 1 }}>
