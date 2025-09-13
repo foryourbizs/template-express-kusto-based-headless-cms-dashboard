@@ -27,11 +27,104 @@ import {
   Card,
   CardContent,
   CardActions,
+  TextField,
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import { requester } from '../../lib/client';
 
 const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
+
+// 텍스트 파일 프리뷰 컴포넌트 (업로드 전 파일용)
+const TextFilePreviewForUpload = ({ file }: { file: File }) => {
+  const [textContent, setTextContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  React.useEffect(() => {
+    const readFileAsText = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          setTextContent(text || '');
+          setLoading(false);
+        };
+        reader.onerror = () => {
+          setError(true);
+          setLoading(false);
+        };
+        reader.readAsText(file, 'UTF-8');
+      } catch (err) {
+        console.error('텍스트 파일 읽기 오류:', err);
+        setError(true);
+        setLoading(false);
+      }
+    };
+
+    readFileAsText();
+  }, [file]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+        <Typography variant="body2">텍스트 파일을 읽는 중...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+        <Typography variant="body2">
+          텍스트 파일을 읽을 수 없습니다.
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ 
+      border: '1px solid #ddd', 
+      borderRadius: 1, 
+      overflow: 'hidden',
+      backgroundColor: '#f9f9f9',
+      maxHeight: 400,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <TextField
+        multiline
+        value={textContent}
+        variant="outlined"
+        fullWidth
+        InputProps={{
+          readOnly: true,
+          sx: {
+            fontFamily: 'monospace',
+            fontSize: '0.875rem',
+            lineHeight: 1.4,
+            '& .MuiInputBase-input': {
+              padding: 2,
+              color: 'text.primary',
+            },
+            '& fieldset': {
+              border: 'none',
+            },
+          },
+        }}
+        sx={{
+          '& .MuiInputBase-root': {
+            maxHeight: 400,
+            overflow: 'auto',
+          },
+        }}
+      />
+    </Box>
+  );
+};
 
 const CreateActions = () => (
   <TopToolbar>
@@ -165,15 +258,25 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
         URL.revokeObjectURL(previewUrl);
       }
 
-      // 이미지나 비디오인 경우에만 프리뷰 생성
-      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
+      // 이미지, 비디오, 오디오, 텍스트인 경우에만 프리뷰 생성
+      if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/') || file.type.startsWith('text/')) {
+        if (file.type.startsWith('text/')) {
+          // 텍스트 파일은 URL이 필요 없으므로 특별한 마커 사용
+          setPreviewUrl('text-preview');
+        } else if (file.type.startsWith('audio/')) {
+          // 오디오 파일도 URL 생성
+          const url = URL.createObjectURL(file);
+          setPreviewUrl(url);
+        } else {
+          // 이미지/비디오는 기존처럼 URL 생성
+          const url = URL.createObjectURL(file);
+          setPreviewUrl(url);
+        }
       } else {
         setPreviewUrl(null);
       }
     } else {
-      if (previewUrl) {
+      if (previewUrl && previewUrl !== 'text-preview') {
         URL.revokeObjectURL(previewUrl);
       }
       setPreviewUrl(null);
@@ -183,7 +286,7 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
   // 컴포넌트 언마운트 시 URL 정리
   React.useEffect(() => {
     return () => {
-      if (previewUrl) {
+      if (previewUrl && previewUrl !== 'text-preview') {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -198,9 +301,9 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
   };
 
   const renderPreview = () => {
-    if (!selectedFile || !previewUrl) return null;
+    if (!selectedFile) return null;
 
-    if (selectedFile.type.startsWith('image/')) {
+    if (selectedFile.type.startsWith('image/') && previewUrl && previewUrl !== 'text-preview') {
       return (
         <Paper sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
@@ -237,7 +340,7 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
       );
     }
 
-    if (selectedFile.type.startsWith('video/')) {
+    if (selectedFile.type.startsWith('video/') && previewUrl && previewUrl !== 'text-preview') {
       return (
         <Paper sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom color="primary">
@@ -266,6 +369,54 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
               }}
             />
           </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            파일명: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+          </Typography>
+        </Paper>
+      );
+    }
+
+    if (selectedFile.type.startsWith('audio/') && previewUrl && previewUrl !== 'text-preview') {
+      return (
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            오디오 미리보기
+          </Typography>
+          <Box sx={{ 
+            border: '1px solid #ddd', 
+            borderRadius: 1, 
+            overflow: 'hidden',
+            backgroundColor: '#f5f5f5',
+            minHeight: 120,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 3
+          }}>
+            <Box
+              component="audio"
+              src={previewUrl}
+              controls
+              sx={{
+                width: '100%',
+                maxWidth: 500,
+              }}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            파일명: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+          </Typography>
+        </Paper>
+      );
+    }
+
+    if (selectedFile.type.startsWith('text/')) {
+      return (
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            텍스트 파일 미리보기
+          </Typography>
+          <TextFilePreviewForUpload file={selectedFile} />
           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
             파일명: {selectedFile.name} ({formatFileSize(selectedFile.size)})
           </Typography>
@@ -321,10 +472,10 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
               onClick={() => {
                 setSelectedFile(null);
                 onFileSelected(null);
-                if (previewUrl) {
+                if (previewUrl && previewUrl !== 'text-preview') {
                   URL.revokeObjectURL(previewUrl);
-                  setPreviewUrl(null);
                 }
+                setPreviewUrl(null);
                 // 파일 input 초기화
                 const input = document.getElementById('file-select-button') as HTMLInputElement;
                 if (input) input.value = '';

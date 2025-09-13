@@ -31,6 +31,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  TextField,
 } from '@mui/material';
 import {
   InsertDriveFile,
@@ -45,6 +46,100 @@ import {
 import { requester } from '../../lib/client';
 
 const ADMIN_SERVER_URL = process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
+
+// 텍스트 파일 프리뷰 컴포넌트
+const TextFilePreview = ({ fileUrl, filename, onError }: { 
+  fileUrl: string; 
+  filename: string; 
+  onError: () => void; 
+}) => {
+  const [textContent, setTextContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  React.useEffect(() => {
+    const fetchTextContent = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        
+        const response = await fetch(fileUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const text = await response.text();
+        setTextContent(text);
+      } catch (err) {
+        console.error('텍스트 파일 로드 오류:', err);
+        setError(true);
+        onError();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTextContent();
+  }, [fileUrl, onError]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+        <Typography variant="body2">텍스트 파일을 불러오는 중...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+        <Typography variant="body2">
+          텍스트 파일을 불러올 수 없습니다.
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ 
+      border: '1px solid #ddd', 
+      borderRadius: 1, 
+      overflow: 'hidden',
+      backgroundColor: '#f9f9f9',
+      maxHeight: 400,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <TextField
+        multiline
+        value={textContent}
+        variant="outlined"
+        fullWidth
+        InputProps={{
+          readOnly: true,
+          sx: {
+            fontFamily: 'monospace',
+            fontSize: '0.875rem',
+            lineHeight: 1.4,
+            '& .MuiInputBase-input': {
+              padding: 2,
+              color: 'text.primary',
+            },
+            '& fieldset': {
+              border: 'none',
+            },
+          },
+        }}
+        sx={{
+          '& .MuiInputBase-root': {
+            maxHeight: 400,
+            overflow: 'auto',
+          },
+        }}
+      />
+    </Box>
+  );
+};
 
 // 삭제 확인 다이얼로그 컴포넌트
 const DeleteConfirmDialog = ({ open, onClose, onConfirm, fileName }: {
@@ -295,8 +390,8 @@ const FilePreviewComponent = () => {
 
   const { filename, mimeType, uuid } = record;
 
-  // 이미지나 비디오가 아니면 프리뷰 없음
-  if (!mimeType?.startsWith('image/') && !mimeType?.startsWith('video/')) {
+  // 이미지, 비디오, 오디오, 텍스트가 아니면 프리뷰 없음
+  if (!mimeType?.startsWith('image/') && !mimeType?.startsWith('video/') && !mimeType?.startsWith('audio/') && !mimeType?.startsWith('text/')) {
     return null;
   }
 
@@ -352,6 +447,27 @@ const FilePreviewComponent = () => {
           }}
         />
       );
+    }
+
+    if (mimeType.startsWith('audio/')) {
+      return (
+        <Box
+          component="audio"
+          src={fileUrl}
+          controls
+          onError={handleError}
+          sx={{
+            width: '100%',
+            maxWidth: 500,
+            display: 'block',
+            margin: '0 auto',
+          }}
+        />
+      );
+    }
+
+    if (mimeType.startsWith('text/')) {
+      return <TextFilePreview fileUrl={fileUrl} filename={filename} onError={handleError} />;
     }
 
     return null;
