@@ -283,6 +283,102 @@ const FileInfoComponent = () => {
   );
 };
 
+// 파일 프리뷰 컴포넌트
+const FilePreviewComponent = () => {
+  const record = useRecordContext();
+  const [previewError, setPreviewError] = useState(false);
+
+  // record가 없거나 삭제된 파일이면 프리뷰 없음
+  if (!record || record.deletedAt) {
+    return null;
+  }
+
+  const { filename, mimeType, uuid } = record;
+
+  // 이미지나 비디오가 아니면 프리뷰 없음
+  if (!mimeType?.startsWith('image/') && !mimeType?.startsWith('video/')) {
+    return null;
+  }
+
+  const fileUrl = `${ADMIN_SERVER_URL}/files/${filename}`;
+
+  const handleError = () => {
+    setPreviewError(true);
+  };
+
+  const renderPreview = () => {
+    if (previewError) {
+      return (
+        <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+          <Typography variant="body2">
+            파일 미리보기를 불러올 수 없습니다.
+          </Typography>
+        </Box>
+      );
+    }
+
+    if (mimeType.startsWith('image/')) {
+      return (
+        <Box
+          component="img"
+          src={fileUrl}
+          alt={filename}
+          onError={handleError}
+          sx={{
+            maxWidth: '100%',
+            maxHeight: 400,
+            objectFit: 'contain',
+            display: 'block',
+            margin: '0 auto',
+          }}
+        />
+      );
+    }
+
+    if (mimeType.startsWith('video/')) {
+      return (
+        <Box
+          component="video"
+          src={fileUrl}
+          controls
+          onError={handleError}
+          sx={{
+            maxWidth: '100%',
+            maxHeight: 400,
+            display: 'block',
+            margin: '0 auto',
+          }}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <Paper sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        파일 미리보기
+      </Typography>
+      <Box sx={{ 
+        border: '1px solid #ddd', 
+        borderRadius: 1, 
+        overflow: 'hidden',
+        backgroundColor: '#f5f5f5',
+        minHeight: 200,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {renderPreview()}
+      </Box>
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+        파일 경로: /files/{filename}
+      </Typography>
+    </Paper>
+  );
+};
+
 const FilesEdit = () => {
   return (
     <Edit actions={<EditActions />}>
@@ -305,6 +401,9 @@ const FilesEditForm = () => {
         
         {/* 파일 정보 섹션 */}
         <FileInfoComponent />
+
+        {/* 파일 프리뷰 섹션 */}
+        <FilePreviewComponent />
 
         {/* 파일 메타데이터 섹션 */}
         <Paper sx={{ p: 3, mb: 3 }}>

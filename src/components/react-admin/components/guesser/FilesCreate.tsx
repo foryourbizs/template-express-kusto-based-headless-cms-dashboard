@@ -127,12 +127,43 @@ const CreateToolbarWithUpload = ({ selectedFile }: { selectedFile: File | null }
 // 파일 선택 컴포넌트 (업로드는 하지 않고 파일만 선택)
 const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File | null) => void }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setSelectedFile(file);
     onFileSelected(file);
-  }, [onFileSelected]);
+
+    // 프리뷰 URL 생성
+    if (file) {
+      // 이전 프리뷰 URL 해제
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      // 이미지나 비디오인 경우에만 프리뷰 생성
+      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+      } else {
+        setPreviewUrl(null);
+      }
+    } else {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviewUrl(null);
+    }
+  }, [onFileSelected, previewUrl]);
+
+  // 컴포넌트 언마운트 시 URL 정리
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -142,60 +173,148 @@ const FileSelectComponent = ({ onFileSelected }: { onFileSelected: (file: File |
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  return (
-    <Card sx={{ mb: 3 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom color="primary">
-          파일 선택
-        </Typography>
-        
-        {selectedFile ? (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            선택된 파일: &apos;{selectedFile.name}&apos; ({formatFileSize(selectedFile.size)})
-            <br />
-            저장 버튼을 누르면 파일이 업로드됩니다.
-          </Alert>
-        ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            업로드할 파일을 선택하세요. 저장 시 파일이 업로드되고 데이터가 저장됩니다.
-          </Typography>
-        )}
-      </CardContent>
+  const renderPreview = () => {
+    if (!selectedFile || !previewUrl) return null;
 
-      <CardActions>
-        <input
-          accept="*/*"
-          style={{ display: 'none' }}
-          id="file-select-button"
-          type="file"
-          onChange={handleFileSelect}
-        />
-        <label htmlFor="file-select-button">
-          <Button
-            variant="contained"
-            component="span"
-            startIcon={<CloudUpload />}
-          >
+    if (selectedFile.type.startsWith('image/')) {
+      return (
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            이미지 미리보기
+          </Typography>
+          <Box sx={{ 
+            border: '1px solid #ddd', 
+            borderRadius: 1, 
+            overflow: 'hidden',
+            backgroundColor: '#f5f5f5',
+            minHeight: 200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 2
+          }}>
+            <Box
+              component="img"
+              src={previewUrl}
+              alt="선택된 이미지 미리보기"
+              sx={{
+                maxWidth: '100%',
+                maxHeight: 300,
+                objectFit: 'contain',
+                borderRadius: 1,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            파일명: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+          </Typography>
+        </Paper>
+      );
+    }
+
+    if (selectedFile.type.startsWith('video/')) {
+      return (
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            동영상 미리보기
+          </Typography>
+          <Box sx={{ 
+            border: '1px solid #ddd', 
+            borderRadius: 1, 
+            overflow: 'hidden',
+            backgroundColor: '#f5f5f5',
+            minHeight: 200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 2
+          }}>
+            <Box
+              component="video"
+              src={previewUrl}
+              controls
+              sx={{
+                maxWidth: '100%',
+                maxHeight: 300,
+                borderRadius: 1,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+            />
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            파일명: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+          </Typography>
+        </Paper>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom color="primary">
             파일 선택
-          </Button>
-        </label>
-        
-        {selectedFile && (
-          <Button
-            variant="outlined"
-            onClick={() => {
-              setSelectedFile(null);
-              onFileSelected(null);
-              // 파일 input 초기화
-              const input = document.getElementById('file-select-button') as HTMLInputElement;
-              if (input) input.value = '';
-            }}
-          >
-            선택 취소
-          </Button>
-        )}
-      </CardActions>
-    </Card>
+          </Typography>
+          
+          {selectedFile ? (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              선택된 파일: <strong>{selectedFile.name}</strong> ({formatFileSize(selectedFile.size)})
+              <br />
+              저장 버튼을 누르면 파일이 업로드됩니다.
+            </Alert>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              업로드할 파일을 선택하세요. 저장 시 파일이 업로드되고 데이터가 저장됩니다.
+            </Typography>
+          )}
+        </CardContent>
+
+        <CardActions>
+          <input
+            accept="*/*"
+            style={{ display: 'none' }}
+            id="file-select-button"
+            type="file"
+            onChange={handleFileSelect}
+          />
+          <label htmlFor="file-select-button">
+            <Button
+              variant="contained"
+              component="span"
+              startIcon={<CloudUpload />}
+            >
+              파일 선택
+            </Button>
+          </label>
+          
+          {selectedFile && (
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSelectedFile(null);
+                onFileSelected(null);
+                if (previewUrl) {
+                  URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                }
+                // 파일 input 초기화
+                const input = document.getElementById('file-select-button') as HTMLInputElement;
+                if (input) input.value = '';
+              }}
+            >
+              선택 취소
+            </Button>
+          )}
+        </CardActions>
+      </Card>
+
+      {/* 파일 프리뷰 섹션 */}
+      {renderPreview()}
+    </>
   );
 };
 
