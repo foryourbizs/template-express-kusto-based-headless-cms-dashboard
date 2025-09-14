@@ -138,6 +138,14 @@ const HierarchySection = () => {
   return (
     <Card sx={{ mb: 2 }}>
       <CardContent>
+        {/* {record?.id && (
+          <Chip 
+            label={`현재 메뉴 ID: ${record.id}`}
+            variant="outlined"
+            size="small"
+            sx={{ mb: 2 }}
+          />
+        )} */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <Sort color="primary" />
           <Typography variant="h6">계층 구조</Typography>
@@ -145,16 +153,17 @@ const HierarchySection = () => {
         
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Box sx={{ flex: 1, minWidth: 200 }}>
+
             <ReferenceInput
               source="parentUUID"
               reference="privates/siteMenu"
               label="상위 메뉴"
               filter={{ 
-                'filter[deletedAt]': null,
+                'deletedAt': null,
                 // 자기 자신 제외
-                ...(record?.uuid && { 'filter[uuid_ne]': record.uuid }),
+                ...(record?.id && { 'uuid_ne': record.id }),
                 // 같은 그룹 내 메뉴만
-                ...(selectedGroupUuid && { 'filter[groupKeyUuid]': selectedGroupUuid })
+                ...(selectedGroupUuid && { 'groupKeyUuid': selectedGroupUuid })
               }}
             >
               <SelectInput
@@ -314,8 +323,8 @@ export const SiteMenuEdit = () => {
       mutationMode="pessimistic"
     >
       <SimpleForm toolbar={<EditToolbar />}>
-        {/* 숨겨진 UUID 필드 */}
-        <TextInput source="uuid" sx={{ display: 'none' }} />
+        {/* 숨겨진 ID 필드 */}
+        <TextInput source="id" sx={{ display: 'none' }} />
         
         {/* 기본 정보 */}
         <MenuInfoSection />

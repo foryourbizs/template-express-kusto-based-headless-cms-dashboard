@@ -121,8 +121,8 @@ const HierarchySection = () => {
               reference="privates/siteMenu"
               label="상위 메뉴"
               filter={{ 
-                'filter[deletedAt]': null,
-                ...(selectedGroupUuid && { 'filter[groupKeyUuid]': selectedGroupUuid })
+                'deletedAt': null,
+                ...(selectedGroupUuid && { 'groupKeyUuid': selectedGroupUuid })
               }}
             >
               <SelectInput
