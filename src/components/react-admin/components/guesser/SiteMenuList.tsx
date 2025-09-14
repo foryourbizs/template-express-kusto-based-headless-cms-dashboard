@@ -122,7 +122,11 @@ const useHierarchicalMenuData = () => {
 
   const hierarchicalData = React.useMemo(() => {
     if (!originalData || originalData.length === 0) return [];
+
+    console.log(originalData);
+
     return buildHierarchicalData(originalData);
+
   }, [originalData]);
 
   return {
@@ -215,31 +219,6 @@ const HierarchicalTitle = ({ record }: { record: any }) => {
   );
 };
 
-// 그룹키 컴포넌트
-const GroupKeyField = ({ record }: { record: any }) => {
-  const groupKeyUuid = record?.groupKeyUuid || record?.attributes?.groupKeyUuid || '-';
-  return (
-    <Chip
-      label={groupKeyUuid}
-      size="small"
-      variant="outlined"
-      color="primary"
-    />
-  );
-};
-
-// 메뉴 타입 컴포넌트
-const MenuTypeField = ({ record }: { record: any }) => {
-  const type = record?.type || record?.attributes?.type || 'INTERNAL_LINK';
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      {getMenuTypeIcon(type)}
-      <Typography variant="body2">
-        {menuTypeChoices.find(choice => choice.id === type)?.name || type}
-      </Typography>
-    </Box>
-  );
-};
 
 // 접근 권한 표시 컴포넌트
 const AccessControlField = ({ record }: { record: any }) => {
