@@ -369,15 +369,20 @@ const HierarchicalDatagrid = () => {
         },
       }}
     >
-      {/* 그룹 */}
+      {/* 그룹명 - 조인된 데이터 사용 */}
       <FunctionField
         label="그룹"
         render={(record) => {
           const level = record?.level || 0;
-          const groupKeyUuid = record?.groupKeyUuid || record?.attributes?.groupKeyUuid || '-';
+          // 조인된 데이터를 우선 사용, 없으면 UUID 사용
+          const groupName = record?.groupKey?.name || 
+                           record?.attributes?.groupKey?.name ||
+                           record?.groupKeyUuid || 
+                           record?.attributes?.groupKeyUuid || 
+                           '-';
           return (
             <Chip
-              label={groupKeyUuid}
+              label={groupName}
               size="small"
               variant={level === 0 ? "filled" : "outlined"}
               color={level === 0 ? "primary" : "default"}
@@ -496,65 +501,7 @@ export const SiteMenuList = () => {
         }
       }}
     >
-      <Datagrid
-        rowClick="edit"
-        sx={{
-          '& .RaDatagrid-headerCell': {
-            fontWeight: 600,
-          },
-          '& .RaDatagrid-rowCell': {
-            '&:first-of-type': {
-              pl: 1,
-            },
-          },
-        }}
-      >
-        {/* 그룹명 - 조인된 데이터 사용 */}
-        <TextField source="groupKey.name" label="그룹" />
-        
-        {/* 메뉴명 - 계층 표시와 함께 */}
-        <FunctionField
-          label="메뉴명"
-          render={(record) => <HierarchicalTitle record={record} />}
-          sx={{ minWidth: 300 }}
-        />
-        
-        {/* 메뉴 타입 */}
-        <FunctionField
-          label="유형"
-          render={(record) => {
-            const type = record?.type || 'INTERNAL_LINK';
-            const choice = menuTypeChoices.find(choice => choice.id === type);
-            return (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {getMenuTypeIcon(type)}
-                <Typography variant="body2">
-                  {choice?.name || type}
-                </Typography>
-              </Box>
-            );
-          }}
-        />
-        
-        {/* 설명 */}
-        <TextField source="description" label="설명" />
-        
-        {/* 표시 순서 */}
-        <NumberField source="displayOrder" label="순서" />
-        
-        {/* 접근 제어 */}
-        <FunctionField
-          label="접근"
-          render={(record) => <AccessControlField record={record} />}
-        />
-        
-        {/* 생성일 */}
-        <DateField source="createdAt" label="생성일" />
-        
-        {/* 액션 버튼들 */}
-        <EditButton />
-        <DeleteButton />
-      </Datagrid>
+      <HierarchicalDatagrid />
     </List>
   );
 };
