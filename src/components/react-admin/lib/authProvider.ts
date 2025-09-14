@@ -21,6 +21,9 @@ let lastCheckTime = 0;
 let lastCheckResult: Promise<void> | null = null;
 const CHECK_CACHE_DURATION = 30 * 1000; // 30초
 
+// 로그아웃 중복 방지 플래그
+let isLoggingOut = false;
+
 export const authProvider: AuthProvider = {
     login: async ({ username, password }) => {
         // 현재 페이지 정보 저장 (로그인 페이지가 아닌 경우에만)
@@ -98,20 +101,45 @@ export const authProvider: AuthProvider = {
         }
     },
     logout: () => {
-        requester(api.signout, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
+        // 이미 로그아웃 중이면 중복 실행 방지
+        if (isLoggingOut) {
+            console.log('Logout already in progress, skipping...');
+            return Promise.resolve();
+        }
 
-        localStorage.removeItem("user");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("accessTokenExpiresAt");
-        localStorage.removeItem("refreshTokenExpiresAt");
-        localStorage.removeItem("redirectAfterLogin"); // 리다이렉트 정보도 제거
-        return Promise.resolve();
+        isLoggingOut = true;
+        console.log('Starting logout process...');
+
+        try {
+            requester(api.signout, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }).catch(error => {
+                // 로그아웃 API 실패는 무시 (이미 서버에서 세션이 만료된 경우)
+                console.warn('Logout API failed:', error);
+            });
+
+            localStorage.removeItem("user");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("accessTokenExpiresAt");
+            localStorage.removeItem("refreshTokenExpiresAt");
+            localStorage.removeItem("redirectAfterLogin"); // 리다이렉트 정보도 제거
+            
+            // 캐시 초기화
+            lastCheckTime = 0;
+            lastCheckResult = null;
+            
+            console.log('Logout completed successfully');
+            return Promise.resolve();
+        } finally {
+            // 로그아웃 완료 후 플래그 리셋 (1초 후)
+            setTimeout(() => {
+                isLoggingOut = false;
+            }, 1000);
+        }
     },
     checkError: (error) => {
         const status = error.status;
@@ -315,6 +343,11 @@ export const getTokenTimeRemaining = (): {
     }
     
     return { accessToken, refreshToken };
+};
+
+// 로그아웃 중인지 확인하는 함수
+export const isCurrentlyLoggingOut = (): boolean => {
+    return isLoggingOut;
 };
 
 export default authProvider;

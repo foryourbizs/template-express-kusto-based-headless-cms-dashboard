@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuthProvider, useNotify } from 'react-admin';
-import { getTokenTimeRemaining, refreshTokens } from '../lib/authProvider';
+import { getTokenTimeRemaining, refreshTokens, isCurrentlyLoggingOut } from '../lib/authProvider';
 import { authEventEmitter } from '../utils/authEvents';
 
 interface AuthState {
@@ -55,21 +55,11 @@ export const useAuthState = (): UseAuthStateReturn => {
 
     setAuthState(newState);
 
-    // 재인증이 필요한 경우 모달 표시
-    if (newState.needsReauth && !showReauthModal) {
-      setShowReauthModal(true);
-    }
-
-    // 리프레시 토큰도 만료된 경우 로그아웃
-    if (newState.refreshTokenExpired && hasTokens) {
-      if (authProvider) {
-        authProvider.logout({});
-      }
-      notify('인증이 완전히 만료되었습니다. 다시 로그인해주세요.', { type: 'warning' });
-    }
+    // 리프레시 토큰도 만료된 경우는 useAuthMonitor에서 처리하도록 함
+    // 여기서는 상태만 업데이트하고 모달 처리는 하지 않음
 
     return newState;
-  }, [authProvider, notify, showReauthModal]);
+  }, [authProvider, notify]);
 
   const checkAuthState = useCallback(async () => {
     const currentState = updateAuthState();

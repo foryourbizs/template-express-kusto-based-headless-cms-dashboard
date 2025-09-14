@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthProvider, useLogout } from 'react-admin';
-import { getTokenTimeRemaining } from '../lib/authProvider';
+import { getTokenTimeRemaining, isCurrentlyLoggingOut } from '../lib/authProvider';
 
 interface AuthMonitorState {
   isAuthExpired: boolean;
@@ -26,11 +26,33 @@ export const useAuthMonitor = () => {
     if (!authProvider) return;
 
     try {
+      // 토큰 존재 여부 확인
+      const hasTokens = !!localStorage.getItem('accessToken') && !!localStorage.getItem('refreshToken');
+      
+      if (!hasTokens) {
+        console.log('useAuthMonitor: No tokens found');
+        setState(prev => ({ 
+          ...prev, 
+          isAuthExpired: false, 
+          isReauthModalOpen: false,
+          timeRemaining: 0 
+        }));
+        return;
+      }
+
       // 1. 토큰 만료시간 확인 (로컬에서만)
       const { accessToken, refreshToken } = getTokenTimeRemaining();
       
-      // Refresh Token이 만료된 경우
+      console.log('useAuthMonitor: Checking auth status', {
+        accessExpired: accessToken.expired,
+        refreshExpired: refreshToken.expired,
+        accessRemaining: accessToken.remaining,
+        refreshRemaining: refreshToken.remaining
+      });
+
+      // Refresh Token이 만료된 경우 - 모달 표시
       if (refreshToken.expired) {
+        console.log('useAuthMonitor: Refresh token expired, showing modal');
         setState(prev => ({ 
           ...prev, 
           isAuthExpired: true, 
@@ -40,8 +62,9 @@ export const useAuthMonitor = () => {
         return;
       }
 
-      // Access Token이 만료된 경우 (하지만 Refresh Token은 유효)
-      if (accessToken.expired) {
+      // Access Token이 만료된 경우 (하지만 Refresh Token은 유효) - 모달 표시
+      if (accessToken.expired && !refreshToken.expired) {
+        console.log('useAuthMonitor: Access token expired, showing modal');
         setState(prev => ({ 
           ...prev, 
           isAuthExpired: true, 
@@ -84,6 +107,13 @@ export const useAuthMonitor = () => {
 
   // 강제 로그아웃
   const forceLogout = useCallback(() => {
+    // 이미 로그아웃 중이면 스킵
+    if (isCurrentlyLoggingOut()) {
+      console.log('useAuthMonitor: Logout already in progress, skipping...');
+      return;
+    }
+
+    console.log('useAuthMonitor: Initiating force logout...');
     setState(prev => ({ 
       ...prev, 
       isAuthExpired: false, 
