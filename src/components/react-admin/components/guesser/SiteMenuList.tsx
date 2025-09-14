@@ -82,7 +82,7 @@ const buildHierarchicalData = (menuItems: any[]) => {
   });
 
   // 3. 계층적 순서로 평면화
-  const flattenHierarchy = (items: any[], level = 0): any[] => {
+  const flattenHierarchy = (items: any[], level = 0, parentPath: number[] = []): any[] => {
     const result: any[] = [];
     
     // 그룹 UUID와 표시순서로 정렬
@@ -98,12 +98,14 @@ const buildHierarchicalData = (menuItems: any[]) => {
       return orderA - orderB;
     });
 
-    items.forEach(item => {
+    items.forEach((item, index) => {
       item.level = level;
+      item.isLast = index === items.length - 1;
+      item.parentPath = [...parentPath];
       result.push(item);
       
       if (item.children && item.children.length > 0) {
-        result.push(...flattenHierarchy(item.children, level + 1));
+        result.push(...flattenHierarchy(item.children, level + 1, [...parentPath, index]));
       }
     });
     
@@ -160,29 +162,17 @@ const HierarchicalTitle = ({ record }: { record: any }) => {
   const title = record?.title || record?.attributes?.title || '-';
   
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      {/* 들여쓰기 */}
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+      {/* 계층 표시용 들여쓰기와 연결선 */}
       {level > 0 && (
-        <Box sx={{ 
-          width: level * 20, 
-          height: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          pr: 1
-        }}>
-          {/* 연결선 표시 */}
-          <Box sx={{ 
-            width: 12, 
-            height: 1, 
-            backgroundColor: 'text.secondary',
-            opacity: 0.5
-          }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+          {/* 왼쪽 여백 (들여쓰기) */}
+          <Box sx={{ width: `${(level - 1) * 24}px` }} />
         </Box>
       )}
       
       {/* 계층 아이콘 */}
-      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 20 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 20, mr: 1 }}>
         {hasChildren ? (
           <FolderOpen 
             fontSize="small" 
@@ -216,42 +206,11 @@ const HierarchicalTitle = ({ record }: { record: any }) => {
         sx={{ 
           fontWeight: level === 0 ? 600 : level === 1 ? 500 : 400,
           color: level === 0 ? 'primary.main' : level === 1 ? 'text.primary' : 'text.secondary',
-          fontSize: level === 0 ? '0.9rem' : level === 1 ? '0.85rem' : '0.8rem'
+          fontSize: level === 0 ? '0.9rem' : level === 1 ? '0.85rem' : '0.8rem',
         }}
       >
         {title}
       </Typography>
-      
-      {/* 레벨 및 계층 정보 */}
-      <Box sx={{ display: 'flex', gap: 0.5, ml: 1 }}>
-        {level > 0 && (
-          <Chip 
-            label={`L${level}`} 
-            size="small" 
-            variant="outlined" 
-            sx={{ 
-              fontSize: '0.7rem', 
-              height: 18,
-              '& .MuiChip-label': { px: 0.5 },
-              color: level === 1 ? 'info.main' : 'warning.main',
-              borderColor: level === 1 ? 'info.main' : 'warning.main'
-            }}
-          />
-        )}
-        {hasChildren && (
-          <Chip 
-            label={`${record.children?.length || 0}개`}
-            size="small" 
-            variant="filled"
-            color="primary"
-            sx={{ 
-              fontSize: '0.7rem', 
-              height: 18,
-              '& .MuiChip-label': { px: 0.5 }
-            }}
-          />
-        )}
-      </Box>
     </Box>
   );
 };
