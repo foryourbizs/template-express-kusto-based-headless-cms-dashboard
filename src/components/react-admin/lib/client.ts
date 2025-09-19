@@ -172,21 +172,19 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
       Object.keys(params.filter || {}).forEach((key) => {
         const value = params.filter[key];
         
-        // user 객체 특별 처리
-        if (key === 'user' && typeof value === 'object' && value !== null) {
-          Object.keys(value).forEach((subKey) => {
-            if (value[subKey] !== null && value[subKey] !== undefined) {
-              searchParams.set(`filter[user.${subKey}]`, value[subKey]);
-            }
+        // OR 조건 처리 (대소문자 구분 없음)
+        if (key.toUpperCase() === 'OR' && Array.isArray(value)) {
+          value.forEach((orCondition, index) => {
+            Object.keys(orCondition).forEach((orKey) => {
+              const orValue = orCondition[orKey];
+              if (orValue !== null && orValue !== undefined) {
+                searchParams.set(`filter[OR][${index}][${orKey}]`, String(orValue));
+              }
+            });
           });
           return;
         }
-        
-        // 특수한 필터 키 처리 - 여러 패턴 체크
-        if ((key === 'user.name_like' || key === 'user_name_like' || key === 'name_like') && value) {
-          searchParams.set(`filter[user.name_like]`, value);
-          return;
-        }
+
         
         // 값이 객체가 아닌 경우에만 필터 추가
         if (value !== null && value !== undefined && typeof value !== 'object') {
