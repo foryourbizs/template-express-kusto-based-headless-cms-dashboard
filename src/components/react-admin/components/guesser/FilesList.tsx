@@ -7,6 +7,12 @@ import {
   RefreshButton,
   useListContext,
   Pagination,
+  EditButton,
+  ShowButton,
+  DeleteButton,
+  useRecordContext,
+  useResourceDefinitions,
+  useResourceContext,
 } from 'react-admin';
 import { 
   Chip, 
@@ -21,7 +27,13 @@ import {
   Card,
   CardMedia,
   Tooltip,
-  Stack
+  Stack,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Button
 } from '@mui/material';
 import {
   InsertDriveFile,
@@ -34,7 +46,13 @@ import {
   Close,
   Visibility,
   Download,
-  Share
+  Share,
+  Info,
+  Edit,
+  Delete,
+  MoreVert,
+  Launch,
+  ContentCopy
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
 import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
@@ -114,6 +132,367 @@ const formatFileSize = (bytes: number) => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+};
+
+// 모달에서 사용할 액션 버튼들
+const FileModalActions = ({ file, onClose }: { file: any; onClose: () => void }) => {
+  const resourceDefinitions = useResourceDefinitions();
+  const currentResource = resourceDefinitions['privates/files'];
+  
+  // 현재 리소스에 정의된 액션들 확인
+  const hasShow = !!currentResource?.hasShow;
+  const hasEdit = !!currentResource?.hasEdit;
+  
+  return (
+    <Stack direction="row" spacing={1} flexWrap="wrap">
+      {hasShow && (
+        <Button
+          startIcon={<Launch />}
+          onClick={() => {
+            window.location.href = `/privates/files/${file.id}/show`;
+            onClose();
+          }}
+          size="small"
+          variant="outlined"
+          color="primary"
+          sx={{ borderRadius: 2, minWidth: 'auto' }}
+        >
+          상세
+        </Button>
+      )}
+      
+      {hasEdit && (
+        <Button
+          startIcon={<Edit />}
+          onClick={() => {
+            window.location.href = `/privates/files/${file.id}`;
+            onClose();
+          }}
+          size="small"
+          variant="outlined"
+          color="warning"
+          sx={{ borderRadius: 2, minWidth: 'auto' }}
+        >
+          편집
+        </Button>
+      )}
+      
+      <Button
+        startIcon={<Delete />}
+        onClick={() => {
+          if (window.confirm(`파일 "${file.originalName || file.filename}"을(를) 정말 삭제하시겠습니까?`)) {
+            console.log('Delete file:', file.id);
+            // TODO: 실제 삭제 로직 구현
+            onClose();
+          }
+        }}
+        size="small"
+        variant="outlined"
+        color="error"
+        sx={{ borderRadius: 2, minWidth: 'auto' }}
+      >
+        삭제
+      </Button>
+    </Stack>
+  );
+};
+
+// 파일 상세보기 모달 컴포넌트
+const FileDetailModal = ({ file, open, onClose }: { 
+  file: any; 
+  open: boolean; 
+  onClose: () => void; 
+}) => {
+  if (!file) return null;
+
+  const handleDownload = () => {
+    if (file.url) {
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.originalName || file.filename || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  return (
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 2 }
+      }}
+    >
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        pb: 2,
+        backgroundColor: 'primary.main',
+        color: 'primary.contrastText'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ 
+            bgcolor: 'rgba(255,255,255,0.2)', 
+            color: 'primary.contrastText'
+          }}>
+            {getFileIcon(file.mimeType)}
+          </Avatar>
+          <Box>
+            <Typography variant="h6" noWrap>
+              파일 상세 정보
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8 }}>
+              {file.originalName || file.filename || '파일명 없음'}
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton onClick={onClose} sx={{ color: 'primary.contrastText' }}>
+          <Close />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ p: 0 }}>
+        {/* 기본 정보 섹션 */}
+        <Box sx={{ p: 3, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              📄 기본 정보
+            </Typography>
+          </Box>
+          <Box sx={{ 
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 2,
+            '@media (max-width: 600px)': {
+              gridTemplateColumns: '1fr'
+            }
+          }}>
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: 'grey.50', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'grey.200'
+            }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                파일명
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                {file.originalName || file.filename || '파일명 없음'}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: 'grey.50', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'grey.200'
+            }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                파일 크기
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                {formatFileSize(file.size)}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: 'grey.50', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'grey.200'
+            }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                파일 유형
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                {file.mimeType}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: 'grey.50', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'grey.200',
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                공개 상태
+              </Typography>
+              <Box sx={{ mt: 0.5 }}>
+                <Chip 
+                  label={file.isPublic ? '공개' : '비공개'} 
+                  color={file.isPublic ? 'success' : 'default'}
+                  size="small"
+                  sx={{ fontWeight: 500 }}
+                />
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* 업로드 정보 섹션 */}
+        <Box sx={{ p: 3, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              📤 업로드 정보
+            </Typography>
+          </Box>
+          <Box sx={{ 
+            display: 'grid',
+            gridTemplateColumns: file.uploadedBy && file.createdAt && file.updatedAt ? '1fr 1fr' : '1fr',
+            gap: 2,
+            '@media (max-width: 600px)': {
+              gridTemplateColumns: '1fr'
+            }
+          }}>
+            {file.uploadedBy && (
+              <Box sx={{ 
+                p: 2, 
+                backgroundColor: 'grey.50', 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'grey.200'
+              }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  업로더
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                  {file.uploadedBy?.username || file.uploadedBy}
+                </Typography>
+              </Box>
+            )}
+            
+            {file.createdAt && (
+              <Box sx={{ 
+                p: 2, 
+                backgroundColor: 'grey.50', 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'grey.200'
+              }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  업로드일
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                  {new Date(file.createdAt).toLocaleString('ko-KR')}
+                </Typography>
+              </Box>
+            )}
+            
+            {file.updatedAt && (
+              <Box sx={{ 
+                p: 2, 
+                backgroundColor: 'grey.50', 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'grey.200',
+                gridColumn: file.uploadedBy && file.createdAt ? 'span 2' : 'span 1'
+              }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  수정일
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 500 }}>
+                  {new Date(file.updatedAt).toLocaleString('ko-KR')}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+
+        {/* 액세스 정보 섹션 */}
+        {file.url && (
+          <Box sx={{ p: 3, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                🔗 액세스 정보
+              </Typography>
+            </Box>
+            <Box sx={{ 
+              p: 2, 
+              backgroundColor: 'grey.50', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'grey.200'
+            }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, mb: 1, display: 'block' }}>
+                파일 URL
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  wordBreak: 'break-all',
+                  fontSize: '0.85rem',
+                  fontFamily: 'monospace',
+                  backgroundColor: 'white',
+                  p: 1.5,
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'grey.300',
+                  lineHeight: 1.4
+                }}
+              >
+                {file.url}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
+        {/* 액션 버튼들 */}
+        <Box sx={{ 
+          p: 3, 
+          backgroundColor: 'grey.50',
+          borderTop: '1px solid',
+          borderTopColor: 'divider'
+        }}>
+          <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            {/* 왼쪽: 빠른 액션 버튼들 */}
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {file.url && (
+                <Button
+                  variant="contained"
+                  startIcon={<Download />}
+                  onClick={handleDownload}
+                  size="small"
+                  color="success"
+                  sx={{ borderRadius: 2 }}
+                >
+                  다운로드
+                </Button>
+              )}
+              
+              <Button
+                variant="outlined"
+                startIcon={<Share />}
+                onClick={() => {
+                  if (file.url) {
+                    navigator.clipboard.writeText(file.url);
+                    // TODO: 성공 알림 표시
+                  }
+                }}
+                size="small"
+                color="info"
+                sx={{ borderRadius: 2 }}
+              >
+                링크 복사
+              </Button>
+            </Stack>
+
+            {/* 오른쪽: React Admin 표준 액션 버튼들 */}
+            <FileModalActions file={file} onClose={onClose} />
+          </Stack>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 // 파일 미리보기 모달 컴포넌트
@@ -333,7 +712,10 @@ const FilePreviewModal = ({ file, open, onClose }: {
 };
 
 // 테이블 컬럼 정의
-const fileTableColumns = (onPreview: (file: any) => void): TableColumn[] => [
+const fileTableColumns = (
+  onPreview: (file: any) => void,
+  onShowDetail: (file: any) => void
+): TableColumn[] => [
   {
     key: 'id',
     label: 'ID',
@@ -539,10 +921,254 @@ const fileTableColumns = (onPreview: (file: any) => void): TableColumn[] => [
       minute: '2-digit'
     }) : '-'
   },
+  {
+    key: 'actions',
+    label: '액션',
+    width: '140px',
+    minWidth: '120px',
+    align: 'center',
+    priority: 2, // 매우 높은 우선순위
+    hideOnMobile: false,
+    render: (value, record) => {
+      // 폴더블 액션 메뉴 컴포넌트
+      const FileActionMenu = ({ record }: { record: any }) => {
+        const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+        const open = Boolean(anchorEl);
+        const resourceDefinitions = useResourceDefinitions();
+        const currentResource = resourceDefinitions['privates/files'];
+        
+        // 현재 리소스에 정의된 액션들 확인
+        const hasShow = !!currentResource?.hasShow;
+        const hasEdit = !!currentResource?.hasEdit;
+
+        const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+          event.stopPropagation();
+          setAnchorEl(event.currentTarget);
+        };
+
+        const handleClose = () => {
+          setAnchorEl(null);
+        };
+
+        const handleAction = (action: () => void) => {
+          action();
+          handleClose();
+        };
+
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* 주요 액션: 상세정보 (항상 표시) */}
+            <Tooltip title="상세정보">
+              <IconButton 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowDetail(record);
+                }}
+                size="small"
+                sx={{
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  borderRadius: 1.5,
+                  width: 32,
+                  height: 32,
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                    transform: 'scale(1.05)',
+                    transition: 'all 0.2s ease'
+                  }
+                }}
+              >
+                <Info fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            {/* 빠른 다운로드 (파일 URL이 있는 경우) */}
+            {record.url && (
+              <Tooltip title="다운로드">
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const link = document.createElement('a');
+                    link.href = record.url;
+                    link.download = record.originalName || record.filename || 'download';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  size="small"
+                  sx={{
+                    bgcolor: 'success.main',
+                    color: 'success.contrastText',
+                    borderRadius: 1.5,
+                    width: 32,
+                    height: 32,
+                    '&:hover': {
+                      bgcolor: 'success.dark',
+                      transform: 'scale(1.05)',
+                      transition: 'all 0.2s ease'
+                    }
+                  }}
+                >
+                  <Download fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* 더 보기 드롭다운 메뉴 */}
+            <Tooltip title="더 많은 옵션">
+              <IconButton
+                onClick={handleClick}
+                size="small"
+                sx={{
+                  bgcolor: open ? 'action.selected' : 'action.hover',
+                  color: 'text.primary',
+                  borderRadius: 1.5,
+                  width: 32,
+                  height: 32,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    bgcolor: 'action.selected',
+                    borderColor: 'primary.main',
+                    transform: 'scale(1.05)',
+                    transition: 'all 0.2s ease'
+                  }
+                }}
+              >
+                <MoreVert fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleClose}
+              onClick={(e) => e.stopPropagation()}
+              PaperProps={{
+                sx: {
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  borderRadius: 3,
+                  minWidth: 200,
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }
+              }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              {/* React Admin 표준 액션들 */}
+              {hasShow && (
+                <MenuItem 
+                  onClick={() => handleAction(() => {
+                    // ShowButton 클릭 시뮬레이션
+                    window.location.href = `/privates/files/${record.id}/show`;
+                  })}
+                  sx={{ py: 1.5 }}
+                >
+                  <ListItemIcon>
+                    <Launch fontSize="small" color="primary" />
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Typography variant="body2" fontWeight={500}>상세 페이지</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      전체 정보 보기
+                    </Typography>
+                  </ListItemText>
+                </MenuItem>
+              )}
+              
+              {hasEdit && (
+                <MenuItem 
+                  onClick={() => handleAction(() => {
+                    // EditButton 클릭 시뮬레이션
+                    window.location.href = `/privates/files/${record.id}`;
+                  })}
+                  sx={{ py: 1.5 }}
+                >
+                  <ListItemIcon>
+                    <Edit fontSize="small" color="warning" />
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Typography variant="body2" fontWeight={500}>편집하기</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      파일 정보 수정
+                    </Typography>
+                  </ListItemText>
+                </MenuItem>
+              )}
+
+              <Divider sx={{ my: 1 }} />
+
+              {/* 링크 복사 */}
+              {record.url && (
+                <MenuItem 
+                  onClick={() => handleAction(() => {
+                    navigator.clipboard.writeText(record.url);
+                    // TODO: 성공 알림 표시
+                  })}
+                  sx={{ py: 1.5 }}
+                >
+                  <ListItemIcon>
+                    <ContentCopy fontSize="small" color="info" />
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Typography variant="body2" fontWeight={500}>링크 복사</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      파일 URL 클립보드에 복사
+                    </Typography>
+                  </ListItemText>
+                </MenuItem>
+              )}
+
+              <Divider sx={{ my: 1 }} />
+
+              {/* 위험한 액션: 삭제 */}
+              <MenuItem 
+                onClick={() => handleAction(() => {
+                  // DeleteButton 시뮬레이션 - 실제로는 React Admin의 삭제 로직 사용
+                  if (window.confirm(`파일 "${record.originalName || record.filename}"을(를) 정말 삭제하시겠습니까?`)) {
+                    console.log('Delete file:', record.id);
+                    // TODO: 실제 삭제 로직 구현
+                  }
+                })}
+                sx={{ 
+                  py: 1.5,
+                  color: 'error.main',
+                  '&:hover': {
+                    bgcolor: 'error.light',
+                    color: 'error.contrastText'
+                  }
+                }}
+              >
+                <ListItemIcon>
+                  <Delete fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText>
+                  <Typography variant="body2" fontWeight={500}>삭제하기</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    영구적으로 제거
+                  </Typography>
+                </ListItemText>
+              </MenuItem>
+            </Menu>
+          </Box>
+        );
+      };
+
+      return <FileActionMenu record={record} />;
+    }
+  },
 ];
 
 // 상단 툴바
-const FileListActions = () => (
+const FileListActions = () => {
+  const resourceDefinitions = useResourceDefinitions();
+  const currentResource = resourceDefinitions['privates/files'];
+  
+  // 현재 리소스에 정의된 액션들 확인
+  const hasCreate = !!currentResource?.hasCreate;
+  
+  return (
   <TopToolbar sx={{ 
     backgroundColor: 'transparent',
     boxShadow: 'none',
@@ -560,29 +1186,97 @@ const FileListActions = () => (
         }
       }} 
     />
-    <CreateButton 
-      label="파일 업로드"
-      sx={{ 
-        mr: 1,
-        backgroundColor: 'primary.main',
-        color: 'primary.contrastText',
-        '&:hover': {
-          backgroundColor: 'primary.dark'
-        }
-      }}
-    />
+    
+    {hasCreate && (
+      <CreateButton 
+        label="새 파일 업로드"
+        resource="privates/files"
+        sx={{ 
+          mr: 1,
+          backgroundColor: 'primary.main',
+          color: 'primary.contrastText',
+          '&:hover': {
+            backgroundColor: 'primary.dark'
+          }
+        }}
+      />
+    )}
+    
     <ExportButton 
+      label="파일 목록 내보내기"
       sx={{
-        borderColor: 'primary.main',
-        color: 'primary.main',
+        mr: 1,
+        borderColor: 'secondary.main',
+        color: 'secondary.main',
         '&:hover': {
-          backgroundColor: 'primary.light',
-          borderColor: 'primary.dark'
+          backgroundColor: 'secondary.light',
+          borderColor: 'secondary.dark'
         }
       }}
     />
+
+    {/* 빠른 필터 버튼들 */}
+    <Box sx={{ 
+      ml: 2, 
+      pl: 2, 
+      borderLeft: '1px solid', 
+      borderLeftColor: 'divider',
+      display: 'flex',
+      gap: 1,
+      alignItems: 'center'
+    }}>
+      <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+        빠른 필터:
+      </Typography>
+      
+      <Chip
+        label="이미지만"
+        size="small"
+        variant="outlined"
+        onClick={() => {
+          // TODO: 이미지 파일만 필터링
+          console.log('Filter images only');
+        }}
+        sx={{ 
+          borderColor: 'primary.main',
+          color: 'primary.main',
+          '&:hover': { backgroundColor: 'primary.light' }
+        }}
+      />
+      
+      <Chip
+        label="공개 파일"
+        size="small"
+        variant="outlined"
+        onClick={() => {
+          // TODO: 공개 파일만 필터링
+          console.log('Filter public files only');
+        }}
+        sx={{ 
+          borderColor: 'success.main',
+          color: 'success.main',
+          '&:hover': { backgroundColor: 'success.light' }
+        }}
+      />
+      
+      <Chip
+        label="최근 업로드"
+        size="small"
+        variant="outlined"
+        onClick={() => {
+          // TODO: 최근 업로드된 파일만 필터링
+          console.log('Filter recent files only');
+        }}
+        sx={{ 
+          borderColor: 'info.main',
+          color: 'info.main',
+          '&:hover': { backgroundColor: 'info.light' }
+        }}
+      />
+    </Box>
   </TopToolbar>
-);
+  );
+};
 
 // 전체 그룹 표시 컴포넌트
 const AllGroupsDatagrid = () => {
@@ -590,6 +1284,8 @@ const AllGroupsDatagrid = () => {
   const { data: originalData, isPending } = listContext;
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [detailFile, setDetailFile] = useState<any>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const handlePreview = (file: any) => {
     setPreviewFile(file);
@@ -599,6 +1295,16 @@ const AllGroupsDatagrid = () => {
   const handleClosePreview = () => {
     setPreviewOpen(false);
     setPreviewFile(null);
+  };
+
+  const handleShowDetail = (file: any) => {
+    setDetailFile(file);
+    setDetailOpen(true);
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+    setDetailFile(null);
   };
   
   if (isPending) {
@@ -624,13 +1330,19 @@ const AllGroupsDatagrid = () => {
         <GroupedTable
           key={groupData.groupKey}
           groupData={groupData}
-          columns={fileTableColumns(handlePreview)}
+          columns={fileTableColumns(handlePreview, handleShowDetail)}
           itemLabel="파일"
           enableBulkDelete={true}
           enableSelection={true}
           groupIcon={getFileIcon(groupData.items[0]?.mimeType || '')}
         />
       ))}
+      
+      <FileDetailModal
+        file={detailFile}
+        open={detailOpen}
+        onClose={handleCloseDetail}
+      />
       
       <FilePreviewModal
         file={previewFile}

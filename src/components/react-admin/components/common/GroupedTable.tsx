@@ -558,32 +558,7 @@ export const MultiGroupTable: React.FC<MultiGroupTableProps> = ({
     mode: pagination.mode || 'group'
   };
 
-  // 그룹별 페이징 모드
-  if (paginationConfig.mode === 'group') {
-    return (
-      <Box>
-        {groupedData.map((groupData) => (
-          <GroupedTable
-            key={groupData.groupKey}
-            groupData={groupData}
-            columns={columns}
-            enableSelection={enableSelection}
-            enableBulkDelete={enableBulkDelete}
-            selectedIds={selectedIds}
-            onSelectionChange={onSelectionChange}
-            onBulkDelete={onBulkDelete}
-            onRowClick={onRowClick}
-            groupIcon={groupIcon}
-            itemLabel={itemLabel}
-            pagination={pagination}
-            groupId={groupData.groupKey}
-          />
-        ))}
-      </Box>
-    );
-  }
-
-  // 전체 페이징 모드
+  // 전체 페이징 모드에서 사용할 Hooks - 항상 호출되어야 함
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(paginationConfig.pageSize);
   
@@ -736,6 +711,32 @@ export const MultiGroupTable: React.FC<MultiGroupTableProps> = ({
     );
   };
 
+  // 그룹별 페이징 모드
+  if (paginationConfig.mode === 'group') {
+    return (
+      <Box>
+        {groupedData.map((groupData) => (
+          <GroupedTable
+            key={groupData.groupKey}
+            groupData={groupData}
+            columns={columns}
+            enableSelection={enableSelection}
+            enableBulkDelete={enableBulkDelete}
+            selectedIds={selectedIds}
+            onSelectionChange={onSelectionChange}
+            onBulkDelete={onBulkDelete}
+            onRowClick={onRowClick}
+            groupIcon={groupIcon}
+            itemLabel={itemLabel}
+            pagination={pagination}
+            groupId={groupData.groupKey}
+          />
+        ))}
+      </Box>
+    );
+  }
+
+  // 전체 페이징 모드
   return (
     <Box>
       {/* 전체 아이템 수 표시 */}

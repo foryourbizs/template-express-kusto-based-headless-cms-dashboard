@@ -17,6 +17,7 @@ import ObjectStoragesCreate from './components/guesser/ObjectStoragesCreate';
 import FilesList from './components/guesser/FilesList';
 import FilesEdit from './components/guesser/FilesEdit';
 import FilesCreate from './components/guesser/FilesCreate';
+import FilesShow from './components/guesser/FilesShow';
 
 import { BrowserRouter } from "react-router-dom";
 import {
@@ -100,7 +101,7 @@ const AdminApp = () => (
 			{/* <Resource name="privates/users/user-security-events" list={ListGuesserEx} options={{ label: '사용자 보안 이벤트', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} /> */}
 
 			<Resource name="privates/objectStorages" list={ObjectStoragesList} edit={ObjectStoragesEdit} create={ObjectStoragesCreate} options={{ label: '저장소', menuGroup: 'objects', menuGroupLabel: '오브젝트', icon: <Storage /> }} />
-			<Resource name="privates/files" list={FilesList} edit={FilesEdit} create={FilesCreate} options={{ label: '파일', menuGroup: 'objects', menuGroupLabel: '오브젝트', icon: <AttachFile /> }} />
+			<Resource name="privates/files" list={FilesList} show={FilesShow} edit={FilesEdit} create={FilesCreate} options={{ label: '파일', menuGroup: 'objects', menuGroupLabel: '오브젝트', icon: <AttachFile /> }} />
 
 
 			{/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
