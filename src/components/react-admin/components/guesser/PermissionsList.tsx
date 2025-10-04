@@ -16,7 +16,12 @@ import {
   BulkDeleteButton,
   BulkExportButton,
   TextInput,
+  Empty,
 } from 'react-admin';
+import {
+	Menu as MenuIcon,
+} from '@mui/icons-material';
+import EmptyList from '../common/EmptyList';
 
 // 권한 전용 벌크 액션 버튼
 const PermissionBulkActionButtons = () => (
@@ -51,6 +56,14 @@ export const PermissionsListWithDelete = (props: any) => {
       {...props}
       actions={<PermissionActions />}
       filters={permissionFilters}
+      empty={
+        <EmptyList
+          title="등록된 권한이 없습니다"
+          description="권한을 추가하여 부가적인 시스템 제어를 설정할 수 있습니다"
+          icon={<MenuIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+          createButtonLabel="권한 추가"
+        />
+      }
     >
       <Datagrid
         rowClick="edit"

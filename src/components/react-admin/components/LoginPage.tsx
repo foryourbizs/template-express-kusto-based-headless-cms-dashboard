@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
+import Image from 'next/image';
 import { useLogin, useNotify, useAuthProvider } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -91,21 +92,14 @@ const CustomLoginPage = () => {
                         sx={{
                             width: 120,
                             height: 60,
-                            backgroundColor: '#f1f5f9',
-                            border: '2px dashed #cbd5e1',
-                            borderRadius: 1,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            mb: 4,
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                                backgroundColor: '#e2e8f0',
-                                borderColor: '#94a3b8'
-                            }
+                            mb: 2,
                         }}
                     >
                         <Typography 
+                            className='fixed -indent-[9999px] opacity-0'
                             variant="body2" 
                             color="text.secondary"
                             sx={{ 
@@ -116,6 +110,7 @@ const CustomLoginPage = () => {
                         >
                             브랜드 로고
                         </Typography>
+                        <Image src="/assets/fuji_b_cmp.webp" alt="Brand Logo" priority width={120} height={60} />
                     </Box>
 
                     <Typography 
@@ -128,7 +123,7 @@ const CustomLoginPage = () => {
                             fontSize: { xs: '1.75rem', sm: '2rem' }
                         }}
                     >
-                        로그인
+                        대시보드 로그인
                     </Typography>
 
                     <Typography 
@@ -141,53 +136,70 @@ const CustomLoginPage = () => {
                             lineHeight: 1.5
                         }}
                     >
-                        계정에 로그인하여 시스템에 액세스하세요
+                        계정에 로그인하여 관리 시스템에 액세스하세요
                     </Typography>
 
                     <Box 
                         component="form" 
                         onSubmit={handleSubmit} 
+                        autoComplete="off"
                         sx={{ width: '100%' }}
                     >
                         <TextField
                             margin="normal"
                             required
                             fullWidth
-                            id="username"
-                            label="이메일 또는 사용자명"
-                            name="username"
-                            autoComplete="username"
+                            id="login_user"
+                            label="이메일 또는 아이디"
+                            name="login_user"
+                            autoComplete="off"
                             autoFocus
                             value={username}
+                            autoCapitalize='off'
+                            aria-autocomplete='none'
+                            autoSave='off'
+                            autoCorrect='off'
                             onChange={(e) => setUsername(e.target.value)}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <EmailIcon sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
+                                        <EmailIcon sx={{ color: '#6b7280', fontSize: '1.2rem' }} />
                                     </InputAdornment>
                                 ),
                             }}
                             sx={{ 
-                                mb: 2,
+                                mb: 3,
                                 '& .MuiOutlinedInput-root': {
-                                    borderRadius: 1.5,
-                                    backgroundColor: '#f8fafc',
+                                    borderRadius: 2,
+                                    backgroundColor: '#ffffff',
+                                    height: '56px',
+                                    transition: 'all 0.2s ease-in-out',
                                     '& fieldset': {
-                                        borderColor: '#e2e8f0',
+                                        borderColor: '#d1d5db',
+                                        borderWidth: '1px',
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: '#cbd5e1',
+                                        borderColor: '#9ca3af',
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: '#3b82f6',
-                                        borderWidth: 2,
+                                        borderColor: '#50a48c',
+                                        borderWidth: '2px',
                                     },
+                                    '& input': {
+                                        fontSize: '1rem',
+                                        color: '#1f2937',
+                                        padding: '16px 14px',
+                                    }
                                 },
                                 '& .MuiInputLabel-root': {
-                                    color: '#64748b',
+                                    color: '#6b7280',
+                                    fontSize: '1rem',
                                     '&.Mui-focused': {
-                                        color: '#3b82f6',
+                                        color: '#50a48c',
                                     },
+                                    '&.MuiInputLabel-shrink': {
+                                        fontSize: '0.875rem',
+                                    }
                                 },
                             }}
                         />
@@ -196,19 +208,19 @@ const CustomLoginPage = () => {
                             margin="normal"
                             required
                             fullWidth
-                            name="password"
+                            name="login_pass"
                             label="비밀번호"
                             autoCapitalize='off'
                             aria-autocomplete='none'
-                            type={showPassword ? 'text' : 'password'}
-                            id="password"
-                            autoComplete="current-password"
+                            type="text"
+                            id="login_pass"
+                            autoComplete="off"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
-                                        <LockIcon sx={{ color: '#94a3b8', fontSize: '1.1rem' }} />
+                                        <LockIcon sx={{ color: '#6b7280', fontSize: '1.2rem' }} />
                                     </InputAdornment>
                                 ),
                                 endAdornment: (
@@ -217,34 +229,55 @@ const CustomLoginPage = () => {
                                             aria-label="toggle password visibility"
                                             onClick={handleClickShowPassword}
                                             edge="end"
-                                            sx={{ color: '#94a3b8' }}
+                                            sx={{ 
+                                                color: '#6b7280',
+                                                '&:hover': {
+                                                    backgroundColor: '#f3f4f6',
+                                                    color: '#374151'
+                                                }
+                                            }}
                                         >
-                                            {showPassword ? <VisibilityOff sx={{ fontSize: '1.1rem' }} /> : <Visibility sx={{ fontSize: '1.1rem' }} />}
+                                            {showPassword ? <VisibilityOff sx={{ fontSize: '1.2rem' }} /> : <Visibility sx={{ fontSize: '1.2rem' }} />}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
                             }}
                             sx={{ 
-                                mb: 3,
+                                mb: 4,
                                 '& .MuiOutlinedInput-root': {
-                                    borderRadius: 1.5,
-                                    backgroundColor: '#f8fafc',
+                                    borderRadius: 2,
+                                    backgroundColor: '#ffffff',
+                                    height: '56px',
+                                    transition: 'all 0.2s ease-in-out',
                                     '& fieldset': {
-                                        borderColor: '#e2e8f0',
+                                        borderColor: '#d1d5db',
+                                        borderWidth: '1px',
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: '#cbd5e1',
+                                        borderColor: '#9ca3af',
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: '#3b82f6',
-                                        borderWidth: 2,
+                                        borderColor: '#50a48c',
+                                        borderWidth: '2px',
                                     },
+                                    '& input': {
+                                        fontSize: '1rem',
+                                        color: '#1f2937',
+                                        padding: '16px 14px',
+                                        WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                                        textSecurity: showPassword ? 'none' : 'disc',
+                                        fontFamily: showPassword ? 'inherit' : 'text-security-disc'
+                                    }
                                 },
                                 '& .MuiInputLabel-root': {
-                                    color: '#64748b',
+                                    color: '#6b7280',
+                                    fontSize: '1rem',
                                     '&.Mui-focused': {
-                                        color: '#3b82f6',
+                                        color: '#50a48c',
                                     },
+                                    '&.MuiInputLabel-shrink': {
+                                        fontSize: '0.875rem',
+                                    }
                                 },
                             }}
                         />
@@ -255,39 +288,35 @@ const CustomLoginPage = () => {
                             variant="contained"
                             disabled={loading}
                             sx={{ 
-                                mt: 2, 
+                                mt: 1, 
                                 mb: 3, 
-                                py: 1.5,
-                                borderRadius: 1.5,
+                                py: 2,
+                                borderRadius: 2,
                                 fontSize: '1rem',
                                 fontWeight: 600,
-                                backgroundColor: '#3b82f6',
+                                backgroundColor: '#50a48c',
                                 textTransform: 'none',
-                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                height: '56px',
+                                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                                transition: 'all 0.2s ease-in-out',
                                 '&:hover': {
-                                    backgroundColor: '#2563eb',
+                                    backgroundColor: '#3d8b73',
                                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                    transform: 'translateY(-1px)',
+                                },
+                                '&:active': {
+                                    transform: 'translateY(0px)',
                                 },
                                 '&:disabled': {
-                                    backgroundColor: '#94a3b8',
+                                    backgroundColor: '#9ca3af',
                                     color: 'white',
+                                    transform: 'none',
                                 }
                             }}
                         >
                             {loading ? '로그인 중...' : '로그인'}
                         </Button>
 
-                        <Divider sx={{ my: 2 }} />
-
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography 
-                                variant="body2" 
-                                color="text.secondary"
-                                sx={{ fontSize: '0.875rem' }}
-                            >
-                                © 2025 All rights reserved.
-                            </Typography>
-                        </Box>
                     </Box>
                 </Box>
             </Paper>

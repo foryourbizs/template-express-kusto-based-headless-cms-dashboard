@@ -16,7 +16,11 @@ import {
   FunctionField,
   useListContext,
 } from 'react-admin';
+import {
+  Menu as MenuIcon,
+} from '@mui/icons-material';
 import { Chip } from '@mui/material';
+import EmptyList from '../common/EmptyList';
 
 const ListActions = () => (
   <TopToolbar>
@@ -46,9 +50,9 @@ const ProviderField = ({ record }: any) => {
   };
 
   return (
-    <Chip 
-      label={record.provider?.toUpperCase() || 'Unknown'} 
-      style={{ 
+    <Chip
+      label={record.provider?.toUpperCase() || 'Unknown'}
+      style={{
         backgroundColor: getProviderColor(record.provider),
         color: 'white',
         fontWeight: 'bold'
@@ -80,30 +84,38 @@ const DefaultField = ({ record }: any) => {
 };
 
 const ObjectStoragesList = () => (
-  <List 
+  <List
     actions={<ListActions />}
     title="오브젝트 스토리지 관리"
+    empty={
+      <EmptyList
+        title="등록된 오브젝트 스토리지가 없습니다"
+        description="첫 번째 오브젝트 스토리지를 추가해보세요"
+        icon={<MenuIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        createButtonLabel="스토리지 추가"
+      />
+    }
   >
-    <Datagrid 
+    <Datagrid
       bulkActionButtons={<BulkActionButtons />}
       rowClick="edit"
     >
       <TextField source="id" label="ID" />
       <TextField source="name" label="스토리지명" />
-      <FunctionField 
-        source="provider" 
+      <FunctionField
+        source="provider"
         label="제공업체"
         render={(record: any) => <ProviderField record={record} />}
       />
       <TextField source="bucketName" label="버킷명" />
       <TextField source="region" label="리전" />
-      <FunctionField 
-        source="isDefault" 
+      <FunctionField
+        source="isDefault"
         label="기본"
         render={(record: any) => <DefaultField record={record} />}
       />
-      <FunctionField 
-        source="status" 
+      <FunctionField
+        source="status"
         label="상태"
         render={(record: any) => <StatusField record={record} />}
       />

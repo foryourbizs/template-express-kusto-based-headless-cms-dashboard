@@ -22,6 +22,10 @@ import {
   useNotify,
   Loading,
 } from 'react-admin';
+import {
+	ViewList as ViewListIcon,
+} from '@mui/icons-material';
+import EmptyList from '../common/EmptyList';
 
 // 삭제 기능이 제거된 커스텀 액션 컴포넌트
 const ListActionsWithoutDelete = ({ hasCreate }: { hasCreate: boolean }) => (
@@ -233,6 +237,15 @@ const ListGuesser: React.FC<ListGuesserProps> = ({
     <List 
       resource={resource}
       actions={<ListActionsWithoutDelete hasCreate={hasCreate} />} 
+      empty={
+        <EmptyList
+          title="등록된 데이터가 없습니다"
+          description="새로운 데이터를 추가할 수 있는 경우 버튼이 표시됩니다. 아닌 경우 쌓여가는 용도의 리소스일 목록일 수 있습니다."
+          icon={<ViewListIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+          showCreateButton={hasCreate}
+          createButtonLabel="데이터 추가"
+        />
+      }
       {...props}
     >
       <ConditionalDatagrid 

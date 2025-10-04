@@ -14,6 +14,7 @@
     "next": "15.5.2",
     "pluralize": "^8.0.0",
     "ra-data-json-server": "^5.10.2",
+    "ra-language-korean": "^1.0.1",
     "react": "19.1.0",
     "react-admin": "^5.10.2",
     "react-dom": "19.1.0"

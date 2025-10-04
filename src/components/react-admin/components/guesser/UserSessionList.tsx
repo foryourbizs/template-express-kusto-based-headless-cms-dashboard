@@ -8,9 +8,22 @@ import {
   DateField, 
   NumberField 
 } from 'react-admin';
+import {
+	Computer as ComputerIcon,
+} from '@mui/icons-material';
+import EmptyList from '../common/EmptyList';
 
 export const UserSessionList = () => (
-  <List>
+  <List
+    empty={
+      <EmptyList
+        title="활성화된 세션이 없습니다"
+        description="사용자가 로그인하면 세션 정보가 여기에 표시됩니다"
+        icon={<ComputerIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        showCreateButton={false}
+      />
+    }
+  >
     <Datagrid>
       <TextField source="id" />
       <TextField source="userUuid" />

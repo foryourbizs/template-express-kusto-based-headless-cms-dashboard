@@ -34,6 +34,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
+import EmptyList from '../common/EmptyList';
 
 // 검색 필터
 const siteMenuGroupFilters = [
@@ -226,6 +227,14 @@ export const SiteMenuGroupList = () => {
       actions={<ListActions />}
       title="메뉴 그룹 관리"
       perPage={25}
+      empty={
+        <EmptyList
+          title="등록된 메뉴 그룹이 없습니다"
+          description="메뉴 그룹을 추가하여 사이트 메뉴를 체계적으로 관리할 수 있습니다"
+          icon={<GroupIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+          createButtonLabel="메뉴 그룹 추가"
+        />
+      }
     >
       <Datagrid
         rowClick="edit"

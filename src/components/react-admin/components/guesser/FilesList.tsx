@@ -27,6 +27,7 @@ import {
   Description,
   Archive,
 } from '@mui/icons-material';
+import EmptyList from '../common/EmptyList';
 
 const ListActions = () => (
   <TopToolbar>
@@ -171,6 +172,14 @@ const FilesList = () => (
     actions={<ListActions />}
     title="파일 관리"
     perPage={25}
+    empty={
+      <EmptyList
+        title="업로드된 파일이 없습니다"
+        description="파일을 업로드하여 시스템에서 관리할 수 있습니다"
+        icon={<InsertDriveFile sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        createButtonLabel="파일 업로드"
+      />
+    }
   >
     <Datagrid 
       bulkActionButtons={<BulkActionButtons />}
