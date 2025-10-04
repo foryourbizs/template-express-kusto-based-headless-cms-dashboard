@@ -40,6 +40,7 @@ import { UserList } from "./components/guesser/UserList";
 
 import { CreateUserPermissions } from "./components/guesser/CreateUserPermissions";
 import { PermissionsListWithDelete, } from "./components/guesser/PermissionsList";
+import { UserAuditsList } from "./components/guesser/UserAuditsList";
 
 import { RatelimitsList } from "./components/guesser/RatelimitsList";
 
@@ -85,7 +86,7 @@ const AdminApp = () => (
 			<Resource name="privates/users/roles" list={ListGuesserEx} options={{ label: '역할', menuGroup: 'users', menuGroupLabel: '사용자 관리', BulkDeleteButton: false, icon: <Article /> }} />
 			<Resource name="privates/users/permissions" list={PermissionsListWithDelete} create={CreateUserPermissions} options={{ label: '권한', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} />
 			<Resource name="privates/users/ratelimits" list={RatelimitsList} options={{ label: '처리율 제한 장치', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} />
-			<Resource name="privates/users/audits" list={ListGuesser} options={{ label: '사용자 로그', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} />
+			<Resource name="privates/users/audits" list={UserAuditsList} options={{ label: '사용자 로그', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} />
 			{/* <Resource name="privates/users/user-roles" list={ListGuesserEx} options={{ label: '역할 - 사용자 연결', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} /> */}
 			{/* <Resource name="privates/users/user-permissions" list={ListGuesserEx} options={{ label: '권한 - 사용자 연결', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} /> */}
 			{/* <Resource name="privates/users/user-security-events" list={ListGuesserEx} options={{ label: '사용자 보안 이벤트', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <Article /> }} /> */}
