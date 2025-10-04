@@ -11,7 +11,7 @@ import {
 import { Box, Chip } from '@mui/material';
 import { Group as GroupIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 검색 필터
 const siteMenuGroupFilters = [
@@ -146,20 +146,22 @@ const AllGroupsDatagrid = () => {
   const groupedData = groupMenuGroupsByType(originalData);
 
   return (
-    <Box>
-      {groupedData.map((groupData) => (
-        <GroupedTable
-          key={groupData.groupKey}
-          groupData={groupData}
-          columns={menuGroupTableColumns}
-
-          itemLabel="메뉴 그룹"
-          enableBulkDelete={true}
-          enableSelection={true}
-          groupIcon={<GroupIcon />}
-        />
-      ))}
-    </Box>
+    <MultiGroupTable
+      groupedData={groupedData}
+      columns={menuGroupTableColumns}
+      itemLabel="메뉴 그룹"
+      enableBulkDelete={true}
+      enableSelection={true}
+      groupIcon={<GroupIcon />}
+      pagination={{
+        enabled: true,
+        pageSize: 15,
+        pageSizeOptions: [10, 15, 25, 50],
+        position: 'bottom',
+        showFirstLastButtons: true,
+        mode: 'global'
+      }}
+    />
   );
 };
 
@@ -169,6 +171,7 @@ export const SiteMenuGroupList = () => (
     actions={<MenuGroupListActions />}
     filters={siteMenuGroupFilters}
     title="메뉴 그룹 관리 (유형별 보기)"
+    perPage={20} // 적절한 페이지 크기
   >
     <AllGroupsDatagrid />
   </List>

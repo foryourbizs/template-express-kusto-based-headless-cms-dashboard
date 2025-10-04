@@ -8,12 +8,11 @@ import {
   FilterButton,
   SelectInput,
   useListContext,
-  Pagination,
 } from "react-admin";
-import { Box, Chip } from "@mui/material";
+import { Box, Chip, Typography } from "@mui/material";
 import { Person as PersonIcon } from "@mui/icons-material";
 import { EmptyList } from "../common/EmptyList";
-import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 const UserListActions = () => (
   <TopToolbar>
@@ -87,37 +86,42 @@ const groupUsersByStatus = (userData: any[]): GroupedTableData[] => {
   userData.forEach(user => {
     let groupKey: string;
     let groupName: string;
+    let priority: number; // 정렬 우선순위
     
     if (user.isSuspended) {
       groupKey = 'suspended';
-      groupName = '정지된 사용자';
+      groupName = '🚫 정지된 사용자';
+      priority = 4;
     } else if (!user.isActive) {
       groupKey = 'inactive';
-      groupName = '비활성 사용자';
+      groupName = '⏸️ 비활성 사용자';
+      priority = 3;
     } else if (!user.isVerified) {
       groupKey = 'unverified';
-      groupName = '미인증 사용자';
+      groupName = '⚠️ 미인증 사용자';
+      priority = 2;
     } else {
       groupKey = 'active';
-      groupName = '활성 사용자';
+      groupName = '✅ 활성 사용자';
+      priority = 1;
     }
     
     if (!grouped.has(groupKey)) {
       grouped.set(groupKey, {
         groupKey,
         groupName,
-        items: []
+        items: [],
+        priority
       });
     }
     
     grouped.get(groupKey).items.push(user);
   });
   
-  // 그룹 순서: 활성 -> 미인증 -> 비활성 -> 정지
-  const order = ['active', 'unverified', 'inactive', 'suspended'];
-  return order
-    .map(key => grouped.get(key))
-    .filter(group => group && group.items.length > 0);
+  // 우선순위별로 정렬하여 반환
+  return Array.from(grouped.values())
+    .filter(group => group.items.length > 0)
+    .sort((a, b) => a.priority - b.priority);
 };
 
 // 테이블 컬럼 정의
@@ -243,7 +247,7 @@ const userTableColumns: TableColumn[] = [
 // 전체 그룹 표시 컴포넌트
 const AllGroupsDatagrid = () => {
   const listContext = useListContext();
-  const { data: originalData, isPending } = listContext;
+  const { data: originalData, isPending, total } = listContext;
   
   if (isPending) {
     return <div>로딩 중...</div>;
@@ -260,20 +264,26 @@ const AllGroupsDatagrid = () => {
     );
   }
 
+  // 현재 페이지의 데이터를 그룹별로 분리
   const groupedData = groupUsersByStatus(originalData);
 
   return (
     <Box>
+    
+
+      {/* 현재 페이지의 그룹별 테이블들 */}
       {groupedData.map((groupData) => (
         <GroupedTable
           key={groupData.groupKey}
           groupData={groupData}
           columns={userTableColumns}
-
           itemLabel="사용자"
           enableBulkDelete={true}
           enableSelection={true}
           groupIcon={<PersonIcon />}
+          pagination={{
+            enabled: false // 서버 페이지네이션을 사용하므로 테이블 자체 페이지네이션은 비활성화
+          }}
         />
       ))}
     </Box>
@@ -285,23 +295,9 @@ export const UserList = () => (
     actions={<UserListActions />} 
     filters={userFilters}
     title="사용자 관리 (상태별 보기)"
-    pagination={false} // 기본 페이지네이션 비활성화
+    perPage={25} // 적절한 페이지 크기로 설정
   >
-    <Box>
-      <AllGroupsDatagrid />
-      {/* 페이지네이션을 테이블 외부에 고정 배치 */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center',
-        mt: 2,
-        p: 2,
-        backgroundColor: 'background.paper',
-        borderRadius: 1,
-        boxShadow: 1
-      }}>
-        <Pagination />
-      </Box>
-    </Box>
+    <AllGroupsDatagrid />
   </List>
 );
 

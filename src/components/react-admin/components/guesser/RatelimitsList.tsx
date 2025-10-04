@@ -12,7 +12,7 @@ import {
 import { Box, Chip } from '@mui/material';
 import { Speed as SpeedIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // Rate Limit을 유형별로 그룹화
 const groupRateLimitsByType = (rateData: any[]): GroupedTableData[] => {
@@ -139,20 +139,22 @@ const AllGroupsDatagrid = () => {
   const groupedData = groupRateLimitsByType(originalData);
 
   return (
-    <Box>
-      {groupedData.map((groupData) => (
-        <GroupedTable
-          key={groupData.groupKey}
-          groupData={groupData}
-          columns={rateTableColumns}
-
-          itemLabel="제한"
-          enableBulkDelete={true}
-          enableSelection={true}
-          groupIcon={<SpeedIcon />}
-        />
-      ))}
-    </Box>
+    <MultiGroupTable
+      groupedData={groupedData}
+      columns={rateTableColumns}
+      itemLabel="제한"
+      enableBulkDelete={true}
+      enableSelection={true}
+      groupIcon={<SpeedIcon />}
+      pagination={{
+        enabled: true,
+        pageSize: 20,
+        pageSizeOptions: [10, 20, 50, 100],
+        position: 'bottom',
+        showFirstLastButtons: true,
+        mode: 'group'
+      }}
+    />
   );
 };
 
@@ -162,6 +164,7 @@ export const RatelimitsList = () => (
     actions={<RateListActions />}
     filters={rateFilters}
     title="Rate Limit 관리 (제한별 보기)"
+    perPage={25} // 적절한 페이지 크기
   >
     <AllGroupsDatagrid />
   </List>

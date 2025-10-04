@@ -8,7 +8,7 @@ import {
   RefreshButton,
   ExportButton,
 } from 'react-admin';
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import {
   Computer as ComputerIcon,
   PhoneAndroid as MobileIcon,
@@ -16,7 +16,7 @@ import {
   TabletMac as TabletIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 디바이스 타입별 아이콘
 const getDeviceIcon = (deviceInfo: string) => {
@@ -162,7 +162,7 @@ const SessionListActions = () => (
 // 전체 그룹 표시 컴포넌트
 const AllGroupsDatagrid = () => {
   const listContext = useListContext();
-  const { data: originalData, isPending } = listContext;
+  const { data: originalData, isPending, total } = listContext;
   
   if (isPending) {
     return <div>로딩 중...</div>;
@@ -173,7 +173,7 @@ const AllGroupsDatagrid = () => {
       <EmptyList
         title="활성화된 세션이 없습니다"
         description="사용자가 로그인하면 세션 정보가 여기에 표시됩니다"
-        icon={<ComputerIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        icon={<ComputerIcon sx={{ fontSize: 48, color: 'text.security', mb: 2 }} />}
         showCreateButton={false}
       />
     );
@@ -183,16 +183,48 @@ const AllGroupsDatagrid = () => {
 
   return (
     <Box>
+      {/* 전체 결과 정보 표시 */}
+      <Box sx={{ 
+        p: 2, 
+        mb: 2,
+        backgroundColor: 'warning.main', 
+        color: 'warning.contrastText',
+        borderRadius: 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        justifyContent: 'center'
+      }}>
+        <ComputerIcon />
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          전체 세션
+        </Typography>
+        <Chip 
+          label={`총 ${total || 0}개`} 
+          size="small" 
+          sx={{ 
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            color: 'inherit'
+          }} 
+        />
+        <Typography variant="body2" sx={{ ml: 2 }}>
+          (현재 페이지: {originalData.length}개)
+        </Typography>
+      </Box>
+
+      {/* 현재 페이지의 그룹별 테이블들 */}
       {groupedData.map((groupData) => (
         <GroupedTable
           key={groupData.groupKey}
           groupData={groupData}
           columns={sessionTableColumns}
-
           itemLabel="세션"
           enableBulkDelete={true}
           enableSelection={true}
           groupIcon={<ComputerIcon />}
+          pagination={{
+            enabled: false // 서버 페이지네이션을 사용하므로 테이블 자체 페이지네이션은 비활성화
+          }}
         />
       ))}
     </Box>
@@ -203,6 +235,7 @@ export const UserSessionList = () => (
   <List
     actions={<SessionListActions />}
     title="사용자 세션 관리 (상태별 보기)"
+    perPage={30} // 적절한 페이지 크기
   >
     <AllGroupsDatagrid />
   </List>
