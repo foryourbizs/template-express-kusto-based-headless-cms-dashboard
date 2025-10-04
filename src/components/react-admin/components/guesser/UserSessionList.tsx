@@ -16,7 +16,7 @@ import {
   TabletMac as TabletIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 디바이스 타입별 아이콘
 const getDeviceIcon = (deviceInfo: string) => {
@@ -188,7 +188,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={sessionTableColumns}
-          resourceName="privates/userSessions"
+
           itemLabel="세션"
           enableBulkDelete={true}
           enableSelection={true}

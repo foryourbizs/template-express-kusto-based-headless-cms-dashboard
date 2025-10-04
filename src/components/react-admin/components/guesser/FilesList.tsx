@@ -6,6 +6,7 @@ import {
   ExportButton,
   RefreshButton,
   useListContext,
+  Pagination,
 } from 'react-admin';
 import { Chip, Box, Link, Avatar } from '@mui/material';
 import {
@@ -18,7 +19,7 @@ import {
   Archive,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 파일 유형별 아이콘 매핑
 const getFileIcon = (mimeType: string) => {
@@ -249,7 +250,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={fileTableColumns}
-          resourceName="privates/files"
+
           itemLabel="파일"
           enableBulkDelete={true}
           enableSelection={true}
@@ -265,8 +266,22 @@ export const FilesList = () => (
   <List 
     actions={<FileListActions />}
     title="파일 관리 (유형별 보기)"
+    pagination={false}
   >
-    <AllGroupsDatagrid />
+    <Box>
+      <AllGroupsDatagrid />
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center',
+        mt: 2,
+        p: 2,
+        backgroundColor: 'background.paper',
+        borderRadius: 1,
+        boxShadow: 1
+      }}>
+        <Pagination />
+      </Box>
+    </Box>
   </List>
 );
 

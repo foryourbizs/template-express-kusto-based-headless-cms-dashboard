@@ -68,3 +68,5 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
     </MainErrorProvider>
   );
 };
+
+export default Main;

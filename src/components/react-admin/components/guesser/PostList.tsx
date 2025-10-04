@@ -7,11 +7,12 @@ import {
   FilterButton,
   TextInput,
   useListContext,
+  Pagination,
 } from 'react-admin';
 import { Box, Chip } from '@mui/material';
 import { Article as ArticleIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 포스트를 상태별로 그룹화
 const groupPostsByStatus = (postData: any[]): GroupedTableData[] => {
@@ -111,7 +112,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={postTableColumns}
-          resourceName="privates/posts"
+
           itemLabel="포스트"
           enableBulkDelete={true}
           enableSelection={true}
@@ -135,8 +136,22 @@ export const PostList = () => (
       <TextInput key="title" label="제목" source="title" placeholder="제목 검색..." />,
     ]}
     title="포스트 관리 (상태별 보기)"
+    pagination={false}
   >
-    <AllGroupsDatagrid />
+    <Box>
+      <AllGroupsDatagrid />
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center',
+        mt: 2,
+        p: 2,
+        backgroundColor: 'background.paper',
+        borderRadius: 1,
+        boxShadow: 1
+      }}>
+        <Pagination />
+      </Box>
+    </Box>
   </List>
 );
 

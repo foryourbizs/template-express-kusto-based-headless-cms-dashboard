@@ -8,11 +8,12 @@ import {
   FilterButton,
   SelectInput,
   useListContext,
+  Pagination,
 } from "react-admin";
 import { Box, Chip } from "@mui/material";
 import { Person as PersonIcon } from "@mui/icons-material";
 import { EmptyList } from "../common/EmptyList";
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 const UserListActions = () => (
   <TopToolbar>
@@ -268,7 +269,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={userTableColumns}
-          resourceName="privates/users"
+
           itemLabel="사용자"
           enableBulkDelete={true}
           enableSelection={true}
@@ -284,8 +285,23 @@ export const UserList = () => (
     actions={<UserListActions />} 
     filters={userFilters}
     title="사용자 관리 (상태별 보기)"
+    pagination={false} // 기본 페이지네이션 비활성화
   >
-    <AllGroupsDatagrid />
+    <Box>
+      <AllGroupsDatagrid />
+      {/* 페이지네이션을 테이블 외부에 고정 배치 */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center',
+        mt: 2,
+        p: 2,
+        backgroundColor: 'background.paper',
+        borderRadius: 1,
+        boxShadow: 1
+      }}>
+        <Pagination />
+      </Box>
+    </Box>
   </List>
 );
 

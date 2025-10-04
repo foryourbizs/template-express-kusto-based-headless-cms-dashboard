@@ -12,7 +12,7 @@ import {
 import { Box, Chip } from '@mui/material';
 import { Security as SecurityIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 권한 전용 액션 버튼들
 const PermissionActions = () => (
@@ -182,7 +182,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={permissionTableColumns}
-          resourceName="privates/permissions"
+
           itemLabel="권한"
           enableBulkDelete={true}
           enableSelection={true}

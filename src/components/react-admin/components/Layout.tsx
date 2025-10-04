@@ -3,7 +3,7 @@ import { Box, CssBaseline, useMediaQuery, Theme } from '@mui/material';
 import { useAuthProvider, useDataProvider, useNotify, useRefresh } from 'react-admin';
 import { Header } from './layout/Header';
 import { Sidebar } from './layout/Sidebar';
-import { Main } from './layout/Main';
+import Main from './layout/Main';
 import { Footer } from './layout/Footer';
 import { LayoutProvider, useLayout } from './layout/LayoutProvider';
 import { ReauthModal } from './ReauthModal';

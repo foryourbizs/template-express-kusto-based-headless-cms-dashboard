@@ -11,7 +11,7 @@ import {
 import { Box, Chip } from '@mui/material';
 import { Storage as StorageIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 스토리지를 유형별로 그룹화
 const groupStoragesByType = (storageData: any[]): GroupedTableData[] => {
@@ -134,7 +134,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={storageTableColumns}
-          resourceName="privates/objectStorages"
+
           itemLabel="스토리지"
           enableBulkDelete={true}
           enableSelection={true}

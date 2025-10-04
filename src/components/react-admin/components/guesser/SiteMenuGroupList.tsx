@@ -11,7 +11,7 @@ import {
 import { Box, Chip } from '@mui/material';
 import { Group as GroupIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 검색 필터
 const siteMenuGroupFilters = [
@@ -152,7 +152,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={menuGroupTableColumns}
-          resourceName="privates/siteMenuGroup"
+
           itemLabel="메뉴 그룹"
           enableBulkDelete={true}
           enableSelection={true}

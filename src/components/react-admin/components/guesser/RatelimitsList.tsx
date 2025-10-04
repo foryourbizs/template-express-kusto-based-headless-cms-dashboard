@@ -12,7 +12,7 @@ import {
 import { Box, Chip } from '@mui/material';
 import { Speed as SpeedIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // Rate Limit을 유형별로 그룹화
 const groupRateLimitsByType = (rateData: any[]): GroupedTableData[] => {
@@ -145,7 +145,7 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={rateTableColumns}
-          resourceName="privates/rateLimits"
+
           itemLabel="제한"
           enableBulkDelete={true}
           enableSelection={true}

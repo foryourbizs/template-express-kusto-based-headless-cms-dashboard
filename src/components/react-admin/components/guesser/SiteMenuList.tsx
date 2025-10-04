@@ -5,6 +5,7 @@ import {
   TopToolbar,
   ExportButton,
   useListContext,
+  Pagination,
 } from 'react-admin';
 import {
   Box,
@@ -14,7 +15,7 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
-import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import GroupedTable, { TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 그룹별 데이터 분리 함수
 const groupMenusByGroup = (menuData: any[]): GroupedTableData[] => {
@@ -130,7 +131,6 @@ const AllGroupsDatagrid = () => {
           key={groupData.groupKey}
           groupData={groupData}
           columns={menuTableColumns}
-          resourceName="privates/siteMenu"
           itemLabel="메뉴"
           enableBulkDelete={true}
           enableSelection={true}
@@ -155,7 +155,21 @@ export const SiteMenuList = () => {
         }
       }}
     >
-      <AllGroupsDatagrid />
+      <Box>
+        <AllGroupsDatagrid />
+        {/* 페이지네이션을 테이블 외부에 고정 배치 */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center',
+          mt: 2,
+          p: 2,
+          backgroundColor: 'background.paper',
+          borderRadius: 1,
+          boxShadow: 1
+        }}>
+          <Pagination />
+        </Box>
+      </Box>
     </List>
   );
 };
