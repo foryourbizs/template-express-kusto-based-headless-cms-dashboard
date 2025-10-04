@@ -20,7 +20,7 @@ import {
 	Settings,
 	Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { useAuthProvider, useLogout, useGetIdentity, useNotify } from 'react-admin';
+import { useLogout, useGetIdentity, useNotify } from 'react-admin';
 import { refreshTokens, getTokenTimeRemaining } from '../../lib/authProvider';
 
 interface HeaderProps {
@@ -69,18 +69,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 		} finally {
 			setIsRefreshing(false);
 		}
-	};
-
-	// 테스트용: 토큰을 수동으로 만료시키는 함수
-	const expireTokensForTest = () => {
-		const now = new Date();
-		const expiredTime = new Date(now.getTime() - 1000).toISOString(); // 1초 전으로 설정
-		
-		localStorage.setItem("accessTokenExpiresAt", expiredTime);
-		localStorage.setItem("refreshTokenExpiresAt", expiredTime);
-		
-		setTokenInfo(getTokenTimeRemaining());
-		notify('테스트용으로 토큰을 만료시켰습니다.', { type: 'info' });
 	};
 
 	// 시간을 사람이 읽기 쉬운 형태로 변환 (초단위까지 표시)
@@ -277,6 +265,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 							}} />
 						</IconButton>
 					</Box>
+
+					
 					{/* 알림 */}
 					{/* <IconButton color="inherit">
 						<Badge badgeContent={3} color="error">
@@ -297,7 +287,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 								bgcolor: theme.palette.primary.main,
 							}}
 						>
-							{identity?.fullName?.[0] || 'A'}
+							{identity?.fullName?.[0] || ''}
 						</Avatar>
 					</IconButton>
 
@@ -338,22 +328,16 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 						{/* <MenuItem onClick={handleUserMenuClose}>
 							<AccountCircle sx={{ mr: 1 }} />
 							프로필
-						</MenuItem>
-						<MenuItem onClick={handleUserMenuClose}>
+						</MenuItem> */}
+
+
+						{/* <MenuItem onClick={handleUserMenuClose}>
 							<Settings sx={{ mr: 1 }} />
 							설정
 						</MenuItem> */}
-						{/* 개발용 테스트 버튼 */}
-						<MenuItem 
-							onClick={() => {
-								expireTokensForTest();
-								handleUserMenuClose();
-							}}
-							sx={{ color: 'orange' }}
-						>
-							<RefreshIcon sx={{ mr: 1 }} />
-							토큰 만료 테스트
-						</MenuItem>
+
+
+						
 						<MenuItem onClick={handleLogout}>
 							<Logout sx={{ mr: 1 }} />
 							로그아웃

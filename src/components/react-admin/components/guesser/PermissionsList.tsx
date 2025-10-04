@@ -63,21 +63,33 @@ const permissionTableColumns: TableColumn[] = [
     key: 'id',
     label: 'ID',
     width: '80px',
+    minWidth: '60px',
+    priority: 10,
+    hideOnMobile: true,
   },
   {
     key: 'name',
     label: '권한명',
     flex: 1,
+    minWidth: '150px',
+    priority: 1, // 가장 높은 우선순위
+    hideOnMobile: false,
   },
   {
     key: 'resource',
     label: '리소스',
     width: '120px',
+    minWidth: '100px',
+    priority: 2, // 높은 우선순위
+    hideOnMobile: false,
   },
   {
     key: 'action',
     label: '액션',
-    width: '120px',
+    width: '100px',
+    minWidth: '80px',
+    priority: 3, // 높은 우선순위
+    hideOnMobile: false,
     render: (value) => (
       <Chip 
         label={value || 'READ'} 
@@ -91,12 +103,18 @@ const permissionTableColumns: TableColumn[] = [
     key: 'description',
     label: '설명',
     width: '200px',
+    minWidth: '150px',
+    priority: 25,
+    hideOnMobile: true,
   },
   {
     key: 'isSystem',
-    label: '시스템 권한',
-    width: '100px',
+    label: '시스템',
+    width: '90px',
+    minWidth: '80px',
     align: 'center',
+    priority: 15,
+    hideOnMobile: false,
     render: (value) => (
       <Chip 
         label={value ? '시스템' : '사용자'} 
@@ -108,14 +126,30 @@ const permissionTableColumns: TableColumn[] = [
   {
     key: 'createdAt',
     label: '생성일',
-    width: '150px',
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+    width: '130px',
+    minWidth: '110px',
+    priority: 35,
+    hideOnMobile: true,
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '-'
   },
   {
     key: 'updatedAt',
     label: '수정일',
-    width: '150px',
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+    width: '130px',
+    minWidth: '110px',
+    priority: 40,
+    hideOnMobile: true,
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '-'
   },
 ];
 

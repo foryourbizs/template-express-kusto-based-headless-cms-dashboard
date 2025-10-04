@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   useDelete,
   useNotify,
@@ -11,7 +11,16 @@ import {
   Typography,
   Chip,
   Checkbox,
-  IconButton
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  Paper
 } from '@mui/material';
 import {
   Folder,
@@ -24,9 +33,13 @@ export interface TableColumn {
   key: string;
   label: string;
   width?: string | number;
+  minWidth?: string | number;
+  maxWidth?: string | number;
   flex?: number;
   render?: (value: any, record: any) => React.ReactNode;
   align?: 'left' | 'center' | 'right';
+  hideOnMobile?: boolean; // 모바일에서 숨길 컬럼
+  priority?: number; // 우선순위 (낮을수록 먼저 숨겨짐)
 }
 
 // 테이블 데이터 타입
@@ -103,9 +116,53 @@ export const GroupedTable: React.FC<GroupedTableProps> = ({
   onRowClick
 }) => {
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  const containerRef = useRef<HTMLDivElement>(null);
   const [deleteOne] = useDelete();
   const notify = useNotify();
   const refresh = useRefresh();
+
+  // 반응형 컬럼 필터링
+  const getVisibleColumns = () => {
+    let visibleColumns = [...columns];
+    
+    // 모바일에서 우선순위가 낮은 컬럼들 숨기기
+    if (isMobile) {
+      visibleColumns = visibleColumns.filter(col => !col.hideOnMobile);
+      // 우선순위에 따라 추가 필터링
+      if (visibleColumns.length > 3) {
+        visibleColumns = visibleColumns
+          .sort((a, b) => (a.priority || 0) - (b.priority || 0))
+          .slice(0, 3);
+      }
+    } else if (isTablet) {
+      // 태블릿에서는 우선순위 낮은 컬럼 일부만 숨기기
+      if (visibleColumns.length > 5) {
+        visibleColumns = visibleColumns
+          .sort((a, b) => (a.priority || 0) - (b.priority || 0))
+          .slice(0, 5);
+      }
+    }
+
+    // 액션 컬럼 추가
+    return [
+      ...visibleColumns,
+      {
+        key: 'actions',
+        label: '작업',
+        width: isMobile ? '80px' : '120px',
+        minWidth: isMobile ? '80px' : '120px',
+        maxWidth: isMobile ? '80px' : '120px',
+        align: 'center' as const,
+        priority: 999, // 항상 표시
+        render: (_, record) => customActions ? customActions(record) : (
+          <EditButton record={record} resourceName={resourceName} onEdit={onEdit} />
+        )
+      } as TableColumn
+    ];
+  };
 
   // 개별 체크박스 핸들러
   const handleToggleSelection = (id: string | number) => {
@@ -145,44 +202,48 @@ export const GroupedTable: React.FC<GroupedTableProps> = ({
 
   const isAllSelected = selectedIds.length === groupData.items.length && groupData.items.length > 0;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < groupData.items.length;
-
-  // 기본 컬럼에 편집 액션 추가
-  const allColumns: TableColumn[] = [
-    ...columns,
-    {
-      key: 'actions',
-      label: '작업',
-      width: '100px',
-      render: (_, record) => customActions ? customActions(record) : (
-        <EditButton record={record} resourceName={resourceName} onEdit={onEdit} />
-      )
-    }
-  ];
+  const visibleColumns = getVisibleColumns();
 
   return (
     <Box sx={{ mb: 3 }}>
       {/* 그룹 헤더 */}
       <Box sx={{ 
-        p: 2, 
+        p: isMobile ? 1.5 : 2, 
         backgroundColor: 'primary.main', 
         color: 'primary.contrastText',
         borderRadius: '4px 4px 0 0',
         display: 'flex',
         alignItems: 'center',
+        flexWrap: isMobile ? 'wrap' : 'nowrap',
         gap: 1,
         justifyContent: 'space-between'
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1,
+          minWidth: 0,
+          flex: 1
+        }}>
           {groupIcon}
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography 
+            variant={isMobile ? "subtitle1" : "h6"} 
+            sx={{ 
+              fontWeight: 600,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
+          >
             {groupData.groupName}
           </Typography>
           <Chip 
-            label={`${groupData.items.length}개 ${itemLabel}`} 
+            label={`${groupData.items.length}개`} 
             size="small" 
             sx={{ 
               backgroundColor: 'rgba(255,255,255,0.2)',
-              color: 'inherit'
+              color: 'inherit',
+              minWidth: 'fit-content'
             }} 
           />
         </Box>
@@ -195,18 +256,20 @@ export const GroupedTable: React.FC<GroupedTableProps> = ({
             gap: 1,
             backgroundColor: 'rgba(255,255,255,0.15)',
             borderRadius: 1,
-            px: 2,
-            py: 0.5
+            px: isMobile ? 1 : 2,
+            py: 0.5,
+            minWidth: 'fit-content'
           }}>
             <Typography 
               variant="body2" 
               sx={{ 
                 fontWeight: 600,
                 color: 'inherit',
-                textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                whiteSpace: 'nowrap'
               }}
             >
-              {selectedIds.length}개 선택됨
+              {selectedIds.length}개 선택
             </Typography>
             <IconButton
               onClick={handleBulkDelete}
@@ -218,106 +281,136 @@ export const GroupedTable: React.FC<GroupedTableProps> = ({
                 }
               }}
             >
-              <DeleteIcon />
+              <DeleteIcon fontSize="small" />
             </IconButton>
           </Box>
         )}
       </Box>
       
-      {/* 커스텀 테이블 */}
-      <Box sx={{ 
-        border: '1px solid',
-        borderColor: 'divider',
-        borderTop: 'none',
-        borderRadius: '0 0 4px 4px',
-        overflow: 'hidden'
-      }}>
-        {/* 테이블 헤더 */}
-        <Box sx={{ 
-          display: 'flex',
-          backgroundColor: 'rgba(25, 118, 210, 0.08)',
-          borderBottom: '1px solid',
+      {/* 반응형 테이블 컨테이너 */}
+      <TableContainer 
+        component={Paper} 
+        ref={containerRef}
+        sx={{ 
+          border: '1px solid',
           borderColor: 'divider',
-          minHeight: '52px',
-          alignItems: 'center'
-        }}>
-          {enableSelection && (
-            <Box sx={{ width: '48px', display: 'flex', justifyContent: 'center' }}>
-              <Checkbox
-                checked={isAllSelected}
-                indeterminate={isIndeterminate}
-                onChange={handleToggleSelectAll}
-                size="small"
-              />
-            </Box>
-          )}
-          {allColumns.map((column) => (
-            <Box 
-              key={column.key}
-              sx={{ 
-                width: column.width,
-                flex: column.flex || (column.width ? 0 : 1),
-                px: 2, 
-                fontWeight: 600, 
-                fontSize: '0.875rem',
-                textAlign: column.align || 'left'
-              }}
-            >
-              {column.label}
-            </Box>
-          ))}
-        </Box>
-        
-        {/* 테이블 바디 */}
-        {groupData.items.map((item, index) => (
-          <Box 
-            key={item.id}
-            sx={{ 
-              display: 'flex',
-              borderBottom: index < groupData.items.length - 1 ? '1px solid' : 'none',
-              borderColor: 'divider',
-              minHeight: '52px',
-              alignItems: 'center',
-              backgroundColor: selectedIds.includes(item.id) ? 'action.selected' : 'inherit',
-              '&:hover': {
-                backgroundColor: 'action.hover'
-              },
-              cursor: onRowClick ? 'pointer' : 'default'
-            }}
-            onClick={() => onRowClick && onRowClick(item)}
-          >
-            {enableSelection && (
-              <Box sx={{ width: '48px', display: 'flex', justifyContent: 'center' }}>
-                <Checkbox
-                  checked={selectedIds.includes(item.id)}
-                  onChange={() => handleToggleSelection(item.id)}
-                  size="small"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </Box>
-            )}
-            {allColumns.map((column) => (
-              <Box 
-                key={column.key}
+          borderTop: 'none',
+          borderRadius: '0 0 4px 4px',
+          maxHeight: isMobile ? '70vh' : 'none',
+          '& .MuiTable-root': {
+            minWidth: isMobile ? '600px' : 'auto' // 모바일에서 최소 너비 보장
+          }
+        }}
+      >
+        <Table stickyHeader={isMobile} size={isMobile ? 'small' : 'medium'}>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: 'rgba(25, 118, 210, 0.08)' }}>
+              {enableSelection && (
+                <TableCell 
+                  padding="checkbox"
+                  sx={{ 
+                    width: '48px',
+                    minWidth: '48px',
+                    position: 'sticky',
+                    left: 0,
+                    backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                    zIndex: 2
+                  }}
+                >
+                  <Checkbox
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    onChange={handleToggleSelectAll}
+                    size="small"
+                  />
+                </TableCell>
+              )}
+              {visibleColumns.map((column, index) => (
+                <TableCell 
+                  key={column.key}
+                  align={column.align || 'left'}
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    whiteSpace: 'nowrap',
+                    minWidth: column.minWidth || (isMobile ? '80px' : '120px'),
+                    maxWidth: column.maxWidth,
+                    width: column.width,
+                    ...(isMobile && index === 0 && enableSelection ? {
+                      position: 'sticky',
+                      left: '48px',
+                      backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                      zIndex: 1
+                    } : {})
+                  }}
+                >
+                  {column.label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {groupData.items.map((item) => (
+              <TableRow 
+                key={item.id}
+                hover
+                selected={selectedIds.includes(item.id)}
+                onClick={() => onRowClick && onRowClick(item)}
                 sx={{ 
-                  width: column.width,
-                  flex: column.flex || (column.width ? 0 : 1),
-                  px: 2,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  textAlign: column.align || 'left'
+                  cursor: onRowClick ? 'pointer' : 'default',
+                  '&.Mui-selected': {
+                    backgroundColor: 'action.selected'
+                  }
                 }}
               >
-                {column.render 
-                  ? column.render(item[column.key], item)
-                  : (item[column.key] || '-')
-                }
-              </Box>
+                {enableSelection && (
+                  <TableCell 
+                    padding="checkbox"
+                    sx={{ 
+                      position: 'sticky',
+                      left: 0,
+                      backgroundColor: selectedIds.includes(item.id) ? 'action.selected' : 'background.paper',
+                      zIndex: 2
+                    }}
+                  >
+                    <Checkbox
+                      checked={selectedIds.includes(item.id)}
+                      onChange={() => handleToggleSelection(item.id)}
+                      size="small"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableCell>
+                )}
+                {visibleColumns.map((column, index) => (
+                  <TableCell 
+                    key={column.key}
+                    align={column.align || 'left'}
+                    sx={{ 
+                      minWidth: column.minWidth || (isMobile ? '80px' : '120px'),
+                      maxWidth: column.maxWidth,
+                      width: column.width,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      ...(isMobile && index === 0 && enableSelection ? {
+                        position: 'sticky',
+                        left: '48px',
+                        backgroundColor: selectedIds.includes(item.id) ? 'action.selected' : 'background.paper',
+                        zIndex: 1
+                      } : {})
+                    }}
+                  >
+                    {column.render 
+                      ? column.render(item[column.key], item)
+                      : (item[column.key] || '-')
+                    }
+                  </TableCell>
+                ))}
+              </TableRow>
             ))}
-          </Box>
-        ))}
-      </Box>
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 };

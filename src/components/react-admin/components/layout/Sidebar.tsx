@@ -284,7 +284,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   return (
     <Box
       component="nav"
-      sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+      sx={{ 
+        width: { md: open ? DRAWER_WIDTH : 0 }, 
+        flexShrink: { md: 0 },
+        transition: (theme) => theme.transitions.create(['width'], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+      }}
     >
       {/* 모바일용 임시 드로어 */}
       {isMobile ? (

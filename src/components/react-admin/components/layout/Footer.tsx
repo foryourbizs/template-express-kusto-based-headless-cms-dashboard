@@ -41,7 +41,7 @@ export const Footer: React.FC = () => {
             textAlign: { xs: 'center', sm: 'left' } // 모바일에서 중앙 정렬
           }}
         >
-          © {currentYear} Admin Panel. All rights reserved.
+          © {currentYear} Foryourbizs Panel. All rights reserved.
         </Typography>
 
         {/* 링크들 */}
@@ -54,31 +54,14 @@ export const Footer: React.FC = () => {
           }}
         >
           <Link
-            href="#"
+            href="https://dx-fujifilm.com"
             variant="body2"
             color="text.secondary"
             underline="hover"
+            target='_homepage'
             sx={{ fontSize: '0.75rem' }}
           >
-            도움말
-          </Link>
-          <Link
-            href="#"
-            variant="body2"
-            color="text.secondary"
-            underline="hover"
-            sx={{ fontSize: '0.75rem' }}
-          >
-            개인정보처리방침
-          </Link>
-          <Link
-            href="#"
-            variant="body2"
-            color="text.secondary"
-            underline="hover"
-            sx={{ fontSize: '0.75rem' }}
-          >
-            이용약관
+            홈페이지
           </Link>
         </Box>
       </Box>

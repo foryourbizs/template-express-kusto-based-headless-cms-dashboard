@@ -103,11 +103,17 @@ const fileTableColumns: TableColumn[] = [
     key: 'id',
     label: 'ID',
     width: '80px',
+    minWidth: '60px',
+    priority: 10,
+    hideOnMobile: true,
   },
   {
     key: 'originalName',
     label: '파일명',
     flex: 1,
+    minWidth: '200px',
+    priority: 1, // 가장 높은 우선순위
+    hideOnMobile: false,
     render: (value, record) => (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Avatar sx={{ width: 24, height: 24 }}>
@@ -118,23 +124,37 @@ const fileTableColumns: TableColumn[] = [
             href={record.url} 
             target="_blank" 
             rel="noopener noreferrer"
-            sx={{ textDecoration: 'none' }}
+            sx={{ 
+              textDecoration: 'none',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}
           >
             {value || record.filename || '파일명 없음'}
           </Link>
         ) : (
-          value || record.filename || '파일명 없음'
+          <Box sx={{ 
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {value || record.filename || '파일명 없음'}
+          </Box>
         )}
       </Box>
     )
   },
   {
     key: 'mimeType',
-    label: '파일 유형',
-    width: '150px',
+    label: '유형',
+    width: '120px',
+    minWidth: '100px',
+    priority: 30,
+    hideOnMobile: true,
     render: (value) => (
       <Chip 
-        label={value || '알 수 없음'} 
+        label={value?.split('/')[1] || '알 수 없음'} 
         size="small"
         variant="outlined"
       />
@@ -144,14 +164,20 @@ const fileTableColumns: TableColumn[] = [
     key: 'size',
     label: '크기',
     width: '100px',
+    minWidth: '80px',
     align: 'right',
+    priority: 2, // 높은 우선순위
+    hideOnMobile: false,
     render: (value) => formatFileSize(value)
   },
   {
     key: 'isPublic',
     label: '공개',
     width: '80px',
+    minWidth: '70px',
     align: 'center',
+    priority: 20,
+    hideOnMobile: false,
     render: (value) => (
       <Chip 
         label={value ? '공개' : '비공개'} 
@@ -164,13 +190,24 @@ const fileTableColumns: TableColumn[] = [
     key: 'uploadedBy',
     label: '업로더',
     width: '120px',
+    minWidth: '100px',
+    priority: 35,
+    hideOnMobile: true,
     render: (value, record) => record.uploadedBy?.username || record.uploadedBy || '-'
   },
   {
     key: 'createdAt',
     label: '업로드일',
-    width: '150px',
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+    width: '130px',
+    minWidth: '110px',
+    priority: 40,
+    hideOnMobile: true,
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '-'
   },
 ];
 

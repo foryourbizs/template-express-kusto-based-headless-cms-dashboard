@@ -125,32 +125,51 @@ const userTableColumns: TableColumn[] = [
     key: 'id',
     label: 'ID',
     width: '80px',
+    minWidth: '60px',
+    priority: 10, // 높은 우선순위
+    hideOnMobile: false,
   },
   {
     key: 'username',
     label: '사용자명',
     width: '120px',
+    minWidth: '100px',
+    priority: 1, // 가장 높은 우선순위
+    hideOnMobile: false,
   },
   {
     key: 'firstName',
     label: '이름',
     width: '100px',
+    minWidth: '80px',
+    priority: 20,
+    hideOnMobile: true, // 모바일에서 숨김
   },
   {
     key: 'lastName',
     label: '성',
     width: '100px',
+    minWidth: '80px',
+    priority: 25,
+    hideOnMobile: true, // 모바일에서 숨김
   },
   {
     key: 'email',
     label: '이메일',
     flex: 1,
+    minWidth: '180px',
+    maxWidth: '300px',
+    priority: 2, // 높은 우선순위
+    hideOnMobile: false,
   },
   {
     key: 'isActive',
     label: '활성',
     width: '80px',
+    minWidth: '70px',
     align: 'center',
+    priority: 30,
+    hideOnMobile: true, // 그룹화로 상태를 알 수 있어서 모바일에서 숨김
     render: (value) => (
       <Chip 
         label={value ? '활성' : '비활성'} 
@@ -161,12 +180,15 @@ const userTableColumns: TableColumn[] = [
   },
   {
     key: 'isVerified',
-    label: '인증됨',
+    label: '인증',
     width: '80px',
+    minWidth: '70px',
     align: 'center',
+    priority: 15,
+    hideOnMobile: false,
     render: (value) => (
       <Chip 
-        label={value ? '인증됨' : '미인증'} 
+        label={value ? '인증' : '미인증'} 
         color={value ? 'primary' : 'warning'}
         size="small"
       />
@@ -174,9 +196,12 @@ const userTableColumns: TableColumn[] = [
   },
   {
     key: 'isSuspended',
-    label: '정지됨',
+    label: '정지',
     width: '80px',
+    minWidth: '70px',
     align: 'center',
+    priority: 35,
+    hideOnMobile: true,
     render: (value) => (
       <Chip 
         label={value ? '정지' : '정상'} 
@@ -189,13 +214,28 @@ const userTableColumns: TableColumn[] = [
     key: 'lastLoginAt',
     label: '마지막 로그인',
     width: '150px',
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+    minWidth: '120px',
+    priority: 40,
+    hideOnMobile: true,
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '-'
   },
   {
     key: 'createdAt',
     label: '생성일',
     width: '150px',
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+    minWidth: '120px',
+    priority: 45,
+    hideOnMobile: true,
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
+      year: '2-digit',
+      month: 'short',
+      day: 'numeric'
+    }) : '-'
   },
 ];
 

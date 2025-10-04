@@ -11,7 +11,7 @@ interface MainProps {
 
 /**
  * React Admin 메인 콘텐츠 영역
- * 간단한 구조로 React Admin이 자체 에러 처리를 담당
+ * 사이드바 상태에 따라 마진을 조정하여 콘텐츠가 전체 폭을 활용할 수 있도록 함
  */
 export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) => {
   const theme = useTheme();

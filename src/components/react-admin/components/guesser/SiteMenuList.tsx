@@ -8,6 +8,7 @@ import {
 } from 'react-admin';
 import {
   Box,
+  Chip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -53,24 +54,50 @@ const menuTableColumns: TableColumn[] = [
     key: 'title',
     label: '메뉴명',
     flex: 1,
+    minWidth: '150px',
+    priority: 1, // 가장 높은 우선순위
+    hideOnMobile: false,
   },
   {
     key: 'type',
     label: '유형',
     width: '120px',
-    render: (value) => value || 'INTERNAL_LINK'
+    minWidth: '100px',
+    priority: 15,
+    hideOnMobile: false,
+    render: (value) => (
+      <Chip 
+        label={value === 'EXTERNAL_LINK' ? '외부링크' : '내부링크'} 
+        size="small"
+        color={value === 'EXTERNAL_LINK' ? 'secondary' : 'primary'}
+        variant="outlined"
+      />
+    )
   },
   {
     key: 'description',
     label: '설명',
     width: '200px',
+    minWidth: '150px',
+    priority: 20,
+    hideOnMobile: true,
   },
   {
     key: 'displayOrder',
     label: '순서',
     width: '80px',
+    minWidth: '60px',
     align: 'center',
-    render: (value) => value || 0
+    priority: 10,
+    hideOnMobile: false,
+    render: (value) => (
+      <Chip 
+        label={value || 0} 
+        size="small"
+        variant="outlined"
+        color="default"
+      />
+    )
   },
 ];
 

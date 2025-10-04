@@ -18,7 +18,7 @@ interface LayoutProviderProps {
  * 사이드바 열림/닫힘, 로딩 상태 등을 관리
  */
 export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const toggleSidebar = (force?: boolean) => {
