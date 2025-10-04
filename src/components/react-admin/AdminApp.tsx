@@ -43,6 +43,14 @@ import { PermissionsListWithDelete, } from "./components/guesser/PermissionsList
 import { UserAuditsList } from "./components/guesser/UserAuditsList";
 
 import { RatelimitsList } from "./components/guesser/RatelimitsList";
+import SiteMenuList from "./components/guesser/SiteMenuList";
+import SiteMenuEdit from "./components/guesser/SiteMenuEdit";
+import SiteMenuCreate from "./components/guesser/SiteMenuCreate";
+import SiteMenuGroupList from "./components/guesser/SiteMenuGroupList";
+import SiteMenuGroupEdit from "./components/guesser/SiteMenuGroupEdit";
+import SiteMenuGroupCreate from "./components/guesser/SiteMenuGroupCreate";
+import PostList from "./components/guesser/PostList";
+import PostEdit from "./components/guesser/PostEdit";
 
 
 // 한글 메시지 커스터마이징
@@ -100,9 +108,9 @@ const AdminApp = () => (
 			{/* <Resource name="system.analytics" list={AnalyticsPage} options={{ label: '데이터 분석', menuGroup: 'system', menuGroupLabel: '시스템', icon: <Analytics /> }} /> */}
 			{/* <Resource name="system.logs" list={SystemLogs} options={{ label: '시스템 로그', menuGroup: 'system', menuGroupLabel: '시스템', icon: <ViewList /> }} /> */}
 
-			{/* <Resource name="privates/siteMenuGroup" list={SiteMenuGroupList} edit={SiteMenuGroupEdit} create={SiteMenuGroupCreate} options={{ label: '메뉴 그룹 관리', menuGroup: 'menus', menuGroupLabel: '사이트', icon: <Article /> }} /> */}
-			{/* <Resource name="privates/siteMenu" list={SiteMenuList} edit={SiteMenuEdit} create={SiteMenuCreate} options={{ label: '메뉴 관리', menuGroup: 'menus', menuGroupLabel: '사이트', icon: <Article /> }} /> */}
-			{/* <Resource name="privates/posts" list={PostList} edit={PostEdit} options={{ label: '게시판 관리', menuGroup: 'posts', menuGroupLabel: '게시판', icon: <Article /> }} /> */}
+			<Resource name="privates/siteMenuGroup" list={SiteMenuGroupList} edit={SiteMenuGroupEdit} create={SiteMenuGroupCreate} options={{ label: '메뉴 그룹 관리', menuGroup: 'menus', menuGroupLabel: '사이트', icon: <Article /> }} />
+			<Resource name="privates/siteMenu" list={SiteMenuList} edit={SiteMenuEdit} create={SiteMenuCreate} options={{ label: '메뉴 관리', menuGroup: 'menus', menuGroupLabel: '사이트', icon: <Article /> }} />
+			<Resource name="privates/posts" list={PostList} edit={PostEdit} options={{ label: '게시판 관리', menuGroup: 'posts', menuGroupLabel: '게시판', icon: <Article /> }} />
 
 		</Admin>
 	</BrowserRouter>
