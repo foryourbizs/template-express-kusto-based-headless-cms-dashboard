@@ -8,7 +8,7 @@ import {
   TextInput,
   useListContext,
 } from 'react-admin';
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import { Group as GroupIcon } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
 import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
@@ -126,7 +126,7 @@ const MenuGroupListActions = () => (
 // 전체 그룹 표시 컴포넌트
 const AllGroupsDatagrid = () => {
   const listContext = useListContext();
-  const { data: originalData, isPending } = listContext;
+  const { data: originalData, isPending, total } = listContext;
   
   if (isPending) {
     return <div>로딩 중...</div>;
@@ -146,22 +146,24 @@ const AllGroupsDatagrid = () => {
   const groupedData = groupMenuGroupsByType(originalData);
 
   return (
-    <MultiGroupTable
-      groupedData={groupedData}
-      columns={menuGroupTableColumns}
-      itemLabel="메뉴 그룹"
-      enableBulkDelete={true}
-      enableSelection={true}
-      groupIcon={<GroupIcon />}
-      pagination={{
-        enabled: true,
-        pageSize: 15,
-        pageSizeOptions: [10, 15, 25, 50],
-        position: 'bottom',
-        showFirstLastButtons: true,
-        mode: 'global'
-      }}
-    />
+    <Box>
+     
+      {/* 현재 페이지의 그룹별 테이블들 */}
+      {groupedData.map((groupData) => (
+        <GroupedTable
+          key={groupData.groupKey}
+          groupData={groupData}
+          columns={menuGroupTableColumns}
+          itemLabel="메뉴 그룹"
+          enableBulkDelete={true}
+          enableSelection={true}
+          groupIcon={<GroupIcon />}
+          pagination={{
+            enabled: false // 서버 페이지네이션을 사용하므로 테이블 자체 페이지네이션은 비활성화
+          }}
+        />
+      ))}
+    </Box>
   );
 };
 

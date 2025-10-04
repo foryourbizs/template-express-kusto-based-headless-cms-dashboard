@@ -183,34 +183,7 @@ const AllGroupsDatagrid = () => {
 
   return (
     <Box>
-      {/* 전체 결과 정보 표시 */}
-      <Box sx={{ 
-        p: 2, 
-        mb: 2,
-        backgroundColor: 'warning.main', 
-        color: 'warning.contrastText',
-        borderRadius: 1,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        justifyContent: 'center'
-      }}>
-        <ComputerIcon />
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          전체 세션
-        </Typography>
-        <Chip 
-          label={`총 ${total || 0}개`} 
-          size="small" 
-          sx={{ 
-            backgroundColor: 'rgba(255,255,255,0.2)',
-            color: 'inherit'
-          }} 
-        />
-        <Typography variant="body2" sx={{ ml: 2 }}>
-          (현재 페이지: {originalData.length}개)
-        </Typography>
-      </Box>
+      
 
       {/* 현재 페이지의 그룹별 테이블들 */}
       {groupedData.map((groupData) => (
