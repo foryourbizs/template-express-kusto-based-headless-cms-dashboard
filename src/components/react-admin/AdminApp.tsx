@@ -35,14 +35,14 @@ import LoginPage from "./components/LoginPage";
 import { simpleGrayTheme } from "./config/theme";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
-import { UserSessionList } from "./components/guesser/UserSessionList";
-import { UserList } from "./components/guesser/UserList";
+import UserSessionList from "./components/guesser/UserSessionList";
+import UserList from "./components/guesser/UserList";
 
 import { CreateUserPermissions } from "./components/guesser/CreateUserPermissions";
-import { PermissionsListWithDelete, } from "./components/guesser/PermissionsList";
-import { UserAuditsList } from "./components/guesser/UserAuditsList";
+import PermissionsListWithDelete from "./components/guesser/PermissionsList";
+import UserAuditsList from "./components/guesser/UserAuditsList";
 
-import { RatelimitsList } from "./components/guesser/RatelimitsList";
+import RatelimitsList from "./components/guesser/RatelimitsList";
 import SiteMenuList from "./components/guesser/SiteMenuList";
 import SiteMenuEdit from "./components/guesser/SiteMenuEdit";
 import SiteMenuCreate from "./components/guesser/SiteMenuCreate";

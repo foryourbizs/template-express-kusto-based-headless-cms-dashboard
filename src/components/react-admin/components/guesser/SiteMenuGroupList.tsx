@@ -1,63 +1,121 @@
 import React from 'react';
 import {
   List,
-  Datagrid,
-  TextField,
-  DateField,
-  EditButton,
-  DeleteButton,
-  CreateButton,
   TopToolbar,
-  FilterButton,
+  CreateButton,
   ExportButton,
-  FunctionField,
-  SearchInput,
+  FilterButton,
   TextInput,
-  useRecordContext,
-  useDelete,
-  useNotify,
-  useRefresh,
-  Button,
+  useListContext,
 } from 'react-admin';
-import {
-  Box,
-  Chip,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
-import {
-  Group as GroupIcon,
-  Menu as MenuIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-} from '@mui/icons-material';
-import EmptyList from '../common/EmptyList';
+import { Box, Chip } from '@mui/material';
+import { Group as GroupIcon } from '@mui/icons-material';
+import { EmptyList } from '../common/EmptyList';
+import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 // 검색 필터
 const siteMenuGroupFilters = [
-  // JSON API 스펙에 맞는 검색을 위해 개별 필드로 검색
-  <TextInput 
-    source="name" 
-    label="그룹명" 
-    placeholder="그룹명으로 검색"
-  />,
-  <TextInput 
-    source="key" 
-    label="그룹 키" 
-    placeholder="키로 검색"
-  />,
-  <TextInput 
-    source="description" 
-    label="설명" 
-    placeholder="설명으로 검색"
-  />,
+  <TextInput key="name" label="그룹명" source="name" placeholder="그룹명 검색..." />,
+  <TextInput key="description" label="설명" source="description" placeholder="설명 검색..." />,
+];
+
+// 메뉴 그룹을 상태별로 그룹화
+const groupMenuGroupsByType = (groupData: any[]): GroupedTableData[] => {
+  const grouped = new Map();
+  
+  groupData.forEach(group => {
+    let groupKey: string;
+    let groupName: string;
+    
+    if (group.isSystem) {
+      groupKey = 'system';
+      groupName = '시스템 그룹';
+    } else if (group.isActive === false) {
+      groupKey = 'inactive';
+      groupName = '비활성 그룹';
+    } else {
+      groupKey = 'user';
+      groupName = '사용자 그룹';
+    }
+    
+    if (!grouped.has(groupKey)) {
+      grouped.set(groupKey, {
+        groupKey,
+        groupName,
+        items: []
+      });
+    }
+    
+    grouped.get(groupKey).items.push(group);
+  });
+  
+  // 그룹 순서: 시스템 -> 사용자 -> 비활성
+  const order = ['system', 'user', 'inactive'];
+  return order
+    .map(key => grouped.get(key))
+    .filter(group => group && group.items.length > 0);
+};
+
+// 테이블 컬럼 정의
+const menuGroupTableColumns: TableColumn[] = [
+  {
+    key: 'id',
+    label: 'ID',
+    width: '80px',
+  },
+  {
+    key: 'name',
+    label: '그룹명',
+    flex: 1,
+  },
+  {
+    key: 'description',
+    label: '설명',
+    width: '200px',
+  },
+  {
+    key: 'displayOrder',
+    label: '순서',
+    width: '80px',
+    align: 'center',
+    render: (value) => value || 0
+  },
+  {
+    key: 'isSystem',
+    label: '시스템',
+    width: '80px',
+    align: 'center',
+    render: (value) => (
+      <Chip 
+        label={value ? '시스템' : '사용자'} 
+        color={value ? 'error' : 'primary'}
+        size="small"
+      />
+    )
+  },
+  {
+    key: 'isActive',
+    label: '활성',
+    width: '80px',
+    align: 'center',
+    render: (value) => (
+      <Chip 
+        label={value !== false ? '활성' : '비활성'} 
+        color={value !== false ? 'success' : 'default'}
+        size="small"
+      />
+    )
+  },
+  {
+    key: 'createdAt',
+    label: '생성일',
+    width: '150px',
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+  },
 ];
 
 // 상단 툴바
-const ListActions = () => (
+const MenuGroupListActions = () => (
   <TopToolbar>
     <FilterButton />
     <CreateButton />
@@ -65,234 +123,55 @@ const ListActions = () => (
   </TopToolbar>
 );
 
-// 그룹 키 표시 컴포넌트
-const GroupKeyField = ({ record }: { record: any }) => {
-  const key = record?.key || record?.attributes?.key || '-';
-  return (
-    <Chip
-      label={key}
-      size="small"
-      variant="filled"
-      color="primary"
-      sx={{
-        fontFamily: 'monospace',
-        fontWeight: 'bold'
-      }}
-    />
-  );
-};
-
-// 그룹명 표시 컴포넌트
-const GroupNameField = ({ record }: { record: any }) => {
-  const name = record?.name || record?.attributes?.name || '-';
-  const key = record?.key || record?.attributes?.key || '';
+// 전체 그룹 표시 컴포넌트
+const AllGroupsDatagrid = () => {
+  const listContext = useListContext();
+  const { data: originalData, isPending } = listContext;
   
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <GroupIcon color="primary" fontSize="small" />
-      <Box>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          {name}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Key: {key}
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
+  if (isPending) {
+    return <div>로딩 중...</div>;
+  }
 
-// 설명 표시 컴포넌트
-const DescriptionField = ({ record }: { record: any }) => {
-  const description = record?.description || record?.attributes?.description || '-';
-  return (
-    <Typography 
-      variant="body2" 
-      sx={{ 
-        maxWidth: 300,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap'
-      }}
-      title={description}
-    >
-      {description}
-    </Typography>
-  );
-};
-
-// 관련 메뉴 수 표시 컴포넌트
-const RelatedMenusField = ({ record }: { record: any }) => {
-  // TODO: 실제 API를 통해 관련 메뉴 수를 가져와야 함
-  // 현재는 표시하지 않음
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <MenuIcon fontSize="small" color="action" />
-      <Typography variant="body2" color="text.secondary">
-        확인 중...
-      </Typography>
-    </Box>
-  );
-};
-
-// 커스텀 편집 버튼
-const CustomEditButton = () => {
-  const record = useRecordContext();
-  
-  return (
-    <EditButton
-      record={record}
-      sx={{
-        '& .MuiButton-startIcon': {
-          marginRight: 0.5
-        }
-      }}
-    />
-  );
-};
-
-// 커스텀 삭제 버튼
-const CustomDeleteButton = () => {
-  const record = useRecordContext();
-  const notify = useNotify();
-  const refresh = useRefresh();
-  const [open, setOpen] = React.useState(false);
-  const [deleteOne] = useDelete();
-
-  const handleDelete = () => {
-    deleteOne(
-      'privates/siteMenuGroup',
-      { id: record.id },
-      {
-        onSuccess: () => {
-          notify('메뉴 그룹이 삭제되었습니다', { type: 'info' });
-          refresh();
-        },
-        onError: (error: any) => {
-          notify(`오류: ${error?.message || '삭제 중 오류가 발생했습니다'}`, { type: 'error' });
-        },
-      }
+  if (!originalData || originalData.length === 0) {
+    return (
+      <EmptyList
+        title="등록된 메뉴 그룹이 없습니다"
+        description="첫 번째 메뉴 그룹을 추가해보세요"
+        icon={<GroupIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        createButtonLabel="메뉴 그룹 추가"
+      />
     );
-    setOpen(false);
-  };
+  }
 
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 이벤트 버블링 중단
-    setOpen(true);
-  };
+  const groupedData = groupMenuGroupsByType(originalData);
 
   return (
-    <>
-      <Button
-        onClick={handleButtonClick}
-        color="error"
-        size="small"
-        startIcon={<DeleteIcon />}
-        sx={{
-          '& .MuiButton-startIcon': {
-            marginRight: 0.5
-          }
-        }}
-      >
-        삭제
-      </Button>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>메뉴 그룹 삭제</DialogTitle>
-        <DialogContent>
-          <Typography>
-            이 메뉴 그룹을 삭제하시겠습니까?
-          </Typography>
-          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
-            ⚠️ 이 그룹에 속한 모든 메뉴도 함께 영향을 받을 수 있습니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} color="primary">
-            취소
-          </Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            삭제
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+    <Box>
+      {groupedData.map((groupData) => (
+        <GroupedTable
+          key={groupData.groupKey}
+          groupData={groupData}
+          columns={menuGroupTableColumns}
+          resourceName="privates/siteMenuGroup"
+          itemLabel="메뉴 그룹"
+          enableBulkDelete={true}
+          enableSelection={true}
+          groupIcon={<GroupIcon />}
+        />
+      ))}
+    </Box>
   );
 };
 
 // 메뉴 그룹 리스트 컴포넌트
-export const SiteMenuGroupList = () => {
-  return (
-    <List
-      filters={siteMenuGroupFilters}
-      actions={<ListActions />}
-      title="메뉴 그룹 관리"
-      perPage={25}
-      empty={
-        <EmptyList
-          title="등록된 메뉴 그룹이 없습니다"
-          description="메뉴 그룹을 추가하여 사이트 메뉴를 체계적으로 관리할 수 있습니다"
-          icon={<GroupIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
-          createButtonLabel="메뉴 그룹 추가"
-        />
-      }
-    >
-      <Datagrid
-        rowClick="edit"
-        sx={{
-          '& .RaDatagrid-headerCell': {
-            fontWeight: 600,
-          },
-          '& .RaDatagrid-rowCell': {
-            '&:first-of-type': {
-              pl: 2,
-            },
-          },
-        }}
-      >
-        {/* 그룹 키 */}
-        <FunctionField
-          label="그룹 키"
-          render={(record) => <GroupKeyField record={record} />}
-          sortBy="key"
-        />
-        
-        {/* 그룹명 */}
-        <FunctionField
-          label="그룹명"
-          render={(record) => <GroupNameField record={record} />}
-          sortBy="name"
-          sx={{ minWidth: 200 }}
-        />
-        
-        {/* 설명 */}
-        <FunctionField
-          label="설명"
-          render={(record) => <DescriptionField record={record} />}
-          sortBy="description"
-        />
-        
-        {/* 관련 메뉴 수 */}
-        <FunctionField
-          label="관련 메뉴"
-          render={(record) => <RelatedMenusField record={record} />}
-        />
-        
-        {/* UUID */}
-        <TextField
-          label="UUID"
-          source="uuid"
-          sx={{ 
-            fontFamily: 'monospace',
-            fontSize: '0.75rem'
-          }}
-        />
-        
-        {/* 액션 버튼들 */}
-        <CustomEditButton />
-        <CustomDeleteButton />
-      </Datagrid>
-    </List>
-  );
-};
+export const SiteMenuGroupList = () => (
+  <List
+    actions={<MenuGroupListActions />}
+    filters={siteMenuGroupFilters}
+    title="메뉴 그룹 관리 (유형별 보기)"
+  >
+    <AllGroupsDatagrid />
+  </List>
+);
 
 export default SiteMenuGroupList;

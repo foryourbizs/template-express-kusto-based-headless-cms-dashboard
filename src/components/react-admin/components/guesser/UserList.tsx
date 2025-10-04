@@ -1,25 +1,18 @@
+import React from 'react';
 import {
   List,
-  Datagrid,
-  TextField,
-  EmailField,
-  DateField,
-  NumberField,
-  BooleanField,
   TopToolbar,
   ExportButton,
   RefreshButton,
-  Filter,
   TextInput,
-  BooleanInput,
   FilterButton,
   SelectInput,
-  BulkDeleteButton,
-  BulkExportButton,
+  useListContext,
 } from "react-admin";
-import { Box } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 import { Person as PersonIcon } from "@mui/icons-material";
 import { EmptyList } from "../common/EmptyList";
+import { GroupedTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 
 const UserListActions = () => (
   <TopToolbar>
@@ -86,66 +79,174 @@ const userFilters = [
   />
 ];
 
-// 간단한 bulk actions 컴포넌트
-const UserBulkActionButtons = () => (
-  <>
-    <BulkExportButton />
-    <BulkDeleteButton />
-  </>
-);
+// 사용자 데이터를 그룹별로 분리 (활성 상태별로)
+const groupUsersByStatus = (userData: any[]): GroupedTableData[] => {
+  const grouped = new Map();
+  
+  userData.forEach(user => {
+    let groupKey: string;
+    let groupName: string;
+    
+    if (user.isSuspended) {
+      groupKey = 'suspended';
+      groupName = '정지된 사용자';
+    } else if (!user.isActive) {
+      groupKey = 'inactive';
+      groupName = '비활성 사용자';
+    } else if (!user.isVerified) {
+      groupKey = 'unverified';
+      groupName = '미인증 사용자';
+    } else {
+      groupKey = 'active';
+      groupName = '활성 사용자';
+    }
+    
+    if (!grouped.has(groupKey)) {
+      grouped.set(groupKey, {
+        groupKey,
+        groupName,
+        items: []
+      });
+    }
+    
+    grouped.get(groupKey).items.push(user);
+  });
+  
+  // 그룹 순서: 활성 -> 미인증 -> 비활성 -> 정지
+  const order = ['active', 'unverified', 'inactive', 'suspended'];
+  return order
+    .map(key => grouped.get(key))
+    .filter(group => group && group.items.length > 0);
+};
 
-export const UserList = () => (
-  <List 
-    actions={<UserListActions />} 
-    filters={userFilters}
-    empty={
+// 테이블 컬럼 정의
+const userTableColumns: TableColumn[] = [
+  {
+    key: 'id',
+    label: 'ID',
+    width: '80px',
+  },
+  {
+    key: 'username',
+    label: '사용자명',
+    width: '120px',
+  },
+  {
+    key: 'firstName',
+    label: '이름',
+    width: '100px',
+  },
+  {
+    key: 'lastName',
+    label: '성',
+    width: '100px',
+  },
+  {
+    key: 'email',
+    label: '이메일',
+    flex: 1,
+  },
+  {
+    key: 'isActive',
+    label: '활성',
+    width: '80px',
+    align: 'center',
+    render: (value) => (
+      <Chip 
+        label={value ? '활성' : '비활성'} 
+        color={value ? 'success' : 'default'}
+        size="small"
+      />
+    )
+  },
+  {
+    key: 'isVerified',
+    label: '인증됨',
+    width: '80px',
+    align: 'center',
+    render: (value) => (
+      <Chip 
+        label={value ? '인증됨' : '미인증'} 
+        color={value ? 'primary' : 'warning'}
+        size="small"
+      />
+    )
+  },
+  {
+    key: 'isSuspended',
+    label: '정지됨',
+    width: '80px',
+    align: 'center',
+    render: (value) => (
+      <Chip 
+        label={value ? '정지' : '정상'} 
+        color={value ? 'error' : 'success'}
+        size="small"
+      />
+    )
+  },
+  {
+    key: 'lastLoginAt',
+    label: '마지막 로그인',
+    width: '150px',
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+  },
+  {
+    key: 'createdAt',
+    label: '생성일',
+    width: '150px',
+    render: (value) => value ? new Date(value).toLocaleString('ko-KR') : '-'
+  },
+];
+
+// 전체 그룹 표시 컴포넌트
+const AllGroupsDatagrid = () => {
+  const listContext = useListContext();
+  const { data: originalData, isPending } = listContext;
+  
+  if (isPending) {
+    return <div>로딩 중...</div>;
+  }
+
+  if (!originalData || originalData.length === 0) {
+    return (
       <EmptyList
         title="등록된 사용자가 없습니다"
         description="첫 번째 사용자를 추가해보세요"
         icon={<PersonIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
         createButtonLabel="사용자 추가"
       />
-    }
+    );
+  }
+
+  const groupedData = groupUsersByStatus(originalData);
+
+  return (
+    <Box>
+      {groupedData.map((groupData) => (
+        <GroupedTable
+          key={groupData.groupKey}
+          groupData={groupData}
+          columns={userTableColumns}
+          resourceName="privates/users"
+          itemLabel="사용자"
+          enableBulkDelete={true}
+          enableSelection={true}
+          groupIcon={<PersonIcon />}
+        />
+      ))}
+    </Box>
+  );
+};
+
+export const UserList = () => (
+  <List 
+    actions={<UserListActions />} 
+    filters={userFilters}
+    title="사용자 관리 (상태별 보기)"
   >
-    <Datagrid
-      rowClick="edit"
-      bulkActionButtons={<UserBulkActionButtons />}
-      isRowSelectable={() => true}
-      sx={{
-        width: '100%',
-        '& .RaDatagrid-table': {
-          minWidth: '1000px',
-          tableLayout: 'auto',
-        },
-        '& .RaDatagrid-headerRow th': {
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          padding: '8px 16px',
-        },
-        '& .RaDatagrid-rowCell': {
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          padding: '8px 16px',
-        },
-        '& .RaDatagrid-expandIconCell': {
-          width: '48px',
-          minWidth: '48px',
-          maxWidth: '48px',
-        },
-      }}
-    >
-      <TextField source="id" label="ID" />
-      <TextField source="username" label="사용자명" />
-      <TextField source="firstName" label="이름" />
-      <TextField source="lastName" label="성" />
-      <EmailField source="email" label="이메일" />
-      <BooleanField source="isActive" label="활성" />
-      <BooleanField source="isVerified" label="인증됨" />
-      <BooleanField source="isSuspended" label="정지됨" />
-      <DateField source="lastLoginAt" label="마지막 로그인" showTime />
-      <DateField source="createdAt" label="생성일" showTime />
-    </Datagrid>
+    <AllGroupsDatagrid />
   </List>
 );
+
+export default UserList;
