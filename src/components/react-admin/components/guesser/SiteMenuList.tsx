@@ -3,245 +3,52 @@ import {
   List,
   Datagrid,
   TextField,
-  BooleanField,
-  NumberField,
-  DateField,
-  EditButton,
-  DeleteButton,
+  FunctionField,
   CreateButton,
   TopToolbar,
   ExportButton,
   useListContext,
-  FunctionField,
-  useDelete,
-  useRecordContext,
-  useNotify,
-  useRefresh,
   Button,
+  useRecordContext,
   useRedirect,
-  ReferenceField,
-  useGetMany,
 } from 'react-admin';
 import {
   Box,
   Chip,
   Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import {
   Folder,
-  FolderOpen,
-  Link,
-  ExitToApp,
-  TouchApp,
   Menu as MenuIcon,
-  Delete as DeleteIcon,
   Edit as EditIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
 
-// 계층 구조 데이터 변환 함수
-const buildHierarchicalData = (menuItems: any[]) => {
-  // 1. 먼저 모든 메뉴를 ID로 매핑
-  const menuMap = new Map();
-  menuItems.forEach(item => {
-    const id = item.id || item.uuid;
-    const parentUUID = item.parentUUID || item.attributes?.parentUUID;
-    menuMap.set(id, {
-      ...item,
-      children: [],
-      level: 0,
-      hasChildren: false,
-      parentUUID
-    });
-  });
-
-  // 2. 계층 구조 구성
-  const rootItems: any[] = [];
-  const processedItems: any[] = [];
-
-  menuItems.forEach(item => {
-    const id = item.id || item.uuid;
-    const parentUUID = item.parentUUID || item.attributes?.parentUUID;
-    const menuItem = menuMap.get(id);
-
-    if (!parentUUID || parentUUID === '' || !menuMap.has(parentUUID)) {
-      // 루트 메뉴
-      menuItem.level = 0;
-      rootItems.push(menuItem);
-    } else {
-      // 하위 메뉴
-      const parent = menuMap.get(parentUUID);
-      if (parent) {
-        parent.children.push(menuItem);
-        parent.hasChildren = true;
-        menuItem.level = (parent.level || 0) + 1;
-      }
+// 그룹별 데이터 분리 함수
+const groupMenusByGroup = (menuData: any[]) => {
+  const grouped = new Map();
+  
+  menuData.forEach(menu => {
+    const groupKey = menu?.groupKeyUuid || menu?.attributes?.groupKeyUuid || 'no-group';
+    const groupName = menu?.groupKey?.name || menu?.attributes?.groupKey?.name || '그룹 없음';
+    
+    if (!grouped.has(groupKey)) {
+      grouped.set(groupKey, {
+        groupKey,
+        groupName,
+        menus: []
+      });
     }
+    
+    grouped.get(groupKey).menus.push(menu);
   });
-
-  // 3. 계층적 순서로 평면화
-  const flattenHierarchy = (items: any[], level = 0, parentPath: number[] = []): any[] => {
-    const result: any[] = [];
-    
-    // 그룹 UUID와 표시순서로 정렬
-    items.sort((a, b) => {
-      const groupA = a.groupKeyUuid || a.attributes?.groupKeyUuid || '';
-      const groupB = b.groupKeyUuid || b.attributes?.groupKeyUuid || '';
-      const orderA = a.displayOrder || a.attributes?.displayOrder || 0;
-      const orderB = b.displayOrder || b.attributes?.displayOrder || 0;
-      
-      if (groupA !== groupB) {
-        return groupA.localeCompare(groupB);
-      }
-      return orderA - orderB;
-    });
-
-    items.forEach((item, index) => {
-      item.level = level;
-      item.isLast = index === items.length - 1;
-      item.parentPath = [...parentPath];
-      result.push(item);
-      
-      if (item.children && item.children.length > 0) {
-        result.push(...flattenHierarchy(item.children, level + 1, [...parentPath, index]));
-      }
-    });
-    
-    return result;
-  };
-
-  return flattenHierarchy(rootItems);
-};
-
-// 커스텀 훅: 계층적 데이터 가져오기 (List context 활용)
-const useHierarchicalMenuData = () => {
-  const listContext = useListContext();
-  const { data: originalData, total, isPending, error, refetch } = listContext;
-
-  const hierarchicalData = React.useMemo(() => {
-    if (!originalData || originalData.length === 0) return [];
-
-    console.log(originalData);
-
-    return buildHierarchicalData(originalData);
-
-  }, [originalData]);
-
-  return {
-    data: hierarchicalData,
-    total,
-    isPending,
-    error,
-    refetch
-  };
-};
-
-// 메뉴 타입 선택지
-const menuTypeChoices = [
-  { id: 'INTERNAL_LINK', name: '내부 링크' },
-  { id: 'EXTERNAL_LINK', name: '외부 링크' },
-  { id: 'BUTTON', name: '버튼' },
-];
-
-// 메뉴 타입 아이콘 매핑
-const getMenuTypeIcon = (type: string) => {
-  switch (type) {
-    case 'INTERNAL_LINK':
-      return <Link fontSize="small" />;
-    case 'EXTERNAL_LINK':
-      return <ExitToApp fontSize="small" />;
-    case 'BUTTON':
-      return <TouchApp fontSize="small" />;
-    default:
-      return <Link fontSize="small" />;
-  }
-};
-
-// 계층 구조를 시각적으로 표현하는 컴포넌트
-const HierarchicalTitle = ({ record }: { record: any }) => {
-  const level = record?.level || 0;
-  const hasChildren = record?.hasChildren || false;
-  const title = record?.title || record?.attributes?.title || '-';
   
-  return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-      {/* 계층 표시용 들여쓰기와 연결선 */}
-      {level > 0 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-          {/* 왼쪽 여백 (들여쓰기) */}
-          <Box sx={{ width: `${(level - 1) * 24}px` }} />
-        </Box>
-      )}
-      
-      {/* 계층 아이콘 */}
-      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 20, mr: 1 }}>
-        {hasChildren ? (
-          <FolderOpen 
-            fontSize="small" 
-            sx={{ 
-              color: level === 0 ? 'primary.main' : 'warning.main',
-              fontSize: '18px'
-            }} 
-          />
-        ) : level > 0 ? (
-          <MenuIcon 
-            fontSize="small" 
-            sx={{ 
-              color: 'action.active',
-              fontSize: '16px'
-            }} 
-          />
-        ) : (
-          <Folder 
-            fontSize="small" 
-            sx={{ 
-              color: 'primary.main',
-              fontSize: '18px'
-            }} 
-          />
-        )}
-      </Box>
-      
-      {/* 메뉴 제목 */}
-      <Typography 
-        variant="body2" 
-        sx={{ 
-          fontWeight: level === 0 ? 600 : level === 1 ? 500 : 400,
-          color: level === 0 ? 'primary.main' : level === 1 ? 'text.primary' : 'text.secondary',
-          fontSize: level === 0 ? '0.9rem' : level === 1 ? '0.85rem' : '0.8rem',
-        }}
-      >
-        {title}
-      </Typography>
-    </Box>
+  return Array.from(grouped.values()).sort((a, b) => 
+    a.groupName.localeCompare(b.groupName)
   );
 };
 
-
-// 접근 권한 표시 컴포넌트
-const AccessControlField = ({ record }: { record: any }) => {
-  const isPublic = record?.isPublic ?? record?.attributes?.isPublic ?? true;
-  const requireLogin = record?.requireLogin ?? record?.attributes?.requireLogin ?? false;
-  
-  return (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-      {isPublic ? (
-        <Chip label="공개" size="small" color="success" variant="outlined" />
-      ) : (
-        <Chip label="제한" size="small" color="warning" variant="outlined" />
-      )}
-      {requireLogin && (
-        <Chip label="로그인 필요" size="small" color="info" variant="outlined" />
-      )}
-    </Box>
-  );
-};
-
-// 상단 툴바 (필터 버튼 제거)
+// 상단 툴바
 const ListActions = () => (
   <TopToolbar>
     <CreateButton />
@@ -249,13 +56,13 @@ const ListActions = () => (
   </TopToolbar>
 );
 
-// 커스텀 편집 버튼
+// 편집 버튼
 const CustomEditButton = () => {
   const record = useRecordContext();
   const redirect = useRedirect();
   
   const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 이벤트 버블링 중단
+    e.stopPropagation();
     redirect('edit', 'privates/siteMenu', record.id);
   };
 
@@ -271,210 +78,86 @@ const CustomEditButton = () => {
   );
 };
 
-// 커스텀 삭제 버튼
-const CustomDeleteButton = () => {
-  const record = useRecordContext();
-  const notify = useNotify();
-  const refresh = useRefresh();
-  const [open, setOpen] = React.useState(false);
-  const [deleteOne] = useDelete();
-
-  const handleDelete = () => {
-    deleteOne(
-      'privates/siteMenu',
-      { id: record.id },
-      {
-        onSuccess: () => {
-          notify('메뉴가 삭제되었습니다', { type: 'info' });
-          refresh();
-        },
-        onError: (error: any) => {
-          notify(`오류: ${error?.message || '삭제 중 오류가 발생했습니다'}`, { type: 'error' });
-        },
-      }
-    );
-    setOpen(false);
-  };
-
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 이벤트 버블링 중단
-    setOpen(true);
-  };
-
+// 그룹별 데이터그리드 컴포넌트
+const GroupedDatagrid = ({ groupData }: { groupData: any }) => {
   return (
-    <>
-      <Button
-        onClick={handleButtonClick}
-        color="error"
-        size="small"
-        startIcon={<DeleteIcon />}
+    <Box sx={{ mb: 3 }}>
+      <Box sx={{ 
+        p: 2, 
+        backgroundColor: 'primary.main', 
+        color: 'primary.contrastText',
+        borderRadius: '4px 4px 0 0',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1
+      }}>
+        <Folder />
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          {groupData.groupName}
+        </Typography>
+        <Chip 
+          label={`${groupData.menus.length}개 메뉴`} 
+          size="small" 
+          sx={{ 
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            color: 'inherit'
+          }} 
+        />
+      </Box>
+      
+      <Datagrid
+        data={groupData.menus}
+        total={groupData.menus.length}
+        rowClick="edit"
+        sx={{
+          '& .RaDatagrid-headerCell': {
+            fontWeight: 600,
+            backgroundColor: 'rgba(25, 118, 210, 0.08)',
+          },
+          borderRadius: '0 0 4px 4px',
+        }}
       >
-        삭제
-      </Button>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>메뉴 삭제</DialogTitle>
-        <DialogContent>
-          이 메뉴를 삭제하시겠습니까? 하위 메뉴가 있는 경우 함께 삭제됩니다.
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>취소</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            삭제
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        <TextField source="title" label="메뉴명" />
+        <TextField source="type" label="유형" />
+        <TextField source="description" label="설명" />
+        <TextField source="displayOrder" label="순서" />
+        <FunctionField
+          label="작업"
+          render={() => <CustomEditButton />}
+        />
+      </Datagrid>
+    </Box>
   );
 };
 
-// 커스텀 데이터그리드 컴포넌트
-const HierarchicalDatagrid = () => {
-  const { data, isPending } = useHierarchicalMenuData();
+// 전체 그룹 표시 컴포넌트
+const AllGroupsDatagrid = () => {
+  const listContext = useListContext();
+  const { data: originalData, isPending } = listContext;
   
   if (isPending) {
     return <div>로딩 중...</div>;
   }
 
+  if (!originalData || originalData.length === 0) {
+    return (
+      <EmptyList
+        title="등록된 메뉴가 없습니다"
+        description="첫 번째 메뉴를 추가해보세요"
+        icon={<MenuIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+        createButtonLabel="메뉴 추가"
+      />
+    );
+  }
+
+  const groupedData = groupMenusByGroup(originalData);
+
   return (
-    <Datagrid
-      data={data}
-      total={data.length}
-      rowClick="edit"
-      sx={{
-        '& .RaDatagrid-headerCell': {
-          fontWeight: 600,
-        },
-        '& .RaDatagrid-rowCell': {
-          '&:first-of-type': {
-            pl: 1,
-          },
-        },
-        // 계층별 행 스타일링
-        '& .RaDatagrid-row': {
-          '&[data-level="0"]': {
-            backgroundColor: 'rgba(25, 118, 210, 0.04)',
-            borderLeft: '3px solid',
-            borderLeftColor: 'primary.main',
-          },
-          '&[data-level="1"]': {
-            backgroundColor: 'rgba(156, 39, 176, 0.04)',
-            borderLeft: '3px solid',
-            borderLeftColor: 'secondary.main',
-          },
-          '&[data-level="2"]': {
-            backgroundColor: 'rgba(255, 152, 0, 0.04)',
-            borderLeft: '3px solid',
-            borderLeftColor: 'warning.main',
-          },
-        },
-      }}
-    >
-      {/* 그룹명 - 조인된 데이터 사용 */}
-      <FunctionField
-        label="그룹"
-        render={(record) => {
-          const level = record?.level || 0;
-          // 조인된 데이터를 우선 사용, 없으면 UUID 사용
-          const groupName = record?.groupKey?.name || 
-                           record?.attributes?.groupKey?.name ||
-                           record?.groupKeyUuid || 
-                           record?.attributes?.groupKeyUuid || 
-                           '-';
-          return (
-            <Chip
-              label={groupName}
-              size="small"
-              variant={level === 0 ? "filled" : "outlined"}
-              color={level === 0 ? "primary" : "default"}
-            />
-          );
-        }}
-      />
-      
-      {/* 메뉴명 (계층적 표시) */}
-      <FunctionField
-        label="메뉴명"
-        render={(record) => <HierarchicalTitle record={record} />}
-        sx={{ minWidth: 300 }}
-      />
-      
-      {/* 메뉴 타입 */}
-      <FunctionField
-        label="유형"
-        render={(record) => {
-          const type = record?.type || record?.attributes?.type || 'INTERNAL_LINK';
-          const choice = menuTypeChoices.find(choice => choice.id === type);
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {getMenuTypeIcon(type)}
-              <Typography variant="body2">
-                {choice?.name || type}
-              </Typography>
-            </Box>
-          );
-        }}
-      />
-      
-      {/* 설명 */}
-      <FunctionField
-        label="설명"
-        render={(record) => {
-          const description = record?.description || record?.attributes?.description || '-';
-          return (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                maxWidth: 200,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}
-              title={description}
-            >
-              {description}
-            </Typography>
-          );
-        }}
-      />
-      
-      {/* 표시 순서 */}
-      <FunctionField
-        label="순서"
-        render={(record) => {
-          const order = record?.displayOrder ?? record?.attributes?.displayOrder ?? 0;
-          const level = record?.level || 0;
-          return (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2">{order}</Typography>
-              {level > 0 && (
-                <Typography variant="caption" color="text.secondary">
-                  (L{level})
-                </Typography>
-              )}
-            </Box>
-          );
-        }}
-      />
-      
-      {/* 접근 제어 */}
-      <FunctionField
-        label="접근"
-        render={(record) => <AccessControlField record={record} />}
-      />
-      
-      {/* 생성일 */}
-      <FunctionField
-        label="생성일"
-        render={(record) => {
-          const createdAt = record?.createdAt || record?.attributes?.createdAt;
-          return createdAt ? new Date(createdAt).toLocaleDateString() : '-';
-        }}
-      />
-      
-      {/* 액션 버튼들 */}
-      <CustomEditButton />
-      <CustomDeleteButton />
-    </Datagrid>
+    <Box>
+      {groupedData.map((groupData) => (
+        <GroupedDatagrid key={groupData.groupKey} groupData={groupData} />
+      ))}
+    </Box>
   );
 };
 
@@ -483,25 +166,17 @@ export const SiteMenuList = () => {
   return (
     <List
       actions={<ListActions />}
-      empty={
-        <EmptyList
-          title="등록된 메뉴가 없습니다"
-          description="첫 번째 메뉴를 추가해보세요"
-          icon={<MenuIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
-          createButtonLabel="메뉴 추가"
-        />
-      }
       pagination={false}
       perPage={10000}
       sort={{ field: 'displayOrder', order: 'ASC' }}
-      title="메뉴 관리 (계층적 보기)"
+      title="메뉴 관리 (그룹별 보기)"
       queryOptions={{
         meta: {
-          include: ['groupKey']
+          include: ['groupKey', 'parent']
         }
       }}
     >
-      <HierarchicalDatagrid />
+      <AllGroupsDatagrid />
     </List>
   );
 };
