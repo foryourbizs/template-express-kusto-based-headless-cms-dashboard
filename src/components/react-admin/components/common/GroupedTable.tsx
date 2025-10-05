@@ -20,11 +20,29 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  Button,
+  Menu,
+  MenuList,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
+  Edit as EditIcon,
+  Visibility as ViewIcon,
+  Add as AddIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
+import {
+  useRecordContext,
+  useResourceContext,
+  useCanAccess,
+  useRedirect,
+  useCreatePath,
+  useEditContext,
+  useShowContext,
+} from 'react-admin';
 
 // 타입 정의 export
 export interface TableColumn {
@@ -57,6 +75,20 @@ interface PaginationConfig {
   mode?: 'group' | 'global'; // 그룹별 페이징 vs 전체 페이징
 }
 
+interface CrudActions {
+  enableCreate?: boolean;
+  enableEdit?: boolean;
+  enableShow?: boolean;
+  enableDelete?: boolean;
+  resource?: string; // React Admin 리소스 이름
+  customActions?: Array<{
+    label: string;
+    icon: React.ReactNode;
+    onClick: (item: any) => void;
+    show?: (item: any) => boolean;
+  }>;
+}
+
 interface GroupedTableProps {
   groupData: GroupedTableData;
   columns: TableColumn[];
@@ -70,7 +102,177 @@ interface GroupedTableProps {
   itemLabel?: string;
   pagination?: PaginationConfig;
   groupId?: string; // 그룹별 페이징을 위한 고유 ID
+  crudActions?: CrudActions; // CRUD 액션 설정
 }
+
+// 행별 액션 버튼 컴포넌트
+const RowActions: React.FC<{ 
+  item: any; 
+  crudActions?: CrudActions;
+  onEdit?: (item: any) => void;
+  onShow?: (item: any) => void;
+  onDelete?: (item: any) => void;
+}> = ({ item, crudActions, onEdit, onShow, onDelete }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const redirect = useRedirect();
+  const createPath = useCreatePath();
+  
+  // React Admin 권한 체크
+  const resource = crudActions?.resource || '';
+  const editAccess = useCanAccess({ 
+    action: 'edit', 
+    resource, 
+    record: item 
+  });
+  const showAccess = useCanAccess({ 
+    action: 'show', 
+    resource, 
+    record: item 
+  });
+  const deleteAccess = useCanAccess({ 
+    action: 'delete', 
+    resource, 
+    record: item 
+  });
+
+  const canEdit = editAccess.canAccess;
+  const canShow = showAccess.canAccess;
+  const canDelete = deleteAccess.canAccess;
+
+  if (!crudActions) return null;
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(item);
+    } else if (resource && item.id) {
+      redirect('edit', resource, item.id);
+    }
+    handleMenuClose();
+  };
+
+  const handleShow = () => {
+    if (onShow) {
+      onShow(item);
+    } else if (resource && item.id) {
+      redirect('show', resource, item.id);  
+    }
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(item);
+    }
+    handleMenuClose();
+  };
+
+  const availableActions = [
+    ...(crudActions.enableShow && canShow ? [{
+      label: '보기',
+      icon: <ViewIcon fontSize="small" />,
+      onClick: handleShow
+    }] : []),
+    ...(crudActions.enableEdit && canEdit ? [{
+      label: '수정',
+      icon: <EditIcon fontSize="small" />,
+      onClick: handleEdit
+    }] : []),
+    ...(crudActions.enableDelete && canDelete ? [{
+      label: '삭제',
+      icon: <DeleteIcon fontSize="small" />,
+      onClick: handleDelete
+    }] : []),
+    ...(crudActions.customActions?.filter(action => 
+      !action.show || action.show(item)
+    ) || [])
+  ];
+
+  if (availableActions.length === 0) return null;
+
+  // 액션이 1개면 직접 버튼, 2개 이상이면 메뉴
+  if (availableActions.length === 1) {
+    const action = availableActions[0];
+    return (
+      <IconButton 
+        size="small" 
+        onClick={action.onClick}
+        title={action.label}
+      >
+        {action.icon}
+      </IconButton>
+    );
+  }
+
+  return (
+    <>
+      <IconButton size="small" onClick={handleMenuOpen}>
+        <MoreVertIcon fontSize="small" />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: { minWidth: 120 }
+        }}
+      >
+        {availableActions.map((action, index) => (
+          <MenuItem key={index} onClick={action.onClick}>
+            <ListItemIcon>
+              {action.icon}
+            </ListItemIcon>
+            <ListItemText primary={action.label} />
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+};
+
+// 생성 버튼 컴포넌트
+const CreateButton: React.FC<{ crudActions: CrudActions }> = ({ crudActions }) => {
+  const redirect = useRedirect();
+  const resource = crudActions.resource || '';
+  
+  const createAccess = useCanAccess({ 
+    action: 'create', 
+    resource 
+  });
+
+  if (!createAccess.canAccess) return null;
+
+  const handleCreate = () => {
+    if (resource) {
+      redirect('create', resource);
+    }
+  };
+
+  return (
+    <Button
+      variant="contained"
+      size="small"
+      startIcon={<AddIcon />}
+      onClick={handleCreate}
+      sx={{
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        color: 'inherit',
+        '&:hover': {
+          backgroundColor: 'rgba(255,255,255,0.25)'
+        }
+      }}
+    >
+      생성
+    </Button>
+  );
+};
 
 const GroupedTable: React.FC<GroupedTableProps> = ({
   groupData,
@@ -84,7 +286,8 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
   groupIcon,
   itemLabel = '항목',
   pagination = { enabled: false },
-  groupId
+  groupId,
+  crudActions
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
@@ -344,43 +547,51 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
           />
         </Box>
         
-        {/* 선택된 항목 표시 및 삭제 버튼 */}
-        {enableBulkDelete && enableSelection && currentSelectedIds.length > 0 && (
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1,
-            backgroundColor: 'rgba(255,255,255,0.15)',
-            borderRadius: 1,
-            px: isMobile ? 1 : 2,
-            py: 0.5,
-            flexShrink: 0
-          }}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                fontWeight: 600,
-                color: 'inherit',
-                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {currentSelectedIds.length}개 선택
-            </Typography>
-            <IconButton
-              onClick={handleBulkDelete}
-              size="small"
-              sx={{ 
-                color: 'inherit',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.2)'
-                }
-              }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        )}
+        {/* 액션 버튼들 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* 생성 버튼 */}
+          {crudActions?.enableCreate && (
+            <CreateButton crudActions={crudActions} />
+          )}
+          
+          {/* 선택된 항목 표시 및 삭제 버튼 */}
+          {enableBulkDelete && enableSelection && currentSelectedIds.length > 0 && (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              borderRadius: 1,
+              px: isMobile ? 1 : 2,
+              py: 0.5,
+              flexShrink: 0
+            }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  fontWeight: 600,
+                  color: 'inherit',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {currentSelectedIds.length}개 선택
+              </Typography>
+              <IconButton
+                onClick={handleBulkDelete}
+                size="small"
+                sx={{ 
+                  color: 'inherit',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.2)'
+                  }
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
       </Box>
       
       {/* 테이블 컨테이너 - Material-UI Table 사용 */}
@@ -443,6 +654,19 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
                   {column.label}
                 </TableCell>
               ))}
+              {crudActions && (
+                <TableCell 
+                  align="center"
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    width: '80px',
+                    minWidth: '80px'
+                  }}
+                >
+                  액션
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -504,6 +728,22 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
                     }
                   </TableCell>
                 ))}
+                {crudActions && (
+                  <TableCell 
+                    align="center"
+                    sx={{ 
+                      width: '80px',
+                      minWidth: '80px',
+                      py: isMobile ? 0.5 : 1
+                    }}
+                    onClick={(e) => e.stopPropagation()} // 행 클릭 이벤트 방지
+                  >
+                    <RowActions 
+                      item={item} 
+                      crudActions={crudActions}
+                    />
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -531,6 +771,7 @@ interface MultiGroupTableProps {
   groupIcon?: React.ReactNode;
   itemLabel?: string;
   pagination?: PaginationConfig;
+  crudActions?: CrudActions; // CRUD 액션 설정
 }
 
 // 다중 그룹 테이블 컴포넌트
@@ -545,7 +786,8 @@ export const MultiGroupTable: React.FC<MultiGroupTableProps> = ({
   onRowClick,
   groupIcon,
   itemLabel = '항목',
-  pagination = { enabled: false }
+  pagination = { enabled: false },
+  crudActions
 }) => {
   const paginationConfig = {
     enabled: pagination.enabled || false,
@@ -730,6 +972,7 @@ export const MultiGroupTable: React.FC<MultiGroupTableProps> = ({
             itemLabel={itemLabel}
             pagination={pagination}
             groupId={groupData.groupKey}
+            crudActions={crudActions}
           />
         ))}
       </Box>
@@ -784,6 +1027,7 @@ export const MultiGroupTable: React.FC<MultiGroupTableProps> = ({
           groupIcon={groupIcon}
           itemLabel={itemLabel}
           pagination={{ enabled: false }} // 개별 그룹은 페이징 비활성화
+          crudActions={crudActions}
         />
       ))}
 

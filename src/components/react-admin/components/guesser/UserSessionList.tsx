@@ -14,6 +14,7 @@ import {
   PhoneAndroid as MobileIcon,
   Laptop as LaptopIcon,
   TabletMac as TabletIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { EmptyList } from '../common/EmptyList';
 import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
@@ -197,6 +198,24 @@ const AllGroupsDatagrid = () => {
           groupIcon={<ComputerIcon />}
           pagination={{
             enabled: false // 서버 페이지네이션을 사용하므로 테이블 자체 페이지네이션은 비활성화
+          }}
+          crudActions={{
+            enableShow: true,
+            enableEdit: false,
+            enableDelete: true,
+            enableCreate: false,
+            resource: 'privates/users/user-sessions',
+            customActions: [
+              {
+                label: '세션 종료',
+                icon: <LogoutIcon />,
+                onClick: (session) => {
+                  console.log('세션 종료:', session);
+                  // TODO: 세션 종료 로직 구현
+                },
+                show: (session) => session.isActive
+              }
+            ]
           }}
         />
       ))}

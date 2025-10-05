@@ -34,3 +34,78 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## GroupedTable with React Admin CRUD Integration
+
+This project includes a powerful `GroupedTable` component that integrates with React Admin's permission system to provide secure, user-friendly CRUD operations.
+
+### 🔐 Permission-Based CRUD Actions
+
+The GroupedTable component automatically checks user permissions and displays only authorized actions:
+
+```tsx
+<GroupedTable
+  crudActions={{
+    enableShow: true,    // View permission
+    enableEdit: true,    // Edit permission  
+    enableDelete: true,  // Delete permission
+    enableCreate: true,  // Create permission
+    resource: 'privates/users', // React Admin resource
+    customActions: [     // Custom actions with conditional display
+      {
+        label: 'Terminate Session',
+        icon: <LogoutIcon />,
+        onClick: (item) => handleLogout(item),
+        show: (item) => item.isActive
+      }
+    ]
+  }}
+/>
+```
+
+### 🎯 Automatic Permission Checking
+
+Using React Admin's `useCanAccess` hook, the component automatically verifies:
+
+- **canShow**: View item permission
+- **canEdit**: Edit item permission  
+- **canDelete**: Delete item permission
+- **canCreate**: Create new item permission
+
+Buttons for unauthorized actions are automatically hidden.
+
+### 🚀 Unified Navigation
+
+React Admin's `useRedirect` hook provides consistent page navigation:
+
+```tsx
+// Automatic navigation to appropriate pages
+redirect('edit', resource, item.id);   // Edit page
+redirect('show', resource, item.id);   // Detail page  
+redirect('create', resource);          // Create page
+```
+
+### 📊 Example Implementations
+
+1. **User Logs** (`UserLogsGroupedList`):
+   - Groups audit logs by user
+   - Shows only view and delete actions
+   - Uses React Admin List context
+
+2. **User Management** (`UserList`):
+   - Groups users by status
+   - Full CRUD operations (create, view, edit, delete)
+   - Status-based grouping
+
+3. **User Sessions** (`UserSessionList`):
+   - Groups sessions by status
+   - Custom "Terminate Session" action
+   - Session management functionality
+
+### 🔧 Key Features
+
+- **Automatic Permission Integration**: Seamless React Admin permissions
+- **Flexible Action System**: Support for both standard CRUD and custom actions
+- **Consistent UI/UX**: Unified navigation and interaction patterns
+- **Type Safety**: Full TypeScript support with proper interfaces
+- **Performance Optimized**: Efficient rendering with React hooks optimization
