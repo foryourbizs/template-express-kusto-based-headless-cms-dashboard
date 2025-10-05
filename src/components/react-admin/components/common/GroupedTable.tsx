@@ -25,7 +25,15 @@ import {
   Menu,
   MenuList,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  CircularProgress,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
@@ -81,11 +89,31 @@ interface CrudActions {
   enableShow?: boolean;
   enableDelete?: boolean;
   resource?: string; // React Admin 리소스 이름
+  // 확인 다이얼로그 설정
+  confirmDelete?: boolean | string; // true면 기본 메시지, string이면 커스텀 메시지
+  confirmEdit?: boolean | string;
+  // 커스텀 핸들러
+  onEdit?: (item: any) => Promise<void> | void;
+  onShow?: (item: any) => Promise<void> | void;
+  onDelete?: (item: any) => Promise<void> | void;
+  onCreate?: () => Promise<void> | void;
+  // 에러 처리
+  onError?: (error: Error, action: string, item?: any) => void;
+  // 로딩 상태 관리
+  loadingStates?: {
+    [itemId: string]: {
+      editing?: boolean;
+      deleting?: boolean;
+      showing?: boolean;
+    };
+  };
   customActions?: Array<{
     label: string;
     icon: React.ReactNode;
-    onClick: (item: any) => void;
+    onClick: (item: any) => Promise<void> | void;
     show?: (item: any) => boolean;
+    confirm?: boolean | string; // 확인 다이얼로그
+    loading?: boolean; // 로딩 상태
   }>;
 }
 
@@ -109,11 +137,21 @@ interface GroupedTableProps {
 const RowActions: React.FC<{ 
   item: any; 
   crudActions?: CrudActions;
-  onEdit?: (item: any) => void;
-  onShow?: (item: any) => void;
-  onDelete?: (item: any) => void;
-}> = ({ item, crudActions, onEdit, onShow, onDelete }) => {
+}> = ({ item, crudActions }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    action: () => void;
+  }>({ open: false, title: '', message: '', action: () => {} });
+  const [loading, setLoading] = useState<{
+    editing: boolean;
+    deleting: boolean;
+    showing: boolean;
+  }>({ editing: false, deleting: false, showing: false });
+  const [error, setError] = useState<string | null>(null);
+  
   const redirect = useRedirect();
   const createPath = useCreatePath();
   
@@ -149,50 +187,152 @@ const RowActions: React.FC<{
     setAnchorEl(null);
   };
 
-  const handleEdit = () => {
-    if (onEdit) {
-      onEdit(item);
-    } else if (resource && item.id) {
-      redirect('edit', resource, item.id);
+  const handleEdit = async () => {
+    try {
+      setLoading(prev => ({ ...prev, editing: true }));
+      setError(null);
+      
+      if (crudActions?.onEdit) {
+        await crudActions.onEdit(item);
+      } else if (resource && item.id) {
+        redirect('edit', resource, item.id);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '수정 중 오류가 발생했습니다';
+      setError(errorMsg);
+      if (crudActions?.onError) {
+        crudActions.onError(err instanceof Error ? err : new Error(errorMsg), 'edit', item);
+      }
+    } finally {
+      setLoading(prev => ({ ...prev, editing: false }));
+      handleMenuClose();
     }
-    handleMenuClose();
   };
 
-  const handleShow = () => {
-    if (onShow) {
-      onShow(item);
-    } else if (resource && item.id) {
-      redirect('show', resource, item.id);  
+  const handleShow = async () => {
+    try {
+      setLoading(prev => ({ ...prev, showing: true }));
+      setError(null);
+      
+      console.log('보기 버튼 클릭:', { item, resource, itemId: item.id });
+      
+      if (crudActions?.onShow) {
+        console.log('커스텀 onShow 호출');
+        await crudActions.onShow(item);
+      } else if (resource && item.id) {
+        console.log('React Admin redirect 호출:', 'show', resource, item.id);
+        redirect('show', resource, item.id);
+      } else {
+        console.warn('보기 액션을 수행할 수 없습니다:', { resource, itemId: item.id });
+        throw new Error('리소스 또는 항목 ID가 없습니다');
+      }
+    } catch (err) {
+      console.error('보기 액션 실행 중 오류:', err);
+      const errorMsg = err instanceof Error ? err.message : '조회 중 오류가 발생했습니다';
+      setError(errorMsg);
+      if (crudActions?.onError) {
+        crudActions.onError(err instanceof Error ? err : new Error(errorMsg), 'show', item);
+      }
+    } finally {
+      setLoading(prev => ({ ...prev, showing: false }));
+      handleMenuClose();
     }
-    handleMenuClose();
   };
 
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(item);
+  const handleDelete = async () => {
+    try {
+      setLoading(prev => ({ ...prev, deleting: true }));
+      setError(null);
+      
+      if (crudActions?.onDelete) {
+        await crudActions.onDelete(item);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '삭제 중 오류가 발생했습니다';
+      setError(errorMsg);
+      if (crudActions?.onError) {
+        crudActions.onError(err instanceof Error ? err : new Error(errorMsg), 'delete', item);
+      }
+    } finally {
+      setLoading(prev => ({ ...prev, deleting: false }));
+      handleMenuClose();
     }
-    handleMenuClose();
+  };
+
+  const showConfirmDialog = (title: string, message: string, action: () => void) => {
+    setConfirmDialog({ open: true, title, message, action });
+  };
+
+  const handleConfirm = () => {
+    confirmDialog.action();
+    setConfirmDialog({ open: false, title: '', message: '', action: () => {} });
+  };
+
+  const handleEditClick = () => {
+    if (crudActions?.confirmEdit) {
+      const message = typeof crudActions.confirmEdit === 'string' 
+        ? crudActions.confirmEdit 
+        : '이 항목을 수정하시겠습니까?';
+      showConfirmDialog('수정 확인', message, handleEdit);
+    } else {
+      handleEdit();
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (crudActions?.confirmDelete) {
+      const message = typeof crudActions.confirmDelete === 'string' 
+        ? crudActions.confirmDelete 
+        : '이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.';
+      showConfirmDialog('삭제 확인', message, handleDelete);
+    } else {
+      handleDelete();
+    }
   };
 
   const availableActions = [
     ...(crudActions.enableShow && canShow ? [{
       label: '보기',
-      icon: <ViewIcon fontSize="small" />,
-      onClick: handleShow
+      icon: loading.showing ? <CircularProgress size={16} /> : <ViewIcon fontSize="small" />,
+      onClick: handleShow,
+      disabled: loading.showing
     }] : []),
     ...(crudActions.enableEdit && canEdit ? [{
       label: '수정',
-      icon: <EditIcon fontSize="small" />,
-      onClick: handleEdit
+      icon: loading.editing ? <CircularProgress size={16} /> : <EditIcon fontSize="small" />,
+      onClick: handleEditClick,
+      disabled: loading.editing
     }] : []),
     ...(crudActions.enableDelete && canDelete ? [{
       label: '삭제',
-      icon: <DeleteIcon fontSize="small" />,
-      onClick: handleDelete
+      icon: loading.deleting ? <CircularProgress size={16} /> : <DeleteIcon fontSize="small" />,
+      onClick: handleDeleteClick,
+      disabled: loading.deleting
     }] : []),
     ...(crudActions.customActions?.filter(action => 
       !action.show || action.show(item)
-    ) || [])
+    ).map(action => ({
+      ...action,
+      onClick: async () => {
+        if (action.confirm) {
+          const message = typeof action.confirm === 'string' 
+            ? action.confirm 
+            : `${action.label}을(를) 실행하시겠습니까?`;
+          showConfirmDialog(action.label, message, () => action.onClick(item));
+        } else {
+          try {
+            await action.onClick(item);
+          } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : `${action.label} 실행 중 오류가 발생했습니다`;
+            setError(errorMsg);
+            if (crudActions?.onError) {
+              crudActions.onError(err instanceof Error ? err : new Error(errorMsg), action.label, item);
+            }
+          }
+        }
+      },
+      disabled: action.loading
+    })) || [])
   ];
 
   if (availableActions.length === 0) return null;
@@ -225,7 +365,11 @@ const RowActions: React.FC<{
         }}
       >
         {availableActions.map((action, index) => (
-          <MenuItem key={index} onClick={action.onClick}>
+          <MenuItem 
+            key={index} 
+            onClick={action.onClick}
+            disabled={action.disabled}
+          >
             <ListItemIcon>
               {action.icon}
             </ListItemIcon>
@@ -233,12 +377,58 @@ const RowActions: React.FC<{
           </MenuItem>
         ))}
       </Menu>
+      
+      {/* 확인 다이얼로그 */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ open: false, title: '', message: '', action: () => {} })}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+      >
+        <DialogTitle id="confirm-dialog-title">
+          {confirmDialog.title}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="confirm-dialog-description">
+            {confirmDialog.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setConfirmDialog({ open: false, title: '', message: '', action: () => {} })}
+            color="inherit"
+          >
+            취소
+          </Button>
+          <Button onClick={handleConfirm} color="primary" variant="contained">
+            확인
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* 에러 스낵바 */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setError(null)} 
+          severity="error" 
+          variant="filled"
+        >
+          {error}
+        </Alert>
+      </Snackbar>
     </>
   );
 };
 
 // 생성 버튼 컴포넌트
 const CreateButton: React.FC<{ crudActions: CrudActions }> = ({ crudActions }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const redirect = useRedirect();
   const resource = crudActions.resource || '';
   
@@ -249,28 +439,66 @@ const CreateButton: React.FC<{ crudActions: CrudActions }> = ({ crudActions }) =
 
   if (!createAccess.canAccess) return null;
 
-  const handleCreate = () => {
-    if (resource) {
-      redirect('create', resource);
+  const handleCreate = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (crudActions.onCreate) {
+        await crudActions.onCreate();
+      } else if (resource) {
+        redirect('create', resource);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : '생성 페이지로 이동 중 오류가 발생했습니다';
+      setError(errorMsg);
+      if (crudActions.onError) {
+        crudActions.onError(err instanceof Error ? err : new Error(errorMsg), 'create');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Button
-      variant="contained"
-      size="small"
-      startIcon={<AddIcon />}
-      onClick={handleCreate}
-      sx={{
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        color: 'inherit',
-        '&:hover': {
-          backgroundColor: 'rgba(255,255,255,0.25)'
-        }
-      }}
-    >
-      생성
-    </Button>
+    <>
+      <Button
+        variant="contained"
+        size="small"
+        startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <AddIcon />}
+        onClick={handleCreate}
+        disabled={loading}
+        sx={{
+          backgroundColor: 'rgba(255,255,255,0.15)',
+          color: 'inherit',
+          '&:hover': {
+            backgroundColor: 'rgba(255,255,255,0.25)'
+          },
+          '&:disabled': {
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.5)'
+          }
+        }}
+      >
+        {loading ? '처리중...' : '생성'}
+      </Button>
+      
+      {/* 에러 스낵바 */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setError(null)} 
+          severity="error" 
+          variant="filled"
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

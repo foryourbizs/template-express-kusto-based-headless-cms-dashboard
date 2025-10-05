@@ -1,6 +1,7 @@
 // User-related components
 export { default as UserList } from './UserList';
 export { default as UserAuditsList } from './UserAuditsList';
+export { default as UserAuditsShow } from './UserAuditsShow';
 export { default as UserLogsGroupedList } from './UserLogsGroupedList';
 export { default as UserSessionList } from './UserSessionList';
 

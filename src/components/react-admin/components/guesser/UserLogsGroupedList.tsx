@@ -230,6 +230,8 @@ const AllGroupsDatagrid = () => {
     // 행 클릭 핸들러 - 항상 정의됨
     const handleRowClick = useCallback((item: any) => {
         console.log('클릭된 로그:', item);
+        console.log('로그 ID:', item.id);
+        console.log('로그 타입:', typeof item.id);
         // TODO: 상세 보기 모달 또는 페이지로 이동
     }, []);
     
@@ -392,7 +394,15 @@ const AllGroupsDatagrid = () => {
                         enableEdit: false,
                         enableDelete: true,
                         enableCreate: false,
-                        resource: 'privates/users/audits'
+                        resource: 'privates/users/audits', // React Admin에서 정의된 감사 로그 리소스 경로
+                        onShow: (item) => {
+                            console.log('보기 버튼 클릭:', item);
+                            // 커스텀 처리가 필요한 경우 여기에 구현
+                        },
+                        onError: (error, action, item) => {
+                            console.error(`${action} 액션 실행 중 오류:`, error, item);
+                            alert(`${action} 실행 중 오류가 발생했습니다: ${error.message}`);
+                        }
                     }}
                 />
             ))}
