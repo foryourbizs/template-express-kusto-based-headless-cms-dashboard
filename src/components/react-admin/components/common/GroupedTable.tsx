@@ -72,18 +72,7 @@ export interface GroupedTableData {
   items: any[];
 }
 
-interface PaginationConfig {
-  enabled?: boolean;
-  pageSize?: number;
-  pageSizeOptions?: number[];
-  showFirstLastButtons?: boolean;
-  showPageNumbers?: boolean; // 페이지 숫자 버튼 표시 여부
-  maxPageButtons?: number; // 표시할 최대 페이지 버튼 수
-  position?: 'top' | 'bottom' | 'both';
-  mode?: 'group' | 'global'; // 그룹별 페이징 vs 전체 페이징
-}
-
-interface CrudActions {
+export interface CrudActions {
   enableCreate?: boolean;
   enableEdit?: boolean;
   enableShow?: boolean;
@@ -115,6 +104,17 @@ interface CrudActions {
     confirm?: boolean | string; // 확인 다이얼로그
     loading?: boolean; // 로딩 상태
   }>;
+}
+
+interface PaginationConfig {
+  enabled?: boolean;
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  showFirstLastButtons?: boolean;
+  showPageNumbers?: boolean; // 페이지 숫자 버튼 표시 여부
+  maxPageButtons?: number; // 표시할 최대 페이지 버튼 수
+  position?: 'top' | 'bottom' | 'both';
+  mode?: 'group' | 'global'; // 그룹별 페이징 vs 전체 페이징
 }
 
 interface GroupedTableProps {
@@ -155,7 +155,7 @@ const RowActions: React.FC<{
   const redirect = useRedirect();
   const createPath = useCreatePath();
   
-  // React Admin 권한 체크
+  // React Admin 권한 체크 - hooks는 항상 호출되어야 함
   const resource = crudActions?.resource || '';
   const editAccess = useCanAccess({ 
     action: 'edit', 
@@ -173,11 +173,15 @@ const RowActions: React.FC<{
     record: item 
   });
 
-  const canEdit = editAccess.canAccess;
-  const canShow = showAccess.canAccess;
-  const canDelete = deleteAccess.canAccess;
+  // crudActions가 없으면 아무것도 렌더링하지 않음
+  const canEdit = crudActions?.enableEdit && editAccess.canAccess;
+  const canShow = crudActions?.enableShow && showAccess.canAccess;
+  const canDelete = crudActions?.enableDelete && deleteAccess.canAccess;
 
-  if (!crudActions) return null;
+  // crudActions가 없으면 빈 컨테이너 반환
+  if (!crudActions) {
+    return <Box sx={{ width: '100%', height: '100%' }} />;
+  }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -437,7 +441,10 @@ const CreateButton: React.FC<{ crudActions: CrudActions }> = ({ crudActions }) =
     resource 
   });
 
-  if (!createAccess.canAccess) return null;
+  // 권한이 없으면 빈 컨테이너 반환
+  if (!createAccess.canAccess) {
+    return <Box sx={{ width: 0, height: 0 }} />;
+  }
 
   const handleCreate = async () => {
     try {
@@ -882,19 +889,18 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
                   {column.label}
                 </TableCell>
               ))}
-              {crudActions && (
-                <TableCell 
-                  align="center"
-                  sx={{ 
-                    fontWeight: 600,
-                    fontSize: '0.875rem',
-                    width: '80px',
-                    minWidth: '80px'
-                  }}
-                >
-                  액션
-                </TableCell>
-              )}
+              <TableCell 
+                align="center"
+                sx={{ 
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  width: crudActions ? '80px' : '0px',
+                  minWidth: crudActions ? '80px' : '0px',
+                  display: crudActions ? 'table-cell' : 'none'
+                }}
+              >
+                {crudActions && '액션'}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -956,22 +962,21 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
                     }
                   </TableCell>
                 ))}
-                {crudActions && (
-                  <TableCell 
-                    align="center"
-                    sx={{ 
-                      width: '80px',
-                      minWidth: '80px',
-                      py: isMobile ? 0.5 : 1
-                    }}
-                    onClick={(e) => e.stopPropagation()} // 행 클릭 이벤트 방지
-                  >
-                    <RowActions 
-                      item={item} 
-                      crudActions={crudActions}
-                    />
-                  </TableCell>
-                )}
+                <TableCell 
+                  align="center"
+                  sx={{ 
+                    width: crudActions ? '80px' : '0px',
+                    minWidth: crudActions ? '80px' : '0px',
+                    py: isMobile ? 0.5 : 1,
+                    display: crudActions ? 'table-cell' : 'none'
+                  }}
+                  onClick={(e) => e.stopPropagation()} // 행 클릭 이벤트 방지
+                >
+                  <RowActions 
+                    item={item} 
+                    crudActions={crudActions}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

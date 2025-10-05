@@ -1,311 +1,305 @@
 import React from 'react';
 import {
-  List,
-  TopToolbar,
-  ExportButton,
-  RefreshButton,
-  TextInput,
-  FilterButton,
-  SelectInput,
-  useListContext,
-} from "react-admin";
-import { Box, Chip, Typography } from "@mui/material";
-import { Person as PersonIcon } from "@mui/icons-material";
-import { EmptyList } from "../common/EmptyList";
-import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+    List,
+    useListContext,
+    TopToolbar,
+    RefreshButton,
+    ExportButton,
+    FilterButton,
+    CreateButton,
+    TextInput,
+    SearchInput,
+    SelectInput,
+    DateInput,
+} from 'react-admin';
+import { 
+    People as PeopleIcon,
+    CheckCircle as ActiveIcon,
+    Cancel as InactiveIcon,
+    Pending as PendingIcon,
+} from '@mui/icons-material';
+import {
+    Box,
+    Typography,
+    Chip,
+    Avatar,
+    CircularProgress,
+} from '@mui/material';
+import { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import { EmptyList } from '../common/EmptyList';
 
-const UserListActions = () => (
-  <TopToolbar>
-    <FilterButton />
-    <RefreshButton />
-    <ExportButton />
-  </TopToolbar>
-);
-
-const userFilters = [
-  <TextInput
-    key="username"
-    label="사용자명"
-    source="username"
-    placeholder="사용자명 검색..."
-  />,
-  <TextInput
-    key="email"
-    label="이메일"
-    source="email"
-    placeholder="이메일 검색..."
-  />,
-  <TextInput
-    key="firstName"
-    label="이름"
-    source="firstName"
-    placeholder="이름 검색..."
-  />,
-  <TextInput
-    key="lastName"
-    label="성"
-    source="lastName"
-    placeholder="성 검색..."
-  />,
-  <SelectInput
-    key="isActive"
-    label="활성 상태"
-    source="isActive"
-    choices={[
-      { id: true, name: '활성' },
-      { id: false, name: '비활성' },
-    ]}
-    emptyText="전체"
-  />,
-  <SelectInput
-    key="isVerified"
-    label="인증 상태"
-    source="isVerified"
-    choices={[
-      { id: true, name: '인증됨' },
-      { id: false, name: '미인증' },
-    ]}
-    emptyText="전체"
-  />,
-  <SelectInput
-    key="isSuspended"
-    label="정지 상태"
-    source="isSuspended"
-    choices={[
-      { id: true, name: '정지됨' },
-      { id: false, name: '정상' },
-    ]}
-    emptyText="전체"
-  />
-];
-
-// 사용자 데이터를 그룹별로 분리 (활성 상태별로)
-const groupUsersByStatus = (userData: any[]): GroupedTableData[] => {
-  const grouped = new Map();
-  
-  userData.forEach(user => {
-    let groupKey: string;
-    let groupName: string;
-    let priority: number; // 정렬 우선순위
-    
-    if (user.isSuspended) {
-      groupKey = 'suspended';
-      groupName = '🚫 정지된 사용자';
-      priority = 4;
-    } else if (!user.isActive) {
-      groupKey = 'inactive';
-      groupName = '⏸️ 비활성 사용자';
-      priority = 3;
-    } else if (!user.isVerified) {
-      groupKey = 'unverified';
-      groupName = '⚠️ 미인증 사용자';
-      priority = 2;
-    } else {
-      groupKey = 'active';
-      groupName = '✅ 활성 사용자';
-      priority = 1;
+// 상태에 따른 아이콘과 색상
+const getStatusDisplay = (status: string | null | undefined) => {
+    if (!status) {
+        return {
+            icon: <PendingIcon fontSize="small" />,
+            color: 'default' as const,
+            label: '알 수 없음'
+        };
     }
     
-    if (!grouped.has(groupKey)) {
-      grouped.set(groupKey, {
-        groupKey,
-        groupName,
-        items: [],
-        priority
-      });
+    const lowerStatus = status.toLowerCase();
+    
+    if (lowerStatus === 'active' || lowerStatus === '활성') {
+        return {
+            icon: <ActiveIcon fontSize="small" />,
+            color: 'success' as const,
+            label: '활성'
+        };
+    }
+    if (lowerStatus === 'inactive' || lowerStatus === '비활성') {
+        return {
+            icon: <InactiveIcon fontSize="small" />,
+            color: 'error' as const,
+            label: '비활성'
+        };
+    }
+    if (lowerStatus === 'pending' || lowerStatus === '대기') {
+        return {
+            icon: <PendingIcon fontSize="small" />,
+            color: 'warning' as const,
+            label: '대기'
+        };
     }
     
-    grouped.get(groupKey).items.push(user);
-  });
-  
-  // 우선순위별로 정렬하여 반환
-  return Array.from(grouped.values())
-    .filter(group => group.items.length > 0)
-    .sort((a, b) => a.priority - b.priority);
+    return {
+        icon: <PendingIcon fontSize="small" />,
+        color: 'default' as const,
+        label: status
+    };
 };
 
-// 테이블 컬럼 정의
-const userTableColumns: TableColumn[] = [
-  {
-    key: 'id',
-    label: 'ID',
-    width: '80px',
-    minWidth: '60px',
-    priority: 10, // 높은 우선순위
-    hideOnMobile: false,
-  },
-  {
-    key: 'username',
-    label: '사용자명',
-    width: '120px',
-    minWidth: '100px',
-    priority: 1, // 가장 높은 우선순위
-    hideOnMobile: false,
-  },
-  {
-    key: 'firstName',
-    label: '이름',
-    width: '100px',
-    minWidth: '80px',
-    priority: 20,
-    hideOnMobile: true, // 모바일에서 숨김
-  },
-  {
-    key: 'lastName',
-    label: '성',
-    width: '100px',
-    minWidth: '80px',
-    priority: 25,
-    hideOnMobile: true, // 모바일에서 숨김
-  },
-  {
-    key: 'email',
-    label: '이메일',
-    flex: 1,
-    minWidth: '180px',
-    maxWidth: '300px',
-    priority: 2, // 높은 우선순위
-    hideOnMobile: false,
-  },
-  {
-    key: 'isActive',
-    label: '활성',
-    width: '80px',
-    minWidth: '70px',
-    align: 'center',
-    priority: 30,
-    hideOnMobile: true, // 그룹화로 상태를 알 수 있어서 모바일에서 숨김
-    render: (value) => (
-      <Chip 
-        label={value ? '활성' : '비활성'} 
-        color={value ? 'success' : 'default'}
-        size="small"
-      />
-    )
-  },
-  {
-    key: 'isVerified',
-    label: '인증',
-    width: '80px',
-    minWidth: '70px',
-    align: 'center',
-    priority: 15,
-    hideOnMobile: false,
-    render: (value) => (
-      <Chip 
-        label={value ? '인증' : '미인증'} 
-        color={value ? 'primary' : 'warning'}
-        size="small"
-      />
-    )
-  },
-  {
-    key: 'isSuspended',
-    label: '정지',
-    width: '80px',
-    minWidth: '70px',
-    align: 'center',
-    priority: 35,
-    hideOnMobile: true,
-    render: (value) => (
-      <Chip 
-        label={value ? '정지' : '정상'} 
-        color={value ? 'error' : 'success'}
-        size="small"
-      />
-    )
-  },
-  {
-    key: 'lastLoginAt',
-    label: '마지막 로그인',
-    width: '150px',
-    minWidth: '120px',
-    priority: 40,
-    hideOnMobile: true,
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }) : '-'
-  },
-  {
-    key: 'createdAt',
-    label: '생성일',
-    width: '150px',
-    minWidth: '120px',
-    priority: 45,
-    hideOnMobile: true,
-    render: (value) => value ? new Date(value).toLocaleString('ko-KR', {
-      year: '2-digit',
-      month: 'short',
-      day: 'numeric'
-    }) : '-'
-  },
+// 사용자 정보 표시 컴포넌트
+const UserDisplay: React.FC<{ name: string; email: string }> = ({ name, email }) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+            {name?.charAt(0)?.toUpperCase() || 'U'}
+        </Avatar>
+        <Box>
+            <Typography variant="body2" fontWeight={500}>
+                {name || '이름 없음'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+                {email || '이메일 없음'}
+            </Typography>
+        </Box>
+    </Box>
+);
+
+// List 액션 버튼
+const UserListActions = () => (
+    <TopToolbar>
+        <FilterButton />
+        <RefreshButton />
+        <ExportButton />
+        <CreateButton />
+    </TopToolbar>
+);
+
+// 사용자 필터
+const userFilters = [
+    <SearchInput 
+        key="q"
+        source="q" 
+        alwaysOn={true}
+        placeholder="사용자명, 이메일 검색..."
+    />,
+    <SelectInput 
+        key="status"
+        source="status" 
+        label="상태"
+        choices={[
+            { id: 'active', name: '활성' },
+            { id: 'inactive', name: '비활성' },
+            { id: 'pending', name: '대기' }
+        ]}
+        emptyText="전체"
+    />,
+    <TextInput 
+        key="role"
+        source="role" 
+        label="역할"
+    />,
+    <DateInput 
+        key="createdAt_gte"
+        source="createdAt_gte" 
+        label="생성일 시작"
+    />,
+    <DateInput 
+        key="createdAt_lte"
+        source="createdAt_lte" 
+        label="생성일 종료"
+    />
 ];
 
-// 전체 그룹 표시 컴포넌트
-const AllGroupsDatagrid = () => {
-  const listContext = useListContext();
-  const { data: originalData, isPending, total } = listContext;
-  
-  if (isPending) {
-    return <div>로딩 중...</div>;
-  }
+// 메인 데이터그리드 컴포넌트
+const UserDatagrid = () => {
+    const listContext = useListContext();
+    const { data: originalData, isPending } = listContext;
 
-  if (!originalData || originalData.length === 0) {
+    // 테이블 컬럼 정의
+    const columns: TableColumn[] = [
+        {
+            key: 'user',
+            label: '사용자',
+            width: '200px',
+            render: (_, item) => (
+                <UserDisplay name={item.name || item.username} email={item.email} />
+            )
+        },
+        {
+            key: 'status',
+            label: '상태',
+            width: '120px',
+            render: (value) => {
+                const { icon, color, label } = getStatusDisplay(value);
+                return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {icon}
+                        <Chip 
+                            label={label} 
+                            color={color} 
+                            size="small"
+                            variant="outlined"
+                        />
+                    </Box>
+                );
+            }
+        },
+        {
+            key: 'role',
+            label: '역할',
+            width: '100px',
+            render: (value) => value ? (
+                <Chip 
+                    label={value} 
+                    variant="outlined" 
+                    size="small"
+                    color="primary"
+                />
+            ) : '-'
+        },
+        {
+            key: 'lastLoginAt',
+            label: '마지막 로그인',
+            width: '160px',
+            hideOnMobile: true,
+            render: (value) => value ? (
+                <Typography variant="body2" fontSize="0.75rem">
+                    {new Intl.DateTimeFormat('ko-KR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    }).format(new Date(value))}
+                </Typography>
+            ) : '로그인 기록 없음'
+        },
+        {
+            key: 'createdAt',
+            label: '생성일',
+            width: '120px',
+            hideOnMobile: true,
+            render: (value) => (
+                <Typography variant="body2" fontSize="0.75rem">
+                    {new Intl.DateTimeFormat('ko-KR').format(new Date(value))}
+                </Typography>
+            )
+        }
+    ];
+
+    if (isPending) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (!originalData || originalData.length === 0) {
+        return (
+            <EmptyList
+                title="등록된 사용자가 없습니다"
+                description="새 사용자를 생성하여 시작하세요"
+                icon={<PeopleIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+                showCreateButton={true}
+            />
+        );
+    }
+
+    // 사용자 상태별 그룹화
+    const groupedData: GroupedTableData[] = (() => {
+        const grouped = new Map<string, any[]>();
+
+        originalData.forEach(user => {
+            const status = user?.status || 'unknown';
+            let groupKey: string;
+            let groupName: string;
+
+            if (status === 'active' || status === '활성') {
+                groupKey = 'active';
+                groupName = '활성 사용자';
+            } else if (status === 'inactive' || status === '비활성') {
+                groupKey = 'inactive';
+                groupName = '비활성 사용자';
+            } else if (status === 'pending' || status === '대기') {
+                groupKey = 'pending';
+                groupName = '대기 사용자';
+            } else {
+                groupKey = 'unknown';
+                groupName = '기타 사용자';
+            }
+
+            if (!grouped.has(groupKey)) {
+                grouped.set(groupKey, []);
+            }
+            grouped.get(groupKey)!.push(user);
+        });
+
+        // 그룹 정렬
+        const sortOrder = { 'active': 0, 'pending': 1, 'inactive': 2, 'unknown': 99 };
+        return Array.from(grouped.entries())
+            .map(([groupKey, items]) => ({
+                groupKey,
+                groupName: groupKey === 'active' ? '활성 사용자' :
+                          groupKey === 'pending' ? '대기 사용자' :
+                          groupKey === 'inactive' ? '비활성 사용자' : '기타 사용자',
+                items: items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+            }))
+            .sort((a, b) => (sortOrder[a.groupKey as keyof typeof sortOrder] || 99) - (sortOrder[b.groupKey as keyof typeof sortOrder] || 99));
+    })();
+
     return (
-      <EmptyList
-        title="등록된 사용자가 없습니다"
-        description="첫 번째 사용자를 추가해보세요"
-        icon={<PersonIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
-        createButtonLabel="사용자 추가"
-      />
-    );
-  }
-
-  // 현재 페이지의 데이터를 그룹별로 분리
-  const groupedData = groupUsersByStatus(originalData);
-
-  return (
-    <Box>
-    
-
-      {/* 현재 페이지의 그룹별 테이블들 */}
-      {groupedData.map((groupData) => (
-        <GroupedTable
-          key={groupData.groupKey}
-          groupData={groupData}
-          columns={userTableColumns}
-          itemLabel="사용자"
-          enableBulkDelete={true}
-          enableSelection={true}
-          groupIcon={<PersonIcon />}
-          pagination={{
-            enabled: false // 서버 페이지네이션을 사용하므로 테이블 자체 페이지네이션은 비활성화
-          }}
-          crudActions={{
-            enableShow: true,
-            enableEdit: true,
-            enableDelete: true,
-            enableCreate: true,
-            resource: 'privates/users'
-          }}
+        <MultiGroupTable
+            groupedData={groupedData}
+            columns={columns}
+            enableSelection={true}
+            enableBulkDelete={true}
+            groupIcon={<PeopleIcon />}
+            itemLabel="사용자"
+            crudActions={{
+                enableShow: true,
+                enableEdit: true,
+                enableDelete: true,
+                enableCreate: true,
+                resource: 'privates/users'
+            }}
         />
-      ))}
-    </Box>
-  );
+    );
 };
 
 export const UserList = () => (
-  <List 
-    actions={<UserListActions />} 
-    filters={userFilters}
-    title="사용자 관리 (상태별 보기)"
-    perPage={25} // 적절한 페이지 크기로 설정
-  >
-    <AllGroupsDatagrid />
-  </List>
+    <List 
+        actions={<UserListActions />} 
+        filters={userFilters}
+        title="사용자 관리"
+        sort={{ field: 'createdAt', order: 'DESC' }}
+        perPage={25}
+    >
+        <UserDatagrid />
+    </List>
 );
 
 export default UserList;

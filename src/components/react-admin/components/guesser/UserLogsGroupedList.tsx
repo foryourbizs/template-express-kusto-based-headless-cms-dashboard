@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import {
     List,
     useListContext,
@@ -7,60 +7,38 @@ import {
     ExportButton,
     FilterButton,
     TextInput,
-    DateInput,
     SearchInput,
+    SelectInput,
+    DateInput,
 } from 'react-admin';
-import {
-    Box,
-    Card,
-    CardContent,
-    Typography,
-    Chip,
-    Avatar,
-    IconButton,
-    Tooltip,
-    useTheme,
-    useMediaQuery,
-    Theme,
-    Alert,
-    CircularProgress,
-} from '@mui/material';
 import {
     Person as PersonIcon,
     Timeline as TimelineIcon,
-    Delete as DeleteIcon,
-    Visibility as VisibilityIcon,
-    AccessTime as AccessTimeIcon,
     Computer as ComputerIcon,
+    AccessTime as AccessTimeIcon,
     Security as SecurityIcon,
     Edit as EditIcon,
     Add as AddIcon,
     Login as LoginIcon,
     Logout as LogoutIcon,
+    Visibility as VisibilityIcon,
+    Delete as DeleteIcon,
 } from '@mui/icons-material';
-import GroupedTable, { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
+import {
+    Box,
+    Typography,
+    Chip,
+    Avatar,
+    Tooltip,
+    CircularProgress,
+} from '@mui/material';
+import { MultiGroupTable, TableColumn, GroupedTableData } from '../common/GroupedTable';
 import { EmptyList } from '../common/EmptyList';
 
-// 감사 로그 필터
-const auditFilters = [
-    <SearchInput key="q" source="q" alwaysOn placeholder="사용자명, 액션, 리소스 검색..." />,
-    <TextInput key="action" source="action_filter" label="액션" placeholder="액션 검색..." />,
-    <TextInput key="resource" source="resource_filter" label="리소스" placeholder="리소스 검색..." />,
-    <DateInput key="start" source="createdAt_gte" label="시작일" />,
-    <DateInput key="end" source="createdAt_lte" label="종료일" />,
-];
-
-// 상단 툴바
-const AuditLogActions = () => (
-    <TopToolbar>
-        <FilterButton />
-        <RefreshButton />
-        <ExportButton />
-    </TopToolbar>
-);
-
 // 액션 타입에 따른 아이콘 반환
-const getActionIcon = (action: string) => {
+const getActionIcon = (action: string | null | undefined) => {
+    if (!action) return <SecurityIcon fontSize="small" color="secondary" />;
+    
     const lowerAction = action.toLowerCase();
     if (lowerAction.includes('create') || lowerAction.includes('생성') || lowerAction.includes('add') || lowerAction.includes('insert')) {
         return <AddIcon fontSize="small" color="success" />;
@@ -84,7 +62,9 @@ const getActionIcon = (action: string) => {
 };
 
 // 액션 타입에 따른 색상 반환
-const getActionColor = (action: string) => {
+const getActionColor = (action: string | null | undefined): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
+    if (!action) return 'secondary';
+    
     const lowerAction = action.toLowerCase();
     if (lowerAction.includes('create') || lowerAction.includes('생성') || lowerAction.includes('add') || lowerAction.includes('insert')) {
         return 'success';
@@ -154,7 +134,7 @@ const ChangesDisplay: React.FC<{ changes: any }> = ({ changes }) => {
     );
 };
 
-// 사용자 정보 표시 컴포넌트 (간단화)
+// 사용자 정보 표시 컴포넌트
 const UserInfo: React.FC<{ userName: string; userUuid: string }> = ({ userName, userUuid }) => {
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -168,95 +148,51 @@ const UserInfo: React.FC<{ userName: string; userUuid: string }> = ({ userName, 
     );
 };
 
-// 사용자별로 로그 그룹화
-const groupLogsByUser = (auditLogs: any[]): GroupedTableData[] => {
-    if (!auditLogs) return [];
+// 사용자 감사 로그 액션 컴포넌트
+const UserLogsActions = () => (
+    <TopToolbar>
+        <FilterButton />
+        <RefreshButton />
+        <ExportButton />
+    </TopToolbar>
+);
 
-    const grouped = new Map<string, any[]>();
+// 사용자 감사 로그 필터
+const logsFilters = [
+    <SearchInput 
+        key="q"
+        source="q" 
+        placeholder="사용자명, 액션, 리소스 검색..." 
+        alwaysOn 
+    />,
+    <TextInput 
+        key="action_filter"
+        source="action_filter"
+        label="액션"
+        placeholder="액션 검색..."
+    />,
+    <TextInput 
+        key="resource_filter"
+        source="resource_filter"
+        label="리소스"
+        placeholder="리소스 검색..."
+    />,
+    <DateInput 
+        key="createdAt_gte"
+        source="createdAt_gte"
+        label="생성일 시작"
+    />,
+    <DateInput 
+        key="createdAt_lte"
+        source="createdAt_lte"
+        label="생성일 종료"
+    />
+];
 
-    // 로그를 사용자별로 그룹화
-    auditLogs.forEach(log => {
-        const userUuid = log.userUuid || 'unknown';
-        if (!grouped.has(userUuid)) {
-            grouped.set(userUuid, []);
-        }
-        grouped.get(userUuid)!.push(log);
-    });
-
-    // 그룹별 데이터 생성
-    return Array.from(grouped.entries()).map(([userUuid, logs]) => {
-        // 사용자 이름 결정 (여러 방법 시도)
-        const firstLog = logs[0];
-        let userName = '알 수 없는 사용자';
-        
-        // 로그에서 사용자 정보 추출 시도
-        if (firstLog?.username) {
-            userName = firstLog.username;
-        } else if (firstLog?.userEmail) {
-            userName = firstLog.userEmail;
-        } else if (firstLog?.userId) {
-            userName = firstLog.userId;
-        } else if (userUuid !== 'unknown') {
-            // UUID의 앞 8자리만 표시
-            userName = `User-${userUuid.substring(0, 8)}`;
-        }
-        
-        return {
-            groupKey: userUuid,
-            groupName: userName,
-            items: logs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        };
-    }).sort((a, b) => a.groupName.localeCompare(b.groupName));
-};
-
-// 전체 그룹 표시 컴포넌트
-const AllGroupsDatagrid = () => {
-    const listContext = useListContext();
-    const { data: originalData, isPending, total } = listContext;
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-    // 선택 상태 변경 핸들러 - 항상 정의됨
-    const handleSelectionChange = useCallback((newSelectedIds: string[]) => {
-        setSelectedIds(newSelectedIds);
-    }, []);
-
-    // 벌크 삭제 핸들러 - 항상 정의됨
-    const handleBulkDelete = useCallback((selectedIds: string[]) => {
-        // TODO: 실제 삭제 로직 구현
-        console.log('삭제할 로그 IDs:', selectedIds);
-        alert(`${selectedIds.length}개의 로그를 삭제하시겠습니까?`);
-    }, []);
-
-    // 행 클릭 핸들러 - 항상 정의됨
-    const handleRowClick = useCallback((item: any) => {
-        console.log('클릭된 로그:', item);
-        console.log('로그 ID:', item.id);
-        console.log('로그 타입:', typeof item.id);
-        // TODO: 상세 보기 모달 또는 페이지로 이동
-    }, []);
+// 사용자 감사 로그 데이터그리드
+const UserLogsDatagrid = () => {
+    const { data, isLoading } = useListContext();
     
-    if (isPending) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (!originalData || originalData.length === 0) {
-        return (
-            <EmptyList
-                title="등록된 감사 로그가 없습니다"
-                description="사용자 활동이 발생하면 로그가 여기에 표시됩니다"
-                icon={<TimelineIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
-                showCreateButton={false}
-            />
-        );
-    }
-
-    // 현재 페이지의 데이터를 그룹별로 분리
-    const groupedData = groupLogsByUser(originalData);
-
     // 테이블 컬럼 정의
     const columns: TableColumn[] = [
         {
@@ -278,7 +214,7 @@ const AllGroupsDatagrid = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {getActionIcon(value)}
                     <Chip 
-                        label={value} 
+                        label={value || '알 수 없음'} 
                         color={getActionColor(value)} 
                         size="small"
                         variant="outlined"
@@ -346,80 +282,95 @@ const AllGroupsDatagrid = () => {
         }
     ];
 
-    return (
-        <Box>
-            {/* 선택된 항목 정보 */}
-            {selectedIds.length > 0 && (
-                <Alert 
-                    severity="info" 
-                    sx={{ mb: 2 }}
-                    action={
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Typography variant="body2">
-                                {selectedIds.length}개 선택됨
-                            </Typography>
-                            <IconButton
-                                size="small"
-                                onClick={() => handleBulkDelete(selectedIds)}
-                                color="error"
-                            >
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
-                    }
-                >
-                    선택된 로그를 일괄 처리할 수 있습니다.
-                </Alert>
-            )}
+    // 데이터가 없거나 로딩 중일 때 처리
+    if (isLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
-            {/* 현재 페이지의 그룹별 테이블들 */}
-            {groupedData.map((groupData) => (
-                <GroupedTable
-                    key={groupData.groupKey}
-                    groupData={groupData}
-                    columns={columns}
-                    enableSelection={true}
-                    enableBulkDelete={true}
-                    selectedIds={selectedIds}
-                    onSelectionChange={handleSelectionChange}
-                    onBulkDelete={handleBulkDelete}
-                    onRowClick={handleRowClick}
-                    groupIcon={<PersonIcon />}
-                    itemLabel="로그"
-                    pagination={{
-                        enabled: false // 서버 페이지네이션을 사용하므로 테이블 자체 페이지네이션은 비활성화
-                    }}
-                    crudActions={{
-                        enableShow: true,
-                        enableEdit: false,
-                        enableDelete: true,
-                        enableCreate: false,
-                        resource: 'privates/users/audits', // React Admin에서 정의된 감사 로그 리소스 경로
-                        onShow: (item) => {
-                            console.log('보기 버튼 클릭:', item);
-                            // 커스텀 처리가 필요한 경우 여기에 구현
-                        },
-                        onError: (error, action, item) => {
-                            console.error(`${action} 액션 실행 중 오류:`, error, item);
-                            alert(`${action} 실행 중 오류가 발생했습니다: ${error.message}`);
-                        }
-                    }}
-                />
-            ))}
-        </Box>
+    if (!data || data.length === 0) {
+        return (
+            <EmptyList
+                title="등록된 감사 로그가 없습니다"
+                description="사용자 활동이 발생하면 로그가 여기에 표시됩니다"
+                icon={<TimelineIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />}
+            />
+        );
+    }
+
+    // 사용자별로 데이터 그룹화
+    const groupedData: GroupedTableData[] = useMemo(() => {
+        const groups = new Map<string, any[]>();
+        
+        data.forEach((item: any) => {
+            const userUuid = item.userUuid || 'unknown';
+            if (!groups.has(userUuid)) {
+                groups.set(userUuid, []);
+            }
+            groups.get(userUuid)!.push(item);
+        });
+
+        return Array.from(groups.entries()).map(([userUuid, items]) => {
+            // 사용자 이름 결정
+            let userName = '알 수 없는 사용자';
+            const firstItem = items[0];
+            
+            if (firstItem?.username) {
+                userName = firstItem.username;
+            } else if (firstItem?.userEmail) {
+                userName = firstItem.userEmail;
+            } else if (firstItem?.userId) {
+                userName = firstItem.userId;
+            } else if (userUuid && userUuid !== 'unknown') {
+                userName = `User-${userUuid.substring(0, 8)}`;
+            }
+            
+            return {
+                groupName: userName,
+                groupKey: userUuid,
+                items: items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            };
+        }).sort((a, b) => a.groupName.localeCompare(b.groupName));
+    }, [data]);
+
+    return (
+        <MultiGroupTable 
+            groupedData={groupedData}
+            columns={columns}
+            enableSelection={true}
+            enableBulkDelete={true}
+            groupIcon={<PersonIcon />}
+            itemLabel="로그"
+            crudActions={{
+                enableShow: true,
+                enableEdit: false,
+                enableDelete: true,
+                enableCreate: false,
+                resource: 'privates/users/audits',
+                onError: (error, action, item) => {
+                    console.error(`${action} 액션 실행 중 오류:`, error, item);
+                    alert(`${action} 실행 중 오류가 발생했습니다: ${error.message}`);
+                }
+            }}
+        />
     );
 };
 
-export const UserLogsGroupedList = () => (
-    <List
-        actions={<AuditLogActions />}
-        filters={auditFilters}
-        title="사용자 감사 로그 (사용자별 보기)"
-        sort={{ field: 'createdAt', order: 'DESC' }}
-        perPage={50} // 적절한 페이지 크기로 설정
-    >
-        <AllGroupsDatagrid />
-    </List>
-);
+export const UserLogsGroupedList = () => {
+    return (
+        <List
+            title="사용자 감사 로그 (사용자별 보기)"
+            actions={<UserLogsActions />}
+            filters={logsFilters}
+            sort={{ field: 'createdAt', order: 'DESC' }}
+            perPage={50}
+        >
+            <UserLogsDatagrid />
+        </List>
+    );
+};
 
 export default UserLogsGroupedList;

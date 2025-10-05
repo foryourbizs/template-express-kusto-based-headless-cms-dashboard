@@ -1,81 +1,34 @@
 import React from 'react';
-import {
-    Show,
-    SimpleShowLayout,
-    TextField,
-    DateField,
-    ReferenceField,
-    ChipField,
-    FunctionField,
-    useRecordContext,
-    TopToolbar,
-    ListButton,
-    EditButton,
-} from 'react-admin';
+import { useRecordContext } from 'react-admin';
 import {
     Box,
     Typography,
-    Card,
-    CardContent,
-    Chip,
     Avatar,
-    Paper,
-    Divider,
+    Chip,
 } from '@mui/material';
 import {
     Person as PersonIcon,
     Computer as ComputerIcon,
     Security as SecurityIcon,
-    AccessTime as AccessTimeIcon,
     Info as InfoIcon,
+    AccessTime as AccessTimeIcon,
 } from '@mui/icons-material';
-
-// 상단 액션 툴바
-const AuditShowActions = () => (
-    <TopToolbar>
-        <ListButton />
-    </TopToolbar>
-);
-
-// 변경사항 표시 컴포넌트
-const ChangesField = () => {
-    const record = useRecordContext();
-    
-    if (!record?.changes) {
-        return <Typography variant="body2" color="text.secondary">변경사항 없음</Typography>;
-    }
-
-    return (
-        <Paper elevation={1} sx={{ p: 2, backgroundColor: 'grey.50' }}>
-            <Typography variant="subtitle2" gutterBottom>
-                변경사항:
-            </Typography>
-            <Typography
-                component="pre"
-                variant="body2"
-                sx={{
-                    fontSize: '0.875rem',
-                    fontFamily: 'monospace',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    maxHeight: 300,
-                    overflow: 'auto',
-                }}
-            >
-                {JSON.stringify(record.changes, null, 2)}
-            </Typography>
-        </Paper>
-    );
-};
+import { GenericShow, ShowSection } from '../common';
 
 // 사용자 정보 표시 컴포넌트
 const UserInfoField = () => {
     const record = useRecordContext();
     
-    if (!record) return null;
+    const userName = record?.username || record?.userEmail || record?.userId || '알 수 없는 사용자';
+    const userUuid = record?.userUuid;
 
-    const userName = record.username || record.userEmail || record.userId || '알 수 없는 사용자';
-    const userUuid = record.userUuid;
+    if (!record) {
+        return (
+            <Typography variant="body2" color="text.secondary">
+                사용자 정보 없음
+            </Typography>
+        );
+    }
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -97,7 +50,8 @@ const UserInfoField = () => {
 };
 
 // 액션 타입에 따른 색상 반환
-const getActionColor = (action: string): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
+const getActionColor = (action: string | null | undefined): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
+    if (!action) return 'default';
     const lowerAction = action.toLowerCase();
     if (lowerAction.includes('create') || lowerAction.includes('생성') || lowerAction.includes('add')) {
         return 'success';
@@ -121,118 +75,127 @@ const getActionColor = (action: string): "default" | "primary" | "secondary" | "
 };
 
 // 액션 필드 컴포넌트
-const ActionField = () => {
-    const record = useRecordContext();
-    
-    if (!record?.action) return null;
+const ActionChip = (value: string) => (
+    <Chip 
+        label={value} 
+        color={getActionColor(value)}
+        variant="outlined"
+        sx={{ fontWeight: 600 }}
+    />
+);
+
+// IP 주소 표시 컴포넌트
+const IPAddressField = (value: string) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <ComputerIcon fontSize="small" color="action" />
+        <Typography variant="body2" fontFamily="monospace">
+            {value || '-'}
+        </Typography>
+    </Box>
+);
+
+// 생성일시 표시 컴포넌트
+const DateTimeField = (value: string) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <AccessTimeIcon fontSize="small" color="action" />
+        <Typography variant="body2">
+            {value ? new Intl.DateTimeFormat('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).format(new Date(value)) : '-'}
+        </Typography>
+    </Box>
+);
+
+export const UserAuditsShow = () => {
+    const sections: ShowSection[] = [
+        {
+            title: '사용자 정보',
+            icon: <PersonIcon color="primary" />,
+            columns: 1,
+            fields: [
+                {
+                    source: 'userInfo',
+                    label: '사용자',
+                    type: 'custom',
+                    render: () => <UserInfoField />
+                }
+            ]
+        },
+        {
+            title: '액션 정보',
+            icon: <SecurityIcon color="primary" />,
+            columns: 3,
+            fields: [
+                {
+                    source: 'action',
+                    label: '액션',
+                    type: 'custom',
+                    render: (value) => ActionChip(value)
+                },
+                {
+                    source: 'resource',
+                    label: '리소스',
+                    type: 'chip',
+                    color: 'default'
+                },
+                {
+                    source: 'resourceId',
+                    label: '리소스 ID',
+                    type: 'text'
+                }
+            ]
+        },
+        {
+            title: '기술적 정보',
+            icon: <InfoIcon color="primary" />,
+            columns: 2,
+            fields: [
+                {
+                    source: 'ipAddress',
+                    label: 'IP 주소',
+                    type: 'custom',
+                    render: (value) => IPAddressField(value)
+                },
+                {
+                    source: 'createdAt',
+                    label: '생성일시',
+                    type: 'custom',
+                    render: (value) => DateTimeField(value)
+                },
+                {
+                    source: 'id',
+                    label: 'ID',
+                    type: 'text'
+                }
+            ]
+        },
+        {
+            title: '변경사항',
+            columns: 1,
+            fields: [
+                {
+                    source: 'changes',
+                    label: '변경 내역',
+                    type: 'json'
+                }
+            ]
+        }
+    ];
 
     return (
-        <Chip 
-            label={record.action} 
-            color={getActionColor(record.action)}
-            variant="outlined"
-            sx={{ fontWeight: 600 }}
+        <GenericShow
+            title="감사 로그 상세"
+            sections={sections}
+            enableEdit={false}
+            enableDelete={false}
         />
     );
 };
-
-export const UserAuditsShow = () => (
-    <Show actions={<AuditShowActions />} title="감사 로그 상세">
-        <SimpleShowLayout>
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    {/* 사용자 정보 */}
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <PersonIcon color="primary" />
-                            사용자 정보
-                        </Typography>
-                        <UserInfoField />
-                    </Box>
-
-                    <Divider sx={{ my: 3 }} />
-
-                    {/* 액션 정보 */}
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <SecurityIcon color="primary" />
-                            액션 정보
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">액션</Typography>
-                                <ActionField />
-                            </Box>
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">리소스</Typography>
-                                <ChipField source="resource" variant="outlined" />
-                            </Box>
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">리소스 ID</Typography>
-                                <TextField source="resourceId" sx={{ fontFamily: 'monospace' }} />
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    <Divider sx={{ my: 3 }} />
-
-                    {/* 기술적 정보 */}
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <InfoIcon color="primary" />
-                            기술적 정보
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">IP 주소</Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                    <ComputerIcon fontSize="small" color="action" />
-                                    <TextField source="ipAddress" sx={{ fontFamily: 'monospace' }} />
-                                </Box>
-                            </Box>
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">생성일시</Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                    <AccessTimeIcon fontSize="small" color="action" />
-                                    <DateField 
-                                        source="createdAt" 
-                                        showTime 
-                                        options={{
-                                            year: 'numeric',
-                                            month: '2-digit',
-                                            day: '2-digit',
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            second: '2-digit',
-                                            hour12: false
-                                        }}
-                                    />
-                                </Box>
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    {/* 추가 정보 */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-                        <Box>
-                            <Typography variant="body2" color="text.secondary">ID</Typography>
-                            <TextField source="id" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }} />
-                        </Box>
-                    </Box>
-                </CardContent>
-            </Card>
-
-            {/* 변경사항 */}
-            <Card>
-                <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                        변경사항
-                    </Typography>
-                    <ChangesField />
-                </CardContent>
-            </Card>
-        </SimpleShowLayout>
-    </Show>
-);
 
 export default UserAuditsShow;

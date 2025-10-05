@@ -104,6 +104,7 @@ const TabPanel = (props: TabPanelProps) => {
 
 // 슬러그 자동 생성 함수
 const generateSlug = (title: string): string => {
+  if (!title) return '';
   return title
     .toLowerCase()
     .replace(/[^a-z0-9가-힣]/g, '-')
