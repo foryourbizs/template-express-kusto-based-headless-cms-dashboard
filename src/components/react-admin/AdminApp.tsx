@@ -1,5 +1,6 @@
 "use client"; // remove this line if you choose Pages Router
 
+import { useState, useEffect } from "react";
 import {
 	Resource,
 	ListGuesser,
@@ -74,21 +75,98 @@ const customKoreanMessages = {
 
 const i18nProvider = polyglotI18nProvider(() => customKoreanMessages, 'ko');
 
+// 인증 체크 로딩 컴포넌트
+const AuthCheckLoader = () => (
+	<div style={{
+		position: 'fixed',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+		justifyContent: 'center',
+		minHeight: '100vh',
+		backgroundColor: '#f8fafc',
+		gap: '16px',
+		zIndex: 9999
+	}}>
+		<div style={{
+			width: '40px',
+			height: '40px',
+			border: '3px solid #e2e8f0',
+			borderTop: '3px solid #50a48c',
+			borderRadius: '50%',
+			animation: 'spin 1s linear infinite'
+		}} />
+		<p style={{
+			margin: 0,
+			color: '#64748b',
+			fontSize: '14px',
+			fontWeight: '500'
+		}}>
+			인증 확인 중...
+		</p>
+		<style>{`
+			@keyframes spin {
+				0% { transform: rotate(0deg); }
+				100% { transform: rotate(360deg); }
+			}
+			body {
+				overflow: hidden !important;
+			}
+		`}</style>
+	</div>
+);
 
+const AdminApp = () => {
+	// 초기값을 null로 설정하여 아무것도 렌더링하지 않음
+	const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | null>(null);
 
+	useEffect(() => {
+		// 클라이언트에서만 실행
+		if (typeof window === 'undefined') return;
 
+		// 즉시 로딩 상태로 전환
+		setAuthState('loading');
 
-const AdminApp = () => (
-	<BrowserRouter>
-		<Admin
-			dataProvider={dataProvider}
-			authProvider={authProvider}
-			i18nProvider={i18nProvider}
-			theme={simpleGrayTheme}
-			loginPage={LoginPage}
-			layout={Layout}
-			dashboard={Dashboard}
-		>
+		// 앱 로드 시 인증 상태를 먼저 확인
+		const checkInitialAuth = async () => {
+			try {
+				await authProvider.checkAuth({});
+				setAuthState('authenticated');
+			} catch (error) {
+				setAuthState('unauthenticated');
+			}
+		};
+
+		checkInitialAuth();
+	}, []);
+
+	// 초기 상태이거나 로딩 중이면 로딩 화면만 표시
+	if (authState === null || authState === 'loading') {
+		return <AuthCheckLoader />;
+	}
+
+	// 모든 경우에 BrowserRouter로 감싸서 일관성 유지
+	return (
+		<BrowserRouter>
+			{authState === 'unauthenticated' ? (
+				// 인증되지 않았으면 로그인 페이지
+				<LoginPage />
+			) : (
+				// 인증된 사용자는 Admin 앱
+				<Admin
+					requireAuth
+					dataProvider={dataProvider}
+					authProvider={authProvider}
+					i18nProvider={i18nProvider}
+					theme={simpleGrayTheme}
+					loginPage={false}
+					layout={Layout}
+					dashboard={Dashboard}
+				>
 
 			<Resource name="privates/users" list={UserList} edit={EditGuesser} options={{ label: '사용자', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <People /> }} />
 			<Resource name="privates/users/user-sessions" list={UserSessionList} options={{ label: '세션', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <ViewList /> }} />
@@ -113,12 +191,10 @@ const AdminApp = () => (
 			<Resource name="privates/siteMenu" list={SiteMenuList} edit={SiteMenuEdit} create={SiteMenuCreate} options={{ label: '메뉴 관리', menuGroup: 'menus', menuGroupLabel: '사이트', icon: <Article /> }} />
 			<Resource name="privates/posts" list={PostList} edit={PostEdit} options={{ label: '게시판 관리', menuGroup: 'posts', menuGroupLabel: '게시판', icon: <Article /> }} />
 
-		</Admin>
-	</BrowserRouter>
-);
-
-
-
-
+				</Admin>
+			)}
+		</BrowserRouter>
+	);
+};
 
 export default AdminApp;

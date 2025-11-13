@@ -1,8 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import Image from 'next/image';
-import { useLogin, useNotify, useAuthProvider } from 'react-admin';
-import { useNavigate } from 'react-router-dom';
+import authProvider from '../lib/authProvider';
 import {
     Button,
     TextField,
@@ -12,7 +11,8 @@ import {
     Paper,
     InputAdornment,
     IconButton,
-    Divider
+    Snackbar,
+    Alert
 } from '@mui/material';
 import {
     Visibility,
@@ -26,29 +26,33 @@ const CustomLoginPage = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    
-    const login = useLogin();
-    const notify = useNotify();
-    const navigate = useNavigate();
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError(null);
 
         try {
-            await login({ username, password });
+            // authProvider의 login 직접 호출
+            await authProvider.login({ username, password });
             
-            // 로그인 성공 후 저장된 페이지로 리다이렉트
+            // 로그인 성공 후 페이지 새로고침하여 인증 상태 재확인
             const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
-            if (redirectAfterLogin) {
+            if (redirectAfterLogin && redirectAfterLogin !== '/login') {
                 localStorage.removeItem('redirectAfterLogin');
-                navigate(redirectAfterLogin);
+                window.location.href = redirectAfterLogin;
+            } else {
+                window.location.href = '/';
             }
         } catch (error) {
-            notify('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.', { type: 'warning' });
-        } finally {
+            setError('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
             setLoading(false);
         }
+    };
+
+    const handleCloseError = () => {
+        setError(null);
     };
 
     const handleClickShowPassword = () => {
@@ -320,6 +324,23 @@ const CustomLoginPage = () => {
                     </Box>
                 </Box>
             </Paper>
+
+            {/* 에러 메시지 Snackbar */}
+            <Snackbar
+                open={!!error}
+                autoHideDuration={6000}
+                onClose={handleCloseError}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert 
+                    onClose={handleCloseError} 
+                    severity="error" 
+                    variant="filled"
+                    sx={{ width: '100%' }}
+                >
+                    {error}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };
