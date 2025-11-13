@@ -1,20 +1,11 @@
 import { FC, useState } from 'react';
 import {
-    Box,
-    Card,
-    CardContent,
-    Typography,
-    Paper,
     useTheme,
 } from '@mui/material';
-import {
-    TrendingUp,
-    People,
-    Article,
-    Comment,
-    Visibility,
-} from '@mui/icons-material';
+
 import { useDataProvider } from 'react-admin';
+
+import { Button } from "@/components/ui/button"
 
 
 /**
@@ -34,7 +25,7 @@ export const Dashboard: FC = () => {
 
     return (
         <>
-        
+            <Button>xxx</Button>
         
         </>
     );
