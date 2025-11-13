@@ -24,8 +24,8 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
           flexGrow: 1,
           width: '100%',
           transition: theme.transitions.create(['margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
+            easing: theme.transitions.easing.easeInOut,
+            duration: theme.transitions.duration.standard,
           }),
           backgroundColor: theme.palette.background.default,
           display: 'flex',

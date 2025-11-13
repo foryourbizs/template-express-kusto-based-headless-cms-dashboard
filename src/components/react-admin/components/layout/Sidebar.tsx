@@ -288,8 +288,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
         width: { md: open ? DRAWER_WIDTH : 0 }, 
         flexShrink: { md: 0 },
         transition: (theme) => theme.transitions.create(['width'], {
-          easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.enteringScreen,
+          easing: theme.transitions.easing.easeInOut,
+          duration: theme.transitions.duration.standard,
         }),
       }}
     >
@@ -324,6 +324,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
               width: DRAWER_WIDTH,
               backgroundColor: theme.palette.background.paper,
               borderRight: `1px solid ${theme.palette.divider}`,
+              transition: theme.transitions.create(['transform', 'width'], {
+                easing: theme.transitions.easing.easeInOut,
+                duration: theme.transitions.duration.standard,
+              }),
             },
           }}
         >
