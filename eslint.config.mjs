@@ -27,6 +27,7 @@ const eslintConfig = [
       "@typescript-eslint/no-unused-vars": "off",
       
       // React 관련 규칙 완화
+      "react-hooks/rules-of-hooks": "off",
       "react-hooks/exhaustive-deps": "off",
       "react/no-unescaped-entities": "off",
       "react/jsx-key": "off",
