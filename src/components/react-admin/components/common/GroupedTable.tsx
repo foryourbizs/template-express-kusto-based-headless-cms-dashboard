@@ -846,18 +846,11 @@ const GroupedTable: React.FC<GroupedTableProps> = ({
       >
         <Table stickyHeader={isMobile} size={isMobile ? 'small' : 'medium'}>
           <TableHead>
-            <TableRow sx={{ backgroundColor: 'rgba(25, 118, 210, 0.08)' }}>
+            <TableRow>
               {enableSelection && (
                 <TableCell 
                   padding="checkbox"
-                  sx={{ 
-                    width: '48px',
-                    minWidth: '48px',
-                    position: 'sticky',
-                    left: 0,
-                    backgroundColor: 'rgba(25, 118, 210, 0.08)',
-                    zIndex: 2
-                  }}
+
                 >
                   <Checkbox
                     checked={isAllSelected}

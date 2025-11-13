@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import Image from 'next/image';
-import authProvider from '../lib/authProvider';
+import authProvider, { LoginCredentials } from '../lib/authProvider';
 import {
     Button,
     TextField,
@@ -22,8 +22,10 @@ import {
 } from '@mui/icons-material';
 
 const CustomLoginPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [loginForm, setLoginForm] = useState<LoginCredentials>({
+        username: '',
+        password: ''
+    });
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -34,8 +36,8 @@ const CustomLoginPage = () => {
         setError(null);
 
         try {
-            // authProvider의 login 직접 호출
-            await authProvider.login({ username, password });
+            // authProvider의 login 직접 호출 (타입 안전한 LoginCredentials 사용)
+            await authProvider.login(loginForm);
             
             // 로그인 성공 후 페이지 새로고침하여 인증 상태 재확인
             const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
@@ -158,12 +160,12 @@ const CustomLoginPage = () => {
                             name="login_user"
                             autoComplete="off"
                             autoFocus
-                            value={username}
+                            value={loginForm.username}
                             autoCapitalize='off'
                             aria-autocomplete='none'
                             autoSave='off'
                             autoCorrect='off'
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">
@@ -219,8 +221,8 @@ const CustomLoginPage = () => {
                             type="text"
                             id="login_pass"
                             autoComplete="off"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            value={loginForm.password}
+                            onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
                             InputProps={{
                                 startAdornment: (
                                     <InputAdornment position="start">

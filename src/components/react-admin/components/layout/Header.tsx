@@ -71,36 +71,53 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 		}
 	};
 
-	// 시간을 사람이 읽기 쉬운 형태로 변환 (초단위까지 표시)
+	// 시간을 간결하게 변환
 	const formatTimeRemaining = (milliseconds: number): string => {
-		if (milliseconds <= 0) return '만료됨';
+		if (milliseconds <= 0) return '0초';
 		
 		const totalSeconds = Math.floor(milliseconds / 1000);
-		const days = Math.floor(totalSeconds / (24 * 60 * 60));
-		const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
-		const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
-		const seconds = totalSeconds % 60;
-
-		if (days > 0) return `${days}일 ${hours}시간`;
-		if (hours > 0) return `${hours}시간 ${minutes}분`;
-		if (minutes > 0) return `${minutes}분 ${seconds}초`;
-		return `${seconds}초`;
+		const totalMinutes = Math.floor(totalSeconds / 60);
+		const totalHours = Math.floor(totalMinutes / 60);
+		const totalDays = Math.floor(totalHours / 24);
+		const totalMonths = Math.floor(totalDays / 30);
+		
+		// 12개월 이상 = 년 단위
+		if (totalMonths >= 12) {
+			const years = Math.floor(totalMonths / 12);
+			return `${years}년`;
+		}
+		// 1개월 이상 = 개월, 일 단위
+		else if (totalMonths >= 1) {
+			const remainingDays = totalDays % 30;
+			return `${totalMonths}개월 ${remainingDays}일`;
+		}
+		// 1일 이상 = 일, 시 단위
+		else if (totalDays >= 1) {
+			const remainingHours = totalHours % 24;
+			return `${totalDays}일 ${remainingHours}시간`;
+		}
+		// 1시간 이상 = 시, 분 단위
+		else if (totalHours >= 1) {
+			const remainingMinutes = totalMinutes % 60;
+			return `${totalHours}시간 ${remainingMinutes}분`;
+		}
+		// 1분 이상 = 분, 초 단위
+		else if (totalMinutes >= 1) {
+			const remainingSeconds = totalSeconds % 60;
+			return `${totalMinutes}분 ${remainingSeconds}초`;
+		}
+		// 1분 미만 = 초 단위
+		else {
+			return `${totalSeconds}초`;
+		}
 	};
 
-	// 모바일용 간결한 시간 표시
-	const formatTimeRemainingMobile = (milliseconds: number): string => {
-		if (milliseconds <= 0) return '만료';
-		
-		const totalSeconds = Math.floor(milliseconds / 1000);
-		const days = Math.floor(totalSeconds / (24 * 60 * 60));
-		const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / (60 * 60));
-		const minutes = Math.floor((totalSeconds % (60 * 60)) / 60);
-		const seconds = totalSeconds % 60;
-
-		if (days > 0) return `${days}d`;
-		if (hours > 0) return `${hours}h`;
-		if (minutes > 0) return `${minutes}m`;
-		return `${seconds}s`;
+	// 토큰 만료 퍼센트 계산 (24시간 기준)
+	const getTokenProgress = (): number => {
+		const maxTime = 24 * 60 * 60 * 1000; // 24시간
+		const remaining = tokenInfo.accessToken.remaining;
+		if (remaining <= 0) return 0;
+		return Math.min((remaining / maxTime) * 100, 100);
 	};
 
 	const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -151,119 +168,190 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 				</Typography>
 
 				{/* 오른쪽 액션들 */}
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-					{/* 토큰 표시 및 갱신 버튼 통합 UI */}
-					<Box sx={{ 
-						display: 'flex', 
-						alignItems: 'center', 
-						gap: 0,
-						borderRadius: 2,
-						border: `1px solid ${theme.palette.divider}`,
-						overflow: 'hidden',
-						backgroundColor: alpha(theme.palette.background.paper, 0.8),
-						transition: 'all 0.2s ease-in-out',
-						'&:hover': {
-							borderColor: theme.palette.primary.main,
-							boxShadow: `0 0 0 1px ${alpha(theme.palette.primary.main, 0.3)}`,
-						}
-					}}>
-						{/* 토큰 만료시간 표시 부분 */}
-						<Box sx={{
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+					{/* 토큰 상태 표시 (시간 + 새로고침) */}
+					<Box
+						sx={{
 							display: 'flex',
 							alignItems: 'center',
-							gap: { xs: 0.5, md: 1 },
-							px: { xs: 1, md: 1.5 },
-							py: 0.75,
-							backgroundColor: tokenInfo.accessToken.expired 
-								? alpha(theme.palette.error.main, 0.1)
-								: tokenInfo.accessToken.remaining < 5 * 60 * 1000 // 5분 미만
-									? alpha(theme.palette.warning.main, 0.1)
-									: alpha(theme.palette.success.main, 0.1),
-							transition: 'all 0.2s ease-in-out',
+							gap: 1,
+							height: { xs: 44, md: 48 },
+							pl: { xs: 1.75, md: 2 },
+							pr: { xs: 0.75, md: 1 },
+							borderRadius: 1,
+							backgroundColor: alpha(theme.palette.background.paper, 0.9),
+							border: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
+							transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+							overflow: 'hidden',
+							backdropFilter: 'blur(10px)',
+							boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.05)}`,
+							position: 'relative',
+							'&:hover': {
+								borderColor: alpha(theme.palette.divider, 0.6),
+								boxShadow: `0 2px 6px ${alpha(theme.palette.common.black, 0.08)}`,
+							},
+							'&::after': {
+								content: '""',
+								position: 'absolute',
+								left: 0,
+								bottom: 0,
+								height: '3px',
+								width: `${getTokenProgress()}%`,
+								background: `linear-gradient(90deg, 
+									${tokenInfo.accessToken.expired 
+										? theme.palette.error.main
+										: tokenInfo.accessToken.remaining < 5 * 60 * 1000
+											? theme.palette.warning.main
+											: theme.palette.success.main
+									} 0%,
+									${alpha(tokenInfo.accessToken.expired 
+										? theme.palette.error.main
+										: tokenInfo.accessToken.remaining < 5 * 60 * 1000
+											? theme.palette.warning.main
+											: theme.palette.success.main, 0.6
+									)} 100%
+								)`,
+								transition: 'width 1s ease-out',
+								borderRadius: '0 0 0 6px',
+							},
+						}}
+					>
+						{/* 상태 도트 + 시간 */}
+						<Box sx={{ 
+							display: 'flex', 
+							alignItems: 'center', 
+							gap: 1,
+							zIndex: 1,
 						}}>
-							<Box sx={{
-								width: { xs: 6, md: 8 },
-								height: { xs: 6, md: 8 },
-								borderRadius: '50%',
-								backgroundColor: tokenInfo.accessToken.expired 
-									? theme.palette.error.main
-									: tokenInfo.accessToken.remaining < 5 * 60 * 1000
-										? theme.palette.warning.main
-										: theme.palette.success.main,
-								animation: tokenInfo.accessToken.remaining < 60 * 1000 ? 'pulse 1s infinite' : 'none',
-								'@keyframes pulse': {
-									'0%': { opacity: 1 },
-									'50%': { opacity: 0.5 },
-									'100%': { opacity: 1 },
-								},
-							}} />
-							<Typography 
-								variant="body2" 
-								sx={{ 
-									fontWeight: 500,
-									color: tokenInfo.accessToken.expired 
+							<Box
+								sx={{
+									width: { xs: 6, md: 7 },
+									height: { xs: 6, md: 7 },
+									borderRadius: '50%',
+									backgroundColor: tokenInfo.accessToken.expired 
 										? theme.palette.error.main
 										: tokenInfo.accessToken.remaining < 5 * 60 * 1000
 											? theme.palette.warning.main
 											: theme.palette.success.main,
-									fontFamily: 'monospace',
-									fontSize: { xs: '0.75rem', md: '0.875rem' },
-									minWidth: { xs: '35px', md: '80px' },
-									textAlign: 'center'
+									flexShrink: 0,
+									boxShadow: `0 0 ${tokenInfo.accessToken.remaining < 60 * 1000 ? '6px' : '3px'} ${
+										alpha(tokenInfo.accessToken.expired 
+											? theme.palette.error.main
+											: tokenInfo.accessToken.remaining < 5 * 60 * 1000
+												? theme.palette.warning.main
+												: theme.palette.success.main, 0.5)
+									}`,
+									animation: tokenInfo.accessToken.remaining < 60 * 1000 ? 'pulse 2s ease-in-out infinite' : 'none',
+									'@keyframes pulse': {
+										'0%, 100%': { opacity: 1, transform: 'scale(1)' },
+										'50%': { opacity: 0.6, transform: 'scale(0.85)' },
+									},
+								}}
+							/>
+							
+							<Typography
+								variant="body2"
+								sx={{
+									fontFamily: 'system-ui, -apple-system, sans-serif',
+									fontWeight: 600,
+									fontSize: { xs: '0.8125rem', md: '0.875rem' },
+									color: theme.palette.text.primary,
+									letterSpacing: '0.3px',
+									lineHeight: 1.2,
 								}}
 							>
-								{/* 모바일과 데스크톱에서 다른 표시 형식 */}
-								<Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
-									{formatTimeRemaining(tokenInfo.accessToken.remaining)}
-								</Box>
-								<Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
-									{formatTimeRemainingMobile(tokenInfo.accessToken.remaining)}
-								</Box>
+								{formatTimeRemaining(tokenInfo.accessToken.remaining)}
 							</Typography>
 						</Box>
 
-						{/* 구분선 */}
-						<Box sx={{
-							width: 1,
-							height: { xs: 28, md: 32 },
-							backgroundColor: theme.palette.divider,
-						}} />
-
-						{/* 토큰 갱신 버튼 부분 */}
+						{/* 새로고침 버튼 */}
 						<IconButton
 							onClick={handleRefreshToken}
 							disabled={isRefreshing || tokenInfo.refreshToken.expired}
 							size="small"
-							title={isRefreshing ? "토큰 갱신 중..." : "토큰 갱신"}
 							sx={{
-								width: { xs: 32, md: 40 },
-								height: { xs: 32, md: 40 },
-								borderRadius: 0,
-								backgroundColor: 'transparent',
+								width: { xs: 32, md: 36 },
+								height: { xs: 32, md: 36 },
+								backgroundColor: alpha(theme.palette.primary.main, 0.08),
 								color: theme.palette.primary.main,
+								zIndex: 1,
 								transition: 'all 0.2s ease-in-out',
 								'&:hover': {
-									backgroundColor: alpha(theme.palette.primary.main, 0.1),
+									backgroundColor: alpha(theme.palette.primary.main, 0.15),
+									transform: 'rotate(90deg)',
 								},
 								'&:disabled': {
-									backgroundColor: 'transparent',
-									color: theme.palette.action.disabled,
+									opacity: 0.4,
+									backgroundColor: alpha(theme.palette.action.disabled, 0.08),
 								},
 							}}
 						>
-							<RefreshIcon sx={{ 
-								fontSize: { xs: 16, md: 18 },
-								animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
-								'@keyframes spin': {
-									'0%': {
-										transform: 'rotate(0deg)',
+							<RefreshIcon
+								sx={{
+									fontSize: { xs: 16, md: 18 },
+									animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+									'@keyframes spin': {
+										'0%': { transform: 'rotate(0deg)' },
+										'100%': { transform: 'rotate(360deg)' },
 									},
-									'100%': {
-										transform: 'rotate(360deg)',
-									},
-								},
-							}} />
+								}}
+							/>
 						</IconButton>
+					</Box>
+
+					{/* 사용자 프로필 */}
+					<Box
+						onClick={handleUserMenuOpen}
+						sx={{
+							display: 'flex',
+							alignItems: 'center',
+							gap: 1.25,
+							height: { xs: 44, md: 48 },
+							pl: { xs: 1, md: 1.25 },
+							pr: { xs: 1.5, md: 1.75 },
+							borderRadius: 1,
+							cursor: 'pointer',
+							backgroundColor: alpha(theme.palette.background.paper, 0.9),
+							border: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
+							transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+							backdropFilter: 'blur(10px)',
+							boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.05)}`,
+							'&:hover': {
+								backgroundColor: alpha(theme.palette.background.paper, 1),
+								borderColor: alpha(theme.palette.primary.main, 0.4),
+								boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.12)}`,
+								transform: 'translateY(-1px)',
+							},
+						}}
+					>
+						<Avatar
+							sx={{
+								width: { xs: 32, md: 36 },
+								height: { xs: 32, md: 36 },
+								bgcolor: theme.palette.primary.main,
+								fontSize: { xs: '0.9375rem', md: '1.0625rem' },
+								fontWeight: 600,
+								boxShadow: `0 2px 6px ${alpha(theme.palette.primary.main, 0.25)}`,
+							}}
+						>
+							{identity?.fullName?.[0] || ''}
+						</Avatar>
+
+						<Typography
+							variant="body2"
+							sx={{
+								display: { xs: 'none', md: 'block' },
+								fontWeight: 500,
+								fontSize: '0.875rem',
+								color: theme.palette.text.primary,
+								maxWidth: 100,
+								overflow: 'hidden',
+								textOverflow: 'ellipsis',
+								whiteSpace: 'nowrap',
+							}}
+						>
+							{identity?.fullName || '관리자'}
+						</Typography>
 					</Box>
 
 					
@@ -274,22 +362,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 						</Badge>
 					</IconButton> */}
 
-					{/* 사용자 메뉴 */}
-					<IconButton
-						onClick={handleUserMenuOpen}
-						color="inherit"
-						sx={{ p: 0 }}
-					>
-						<Avatar
-							sx={{
-								width: 32,
-								height: 32,
-								bgcolor: theme.palette.primary.main,
-							}}
-						>
-							{identity?.fullName?.[0] || ''}
-						</Avatar>
-					</IconButton>
+					{/* 사용자 메뉴 (기존 위치에서 제거 - 위의 통합 컴포넌트로 이동됨) */}
+					{/* <IconButton ... 제거됨 ... */}
 
 					<Menu
 						anchorEl={anchorEl}

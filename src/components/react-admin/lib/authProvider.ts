@@ -5,6 +5,12 @@ import { requester } from "./client";
  * This authProvider is only for test purposes. Don't use it in production.
  */
 
+// 로그인 인증 정보 타입 (username/password만 허용)
+export interface LoginCredentials {
+    username: string;
+    password: string;
+}
+
 const url = process.env.ADMIN_SERVER_URL || process.env.NEXT_PUBLIC_ADMIN_SERVER_URL || '';
 
 
@@ -25,33 +31,15 @@ const CHECK_CACHE_DURATION = 30 * 1000; // 30초
 let isLoggingOut = false;
 
 export const authProvider: AuthProvider = {
-    login: async ({ username, password }) => {
+    login: async (credentials: LoginCredentials) => {
+        const { username, password } = credentials;
+        
         // 현재 페이지 정보 저장 (로그인 페이지가 아닌 경우에만)
         const currentPath = window.location.pathname + window.location.search + window.location.hash;
         if (currentPath !== '/login' && !currentPath.includes('/login')) {
             localStorage.setItem("redirectAfterLogin", currentPath);
         }
 
-        // ====== 테스트용 로그인 (서버 연결 문제 해결용) ======
-        if (username === 'test' && password === '1234' && false) {
-            const testUser = {
-                id: '999',
-                username: 'test',
-                email: 'test@example.com',
-                name: '테스트 관리자',
-                role: 'admin',
-                avatar: null,
-                accessToken: 'test-access-token-12345',
-                refreshToken: 'test-refresh-token-67890'
-            };
-
-            localStorage.setItem("user", JSON.stringify(testUser));
-            localStorage.setItem("accessToken", testUser.accessToken);
-            localStorage.setItem("refreshToken", testUser.refreshToken);
-
-            return Promise.resolve();
-        }
-        // ====== 테스트용 로그인 끝 ======
 
         try {
             const response = await requester(api.signin, {
@@ -131,6 +119,11 @@ export const authProvider: AuthProvider = {
             // 캐시 초기화
             lastCheckTime = 0;
             lastCheckResult = null;
+            
+            // 로그아웃 이벤트 발생 (AdminApp이 감지하여 로그인 페이지로 전환)
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('auth-logout'));
+            }
             
             console.log('Logout completed successfully');
             return Promise.resolve();
