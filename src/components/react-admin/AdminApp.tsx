@@ -1,6 +1,6 @@
 "use client"; // remove this line if you choose Pages Router
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import {
 	Resource,
 	ListGuesser,
@@ -32,7 +32,7 @@ import {
 import { dataProvider } from "./lib/dataProvider";
 import authProvider from "./lib/authProvider";
 import LoginPage from "./components/LoginPage";
-import { simpleGrayTheme } from "./config/theme";
+import { lightTheme, darkTheme, simpleGrayTheme } from "./config/theme";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import UserSessionList from "./components/guesser_______OLD/UserSessionList";
@@ -53,6 +53,19 @@ import SiteMenuGroupEdit from "./components/guesser_______OLD/SiteMenuGroupEdit"
 import SiteMenuGroupCreate from "./components/guesser_______OLD/SiteMenuGroupCreate";
 import PostList from "./components/guesser_______OLD/PostList";
 import PostEdit from "./components/guesser_______OLD/PostEdit";
+
+// 테마 컨텍스트 생성
+interface ThemeContextType {
+	darkMode: boolean;
+	toggleDarkMode: () => void;
+}
+
+export const ThemeContext = createContext<ThemeContextType>({
+	darkMode: false,
+	toggleDarkMode: () => {},
+});
+
+export const useThemeMode = () => useContext(ThemeContext);
 
 
 // 한글 메시지 커스터마이징
@@ -123,6 +136,26 @@ const AuthCheckLoader = () => (
 const AdminApp = () => {
 	// 초기값을 null로 설정하여 아무것도 렌더링하지 않음
 	const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | null>(null);
+	
+	// 다크모드 상태 관리 (localStorage에서 초기값 가져오기)
+	const [darkMode, setDarkMode] = useState(() => {
+		if (typeof window !== 'undefined') {
+			const saved = localStorage.getItem('darkMode');
+			return saved === 'true';
+		}
+		return false;
+	});
+
+	// 다크모드 토글 함수
+	const toggleDarkMode = () => {
+		setDarkMode(prev => {
+			const newValue = !prev;
+			if (typeof window !== 'undefined') {
+				localStorage.setItem('darkMode', String(newValue));
+			}
+			return newValue;
+		});
+	};
 
 	useEffect(() => {
 		// 클라이언트에서만 실행
@@ -164,22 +197,23 @@ const AdminApp = () => {
 
 	// 모든 경우에 BrowserRouter로 감싸서 일관성 유지
 	return (
-		<BrowserRouter>
-			{authState === 'unauthenticated' ? (
-				// 인증되지 않았으면 로그인 페이지
-				<LoginPage />
-			) : (
-				// 인증된 사용자는 Admin 앱
-				<Admin
-					requireAuth
-					dataProvider={dataProvider}
-					authProvider={authProvider}
-					i18nProvider={i18nProvider}
-					theme={simpleGrayTheme}
-					loginPage={LoginPage}
-					layout={Layout}
-					dashboard={Dashboard}
-				>
+		<ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+			<BrowserRouter>
+				{authState === 'unauthenticated' ? (
+					// 인증되지 않았으면 로그인 페이지
+					<LoginPage />
+				) : (
+					// 인증된 사용자는 Admin 앱
+					<Admin
+						requireAuth
+						dataProvider={dataProvider}
+						authProvider={authProvider}
+						i18nProvider={i18nProvider}
+						theme={darkMode ? darkTheme : lightTheme}
+						loginPage={LoginPage}
+						layout={Layout}
+						dashboard={Dashboard}
+					>
 
 			{/* <Resource name="privates/users" list={UserList} edit={EditGuesser} options={{ label: '사용자', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <People /> }} /> */}
 			{/* <Resource name="privates/users/user-sessions" list={UserSessionList} options={{ label: '세션', menuGroup: 'users', menuGroupLabel: '사용자 관리', icon: <ViewList /> }} /> */}
@@ -209,6 +243,7 @@ const AdminApp = () => {
 				</Admin>
 			)}
 		</BrowserRouter>
+		</ThemeContext.Provider>
 	);
 };
 

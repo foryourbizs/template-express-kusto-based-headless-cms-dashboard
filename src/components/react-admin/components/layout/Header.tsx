@@ -11,6 +11,7 @@ import {
 	Badge,
 	useTheme,
 	alpha,
+	Switch,
 } from '@mui/material';
 import {
 	Menu as MenuIcon,
@@ -19,9 +20,12 @@ import {
 	Logout,
 	Settings,
 	Refresh as RefreshIcon,
+	DarkMode,
+	LightMode,
 } from '@mui/icons-material';
 import { useLogout, useGetIdentity, useNotify } from 'react-admin';
 import { refreshTokens, getTokenTimeRemaining } from '../../lib/authProvider';
+import { useThemeMode } from '../../AdminApp';
 
 interface HeaderProps {
 	onMenuClick: () => void;
@@ -37,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 	const logout = useLogout();
 	const notify = useNotify();
 	const { data: identity } = useGetIdentity();
+	const { darkMode, toggleDarkMode } = useThemeMode();
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [tokenInfo, setTokenInfo] = React.useState(getTokenTimeRemaining());
 	const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -410,6 +415,34 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, isMobile }) => {
 							설정
 						</MenuItem> */}
 
+						
+						<MenuItem 
+							onClick={(e) => {
+								e.stopPropagation();
+								toggleDarkMode();
+							}}
+							sx={{
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'space-between',
+								minWidth: 200,
+							}}
+						>
+							<Box sx={{ display: 'flex', alignItems: 'center' }}>
+								{darkMode ? (
+									<DarkMode sx={{ mr: 1 }} />
+								) : (
+									<LightMode sx={{ mr: 1 }} />
+								)}
+								다크모드
+							</Box>
+							<Switch
+								checked={darkMode}
+								onChange={toggleDarkMode}
+								size="small"
+								onClick={(e) => e.stopPropagation()}
+							/>
+						</MenuItem>
 
 						
 						<MenuItem onClick={handleLogout}>
