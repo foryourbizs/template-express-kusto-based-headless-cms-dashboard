@@ -5,8 +5,8 @@ import {
 
 import { useDataProvider } from 'react-admin';
 
-
-import GridLayout, { Layout, Responsive, WidthProvider } from "react-grid-layout";
+import { LocalStorage } from '@/lib/utils'
+import { Layout, Responsive, WidthProvider } from "react-grid-layout";
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
@@ -102,6 +102,7 @@ export const Dashboard: FC = () => {
     const dataProvider = useDataProvider();
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(1200);
+    const [isLayoutReady, setIsLayoutReady] = useState(false);
     
     // 화면 크기에 따른 rowHeight 동적 계산
     const getRowHeight = (width: number) => {
@@ -193,20 +194,68 @@ export const Dashboard: FC = () => {
         return layouts;
     };
     
-    const [layouts, setLayouts] = useState(generateResponsiveLayouts());
+    // LocalStorage에서 저장된 레이아웃 불러오기 또는 기본 레이아웃 생성
+    const getInitialLayouts = (): { [key: string]: Layout[] } => {
+        const savedLayouts = LocalStorage.get<{ [key: string]: Layout[] }>('userLayoutPosData');
+        
+        if (savedLayouts) {
+            console.log('Loaded saved layout from LocalStorage');
+            return savedLayouts;
+        }
+        
+        console.log('Using default layout');
+        return generateResponsiveLayouts();
+    };
+    
+    const [layouts, setLayouts] = useState(getInitialLayouts());
+    
+    // 레이아웃 준비 완료 처리
+    useEffect(() => {
+        // 짧은 지연 후 레이아웃 표시 (초기 위치 계산 완료 후)
+        const timer = setTimeout(() => {
+            setIsLayoutReady(true);
+        }, 100);
+        
+        return () => clearTimeout(timer);
+    }, []);
 
     // 레이아웃 변경 핸들러
     const handleLayoutChange = (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
         setLayouts(allLayouts);
-        // TODO: 레이아웃을 localStorage나 백엔드에 저장
-        console.log('Layout changed:', allLayouts);
+        
+        // LocalStorage에 레이아웃 저장
+        LocalStorage.set('userLayoutPosData', allLayouts);
+        console.log('Layout saved to LocalStorage:', allLayouts);
+    };
+
+    // 레이아웃 초기화 함수
+    const resetLayout = () => {
+        const defaultLayouts = generateResponsiveLayouts();
+        setIsLayoutReady(false);
+        setLayouts(defaultLayouts);
+        LocalStorage.set('userLayoutPosData', defaultLayouts);
+        console.log('Layout reset to default');
+        
+        // 애니메이션을 위해 다시 활성화
+        setTimeout(() => {
+            setIsLayoutReady(true);
+        }, 50);
     };
 
     return (
         <div style={{ padding: '20px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }} ref={containerRef}>
-            <h1 style={{ marginBottom: '20px' }}>대시보드</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h1 style={{ margin: 0 }}>대시보드</h1>
+                <Button className={`bg-[${theme.palette.background}] text-[${theme.palette.text}]`} onClick={resetLayout} variant="outline">
+                    레이아웃 초기화
+                </Button>
+            </div>
             
-            <ResponsiveGridLayout
+            <div style={{ 
+                opacity: isLayoutReady ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out'
+            }}>
+                <ResponsiveGridLayout
                 className="layout"
                 layouts={layouts}
                 breakpoints={BREAKPOINTS}
@@ -222,7 +271,7 @@ export const Dashboard: FC = () => {
             >
                 {DASHBOARD_WIDGETS.map((widget, index) => (
                     <div key={`widget-${index}`}>
-                        <Card style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Card className={`bg-[${theme.palette.background}] text-[${theme.palette.text}]`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <div 
                                 className="drag-handle" 
                                 style={{ 
@@ -241,6 +290,7 @@ export const Dashboard: FC = () => {
                     </div>
                 ))}
             </ResponsiveGridLayout>
+            </div>
         </div>
     );
 };
