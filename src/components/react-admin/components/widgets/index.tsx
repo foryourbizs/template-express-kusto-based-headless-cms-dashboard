@@ -27,15 +27,15 @@ export interface DashboardWidget {
 export const DASHBOARD_WIDGETS: DashboardWidget[] = [
     {
         id: 'user-stats',
-        title: '사용자 통계',
+        title: '방문 합계',
         component: <UserStatsWidget />,
-        layout: { x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 5 },
+        layout: { x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
     },
     {
         id: 'visitor-chart',
         title: '방문자 통계 차트',
         component: <VisitorChartWidget />,
-        layout: { x: 3, y: 0, w: 6, h: 8, minW: 4, minH: 8 },
+        layout: { x: 3, y: 0, w: 6, h: 9, minW: 4, minH: 8 },
     },
     {
         id: 'system-status',

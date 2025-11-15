@@ -261,7 +261,7 @@ export const Dashboard: FC = () => {
                 >
                     {DASHBOARD_WIDGETS.map((widget, index) => (
                         <div key={`widget-${index}`} className='h-auto'>
-                            <Card className={`bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}]`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <Card className={`bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}] gap-1 p-0 px-2 pb-4`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <div
                                     className="drag-handle"
                                     style={{
@@ -273,7 +273,7 @@ export const Dashboard: FC = () => {
                                 >
                                     {widget.title}
                                 </div>
-                                <div style={{ padding: '10px', flex: 1, overflow: 'hidden' }}>
+                                <div style={{ padding: '10px', paddingBottom:0, flex: 1, overflow: 'hidden' }}>
                                     {widget.component}
                                 </div>
                             </Card>
