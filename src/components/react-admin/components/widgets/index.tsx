@@ -63,12 +63,4 @@ export const DASHBOARD_WIDGETS: DashboardWidget[] = [
     },
 ];
 
-// 개별 위젯 컴포넌트 export
-export {
-    UserStatsWidget,
-    VisitorChartWidget,
-    SystemStatusWidget,
-    RecentActivityWidget,
-    NotificationsWidget,
-    QuickActionsWidget,
-};
+

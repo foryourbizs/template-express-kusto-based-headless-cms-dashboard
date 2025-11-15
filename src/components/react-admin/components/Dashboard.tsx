@@ -42,6 +42,14 @@ export const Dashboard: FC = () => {
     const [containerWidth, setContainerWidth] = useState(1200);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
 
+    // 위젯 간 간격 (grid units) - 브레이크포인트별로 다르게 설정
+    const WIDGET_GAPS = {
+        lg: 0,
+        md: 0,
+        sm: 0,  // sm에서는 높이가 1.5배이므로 간격도 비례
+        xs: 0,  // xs 1열일 때는 간격 없이 붙임
+    };
+
     // 화면 크기에 따른 rowHeight 동적 계산
     const getRowHeight = (width: number) => {
         if (width < BREAKPOINTS.xs) return 20;
@@ -85,7 +93,7 @@ export const Dashboard: FC = () => {
     const generateResponsiveLayouts = () => {
         const layouts: { [key: string]: Layout[] } = {};
 
-        // lg (큰 화면) - 원본 레이아웃
+        // lg (큰 화면) - 원본 레이아웃 유지
         layouts.lg = DASHBOARD_WIDGETS.map((widget, index) => ({
             i: `widget-${index}`,
             x: widget.layout.x,
@@ -96,38 +104,81 @@ export const Dashboard: FC = () => {
             minH: widget.layout.minH || 3,
         }));
 
-        // md (중간 화면) - 너비 조정
-        layouts.md = DASHBOARD_WIDGETS.map((widget, index) => ({
-            i: `widget-${index}`,
-            x: widget.layout.x >= 6 ? 0 : widget.layout.x,
-            y: widget.layout.x >= 6 ? widget.layout.y + 10 : widget.layout.y,
-            w: Math.min(widget.layout.w, 10),
-            h: widget.layout.h,
-            minW: widget.layout.minW || 2,
-            minH: widget.layout.minH || 3,
-        }));
+        // md (중간 화면) - 2열 레이아웃으로 재배치
+        const mdLeftY: number[] = [0];
+        const mdRightY: number[] = [0];
+        
+        layouts.md = DASHBOARD_WIDGETS.map((widget, index) => {
+            const baseHeight = Math.max(widget.layout.h, widget.layout.minH || 3);
+            const heightForMd = baseHeight; // 원본 높이 유지
+            
+            // 원래 위치가 왼쪽(x < 6)이면 왼쪽, 오른쪽(x >= 6)이면 오른쪽 배치
+            const column = widget.layout.x >= 6 ? 1 : 0;
+            const columnYArray = column === 0 ? mdLeftY : mdRightY;
+            const currentY = columnYArray[columnYArray.length - 1];
+            
+            // 다음 위젯 Y = 현재 Y + 현재 높이 + 간격
+            const nextY = currentY + heightForMd + WIDGET_GAPS.md;
+            columnYArray.push(nextY);
+            
+            return {
+                i: `widget-${index}`,
+                x: column * 5,
+                y: currentY,
+                w: 5,
+                h: heightForMd,
+                minW: widget.layout.minW || 2,
+                minH: widget.layout.minH || 3,
+            };
+        });
 
         // sm (작은 화면) - 2열 레이아웃
-        layouts.sm = DASHBOARD_WIDGETS.map((widget, index) => ({
-            i: `widget-${index}`,
-            x: (index % 2) * 3,
-            y: Math.floor(index / 2) * (widget.layout.h + 1),
-            w: 3,
-            h: widget.layout.h,
-            minW: 2,
-            minH: widget.layout.minH || 3,
-        }));
+        const smLeftY: number[] = [0];
+        const smRightY: number[] = [0];
+        
+        layouts.sm = DASHBOARD_WIDGETS.map((widget, index) => {
+            const baseHeight = Math.max(widget.layout.h, widget.layout.minH || 3);
+            const heightForSm = Math.ceil(baseHeight * 1.5); // 1.5배 증가
+            const column = index % 2;
+            const columnYArray = column === 0 ? smLeftY : smRightY;
+            const currentY = columnYArray[columnYArray.length - 1];
+            
+            // 다음 위젯 Y = 현재 Y + 현재 높이 + 간격
+            const nextY = currentY + heightForSm + WIDGET_GAPS.sm;
+            columnYArray.push(nextY);
+            
+            return {
+                i: `widget-${index}`,
+                x: column * 3,
+                y: currentY,
+                w: 3,
+                h: heightForSm,
+                minW: 2,
+                minH: widget.layout.minH || 3,
+            };
+        });
 
         // xs (매우 작은 화면) - 1열 레이아웃
-        layouts.xs = DASHBOARD_WIDGETS.map((widget, index) => ({
-            i: `widget-${index}`,
-            x: 0,
-            y: index * (widget.layout.h + 1),
-            w: 4,
-            h: widget.layout.h,
-            minW: 2,
-            minH: widget.layout.minH || 3,
-        }));
+        let xsCumulativeY = 0;
+        layouts.xs = DASHBOARD_WIDGETS.map((widget, index) => {
+            const baseHeight = Math.max(widget.layout.h, widget.layout.minH || 3);
+            const heightForXs = Math.ceil(baseHeight * 2); // 2배 증가
+            const currentY = xsCumulativeY;
+            
+            const layout = {
+                i: `widget-${index}`,
+                x: 0,
+                y: currentY,
+                w: 4,
+                h: heightForXs,
+                minW: 2,
+                minH: widget.layout.minH || 3,
+            };
+            
+            // 다음 위젯 Y = 현재 Y + 현재 높이 + 간격
+            xsCumulativeY = currentY + heightForXs + WIDGET_GAPS.xs;
+            return layout;
+        });
 
         return layouts;
     };
@@ -204,8 +255,9 @@ export const Dashboard: FC = () => {
                     isResizable={true}
                     isDraggable={true}
                     compactType="vertical"
+                    preventCollision={false}
                     containerPadding={[0, 0]}
-                    margin={[10, 10]}
+                    margin={containerWidth < BREAKPOINTS.md ? [5, 5] : [10, 10]}
                 >
                     {DASHBOARD_WIDGETS.map((widget, index) => (
                         <div key={`widget-${index}`} className='h-auto'>

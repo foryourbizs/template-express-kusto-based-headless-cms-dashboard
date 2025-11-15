@@ -1,17 +1,24 @@
 import { FC } from 'react';
-import { Typography, Badge } from '@mui/material';
+import { Typography, Badge, useTheme } from '@mui/material';
 import { Notifications, ErrorOutline, InfoOutlined } from '@mui/icons-material';
 
 export const NotificationsWidget: FC = () => {
+    const theme = useTheme();
+    
     return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col" style={{ color: theme.palette.text.primary }}>
             <div className="flex items-center justify-end mb-2">
                 <Badge badgeContent={3} color="error">
                     <Notifications />
                 </Badge>
             </div>
             <div className="space-y-2 flex-1 overflow-auto">
-                <div className="flex items-start gap-2 p-2 rounded bg-red-50">
+                <div 
+                    className="flex items-start gap-2 p-2 rounded" 
+                    style={{ 
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(244, 67, 54, 0.1)' : '#ffebee'
+                    }}
+                >
                     <ErrorOutline color="error" fontSize="small" />
                     <div>
                         <Typography variant="body2" fontWeight="medium">
@@ -22,7 +29,12 @@ export const NotificationsWidget: FC = () => {
                         </Typography>
                     </div>
                 </div>
-                <div className="flex items-start gap-2 p-2 rounded bg-blue-50">
+                <div 
+                    className="flex items-start gap-2 p-2 rounded" 
+                    style={{ 
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.1)' : '#e3f2fd'
+                    }}
+                >
                     <InfoOutlined color="info" fontSize="small" />
                     <div>
                         <Typography variant="body2" fontWeight="medium">

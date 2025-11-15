@@ -1,10 +1,12 @@
 import { FC } from 'react';
-import { Typography } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 import { Group, PersonAdd, CheckCircle, TrendingUp } from '@mui/icons-material';
 
 export const UserStatsWidget: FC = () => {
+    const theme = useTheme();
+    
     return (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2" style={{ color: theme.palette.text.primary }}>
             <div className="flex items-center gap-2">
                 <Group color="primary" />
                 <div>

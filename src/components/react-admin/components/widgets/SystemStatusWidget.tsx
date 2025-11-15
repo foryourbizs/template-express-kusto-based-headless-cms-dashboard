@@ -1,10 +1,12 @@
 import { FC } from 'react';
-import { Typography, Chip } from '@mui/material';
+import { Typography, Chip, useTheme } from '@mui/material';
 import { CheckCircle, Warning, Error, Storage } from '@mui/icons-material';
 
 export const SystemStatusWidget: FC = () => {
+    const theme = useTheme();
+    
     return (
-        <div className="space-y-2">
+        <div className="space-y-2" style={{ color: theme.palette.text.primary }}>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <CheckCircle color="success" fontSize="small" />

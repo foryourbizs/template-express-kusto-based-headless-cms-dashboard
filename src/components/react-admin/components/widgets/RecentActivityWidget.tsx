@@ -1,9 +1,11 @@
 import { FC } from 'react';
-import { Typography, List, ListItem, ListItemText, Avatar } from '@mui/material';
+import { Typography, List, ListItem, ListItemText, Avatar, useTheme } from '@mui/material';
 
 export const RecentActivityWidget: FC = () => {
+    const theme = useTheme();
+    
     return (
-        <List dense>
+        <List dense style={{ color: theme.palette.text.primary }}>
             <ListItem>
                 <Avatar sx={{ width: 24, height: 24, mr: 1, bgcolor: 'primary.main' }}>
                     U
