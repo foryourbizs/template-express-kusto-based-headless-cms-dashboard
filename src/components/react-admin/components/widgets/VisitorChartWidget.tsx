@@ -112,6 +112,51 @@ export const VisitorChartWidget: FC = () => {
         pageViews: false,
     });
 
+    // 날짜 선택 state
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+    const [selectedDay, setSelectedDay] = useState<number>(new Date().getDate());
+
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentDay = currentDate.getDate();
+
+    // 사용 가능한 년도 목록 생성 (1900년부터 현재까지)
+    const availableYears = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => currentYear - i);
+
+    // 사용 가능한 월 목록 (선택된 년도가 현재 년도면 현재 월까지만)
+    const getAvailableMonths = () => {
+        if (selectedYear === currentYear) {
+            return Array.from({ length: currentMonth }, (_, i) => i + 1);
+        }
+        return Array.from({ length: 12 }, (_, i) => i + 1);
+    };
+
+    // 사용 가능한 일 목록 (선택된 년/월의 실제 일수만큼, 현재 년/월이면 현재 일까지만)
+    const getAvailableDays = () => {
+        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+        if (selectedYear === currentYear && selectedMonth === currentMonth) {
+            return Array.from({ length: currentDay }, (_, i) => i + 1);
+        }
+        return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    };
+
+    // 월이나 일이 범위를 벗어나면 조정
+    useEffect(() => {
+        const availableMonths = getAvailableMonths();
+        if (!availableMonths.includes(selectedMonth)) {
+            setSelectedMonth(Math.max(...availableMonths));
+        }
+    }, [selectedYear]);
+
+    useEffect(() => {
+        const availableDays = getAvailableDays();
+        if (!availableDays.includes(selectedDay)) {
+            setSelectedDay(Math.max(...availableDays));
+        }
+    }, [selectedYear, selectedMonth]);
+
     useEffect(() => {
         switch (period) {
             case 'yearly':
@@ -123,6 +168,7 @@ export const VisitorChartWidget: FC = () => {
                 })));
                 break;
             case 'monthly':
+                // 선택된 년도의 월별 데이터 필터링 (실제로는 API 호출)
                 setChartData(visitData.monthly.map(d => ({
                     name: d.monthName,
                     visitors: d.visitors,
@@ -131,6 +177,7 @@ export const VisitorChartWidget: FC = () => {
                 })));
                 break;
             case 'daily':
+                // 선택된 년/월의 일별 데이터 필터링 (실제로는 API 호출)
                 setChartData(visitData.daily.map(d => ({
                     name: `${d.date.split('-')[2]}일(${d.dayOfWeek})`,
                     visitors: d.visitors,
@@ -139,6 +186,7 @@ export const VisitorChartWidget: FC = () => {
                 })));
                 break;
             case 'hourly':
+                // 선택된 년/월/일의 시간별 데이터 필터링 (실제로는 API 호출)
                 setChartData(visitData.hourly.map(d => ({
                     name: `${d.hour}시`,
                     visitors: d.visitors,
@@ -147,7 +195,7 @@ export const VisitorChartWidget: FC = () => {
                 })));
                 break;
         }
-    }, [period]);
+    }, [period, selectedYear, selectedMonth, selectedDay]);
 
     const toggleLine = (key: LineKey) => {
         setHiddenLines(prev => ({
@@ -158,55 +206,176 @@ export const VisitorChartWidget: FC = () => {
 
     return (
         <div className="h-full w-full flex flex-col" style={{ maxHeight: '100%', overflow: 'hidden' }}>
-            <div className="flex gap-2 mb-2 flex-shrink-0">
-                <Button
-                    variant={period === 'yearly' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPeriod('yearly')}
-                    style={period === 'yearly' ? {} : {
-                        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
-                        color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
-                        borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
-                    }}
-                >
-                    년도별
-                </Button>
-                <Button
-                    variant={period === 'monthly' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPeriod('monthly')}
-                    style={period === 'monthly' ? {} : {
-                        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
-                        color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
-                        borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
-                    }}
-                >
-                    월별
-                </Button>
-                <Button
-                    variant={period === 'daily' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPeriod('daily')}
-                    style={period === 'daily' ? {} : {
-                        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
-                        color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
-                        borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
-                    }}
-                >
-                    일별
-                </Button>
-                <Button
-                    variant={period === 'hourly' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPeriod('hourly')}
-                    style={period === 'hourly' ? {} : {
-                        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
-                        color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
-                        borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
-                    }}
-                >
-                    시간별
-                </Button>
+            {/* 기간 선택 및 날짜 필터 */}
+            <div className="flex gap-3 mb-3 flex-shrink-0 items-center justify-between flex-wrap">
+                <div className="flex gap-2">
+                    <Button
+                        variant={period === 'yearly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPeriod('yearly')}
+                        style={period === 'yearly' ? {} : {
+                            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
+                            color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
+                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
+                        }}
+                    >
+                        년도별
+                    </Button>
+                    <Button
+                        variant={period === 'monthly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPeriod('monthly')}
+                        style={period === 'monthly' ? {} : {
+                            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
+                            color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
+                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
+                        }}
+                    >
+                        월별
+                    </Button>
+                    <Button
+                        variant={period === 'daily' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPeriod('daily')}
+                        style={period === 'daily' ? {} : {
+                            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
+                            color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
+                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
+                        }}
+                    >
+                        일별
+                    </Button>
+                    <Button
+                        variant={period === 'hourly' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPeriod('hourly')}
+                        style={period === 'hourly' ? {} : {
+                            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : undefined,
+                            color: theme.palette.mode === 'dark' ? theme.palette.grey[200] : undefined,
+                            borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[600] : undefined,
+                        }}
+                    >
+                        시간별
+                    </Button>
+                </div>
+
+                {/* 날짜 선택 필터 */}
+                <div className="flex gap-2 items-center">
+                    {period === 'monthly' && (
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
+                                backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ffffff',
+                                color: theme.palette.text.primary,
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            {availableYears.map(year => (
+                                <option key={year} value={year}>{year}년</option>
+                            ))}
+                        </select>
+                    )}
+                    
+                    {period === 'daily' && (
+                        <>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
+                                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ffffff',
+                                    color: theme.palette.text.primary,
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>{year}년</option>
+                                ))}
+                            </select>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
+                                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ffffff',
+                                    color: theme.palette.text.primary,
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {getAvailableMonths().map(month => (
+                                    <option key={month} value={month}>{month}월</option>
+                                ))}
+                            </select>
+                        </>
+                    )}
+                    
+                    {period === 'hourly' && (
+                        <>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
+                                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ffffff',
+                                    color: theme.palette.text.primary,
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {availableYears.map(year => (
+                                    <option key={year} value={year}>{year}년</option>
+                                ))}
+                            </select>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
+                                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ffffff',
+                                    color: theme.palette.text.primary,
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {getAvailableMonths().map(month => (
+                                    <option key={month} value={month}>{month}월</option>
+                                ))}
+                            </select>
+                            <select
+                                value={selectedDay}
+                                onChange={(e) => setSelectedDay(Number(e.target.value))}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[600] : theme.palette.grey[300]}`,
+                                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#ffffff',
+                                    color: theme.palette.text.primary,
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {getAvailableDays().map(day => (
+                                    <option key={day} value={day}>{day}일</option>
+                                ))}
+                            </select>
+                        </>
+                    )}
+                </div>
             </div>
             
             {/* 커스텀 범례 */}

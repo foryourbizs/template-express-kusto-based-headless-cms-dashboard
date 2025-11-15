@@ -13,6 +13,8 @@ widgets/
 ├── RecentActivityWidget.tsx    # 최근 활동
 ├── NotificationsWidget.tsx     # 알림
 └── QuickActionsWidget.tsx      # 퀵 액션
+... 등등 추가하여 사용
+
 ```
 
 ## 사용법
