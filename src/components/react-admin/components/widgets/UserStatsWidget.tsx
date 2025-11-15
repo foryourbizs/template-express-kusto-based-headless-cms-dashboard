@@ -1,31 +1,50 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Typography, useTheme, Box, Paper, Button } from '@mui/material';
 import { Group, TodayOutlined, CalendarMonthOutlined, CalendarTodayOutlined, ArrowForward } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useWidget } from './WidgetContext'
+import { useCountUp } from '../../hooks/useCountUp';
 
 export const UserStatsWidget: FC = () => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const widget = useWidget('user-stats');
+    const [refreshKey, setRefreshKey] = useState(0);
     
     // 기준일자
     const referenceDate = '2025년 6월 27일';
     
+    // 새로고침 완료 시 애니메이션 재시작
+    useEffect(() => {
+        if (!widget.isRefreshing && widget.state.lastRefreshed) {
+            setRefreshKey(prev => prev + 1);
+        }
+    }, [widget.isRefreshing, widget.state.lastRefreshed]);
+    
+    // 숫자 애니메이션 (refreshKey가 변경되면 재시작)
+    const totalUsers = useCountUp({ end: 45750982, duration: 2000, trigger: refreshKey });
+    const todayUsers = useCountUp({ end: 1234, duration: 1500, trigger: refreshKey });
+    const monthUsers = useCountUp({ end: 85432, duration: 1800, trigger: refreshKey });
+    const yearUsers = useCountUp({ end: 2145678, duration: 2000, trigger: refreshKey });
+
+    
+    
     const periodStats = [
         {
             label: '금일',
-            value: '1,234',
+            value: todayUsers,
             icon: <TodayOutlined />,
             color: theme.palette.info.main,
         },
         {
             label: '금월',
-            value: '85,432',
+            value: monthUsers,
             icon: <CalendarMonthOutlined />,
             color: theme.palette.success.main,
         },
         {
             label: '금년',
-            value: '2,145,678',
+            value: yearUsers,
             icon: <CalendarTodayOutlined />,
             color: theme.palette.warning.main,
         },
@@ -91,7 +110,7 @@ export const UserStatsWidget: FC = () => {
                                 fontSize: '1.5rem',
                             }}
                         >
-                            45,750,982
+                            {totalUsers}
                         </Typography>
                     </Box>
                 </Box>
