@@ -7,10 +7,10 @@ export const UsersShow = () => {
     <Show>
       <SimpleShowLayout>
         <TextField source="id" label="ID" />
-        <TextField source="attributes.username" label="사용자명" />
-        <EmailField source="attributes.email" label="이메일" />
-        <DateField source="attributes.createdAt" label="생성일" showTime />
-        <DateField source="attributes.updatedAt" label="수정일" showTime />
+        <TextField source="username" label="사용자명" />
+        <EmailField source="email" label="이메일" />
+        <DateField source="createdAt" label="생성일" showTime />
+        <DateField source="updatedAt" label="수정일" showTime />
       </SimpleShowLayout>
     </Show>
   );
