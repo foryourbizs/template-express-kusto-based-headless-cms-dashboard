@@ -231,7 +231,7 @@ const AdminApp = () => {
 
 
 			{/* 가상 Resource - 환경설정 페이지 (데이터 없음, 메뉴만 생성) */}
-			<Resource name="system.settings" options={{ label: '데이터 분석', menuGroup: 'system', menuGroupLabel: '시스템' }} />
+			{/* <Resource name="system.settings" options={{ label: '데이터 분석', menuGroup: 'system', menuGroupLabel: '시스템' }} /> */}
 
 			{/* <Resource name="system.analytics" list={AnalyticsPage} options={{ label: '데이터 분석', menuGroup: 'system', menuGroupLabel: '시스템', icon: <Analytics /> }} /> */}
 			{/* <Resource name="system.logs" list={SystemLogs} options={{ label: '시스템 로그', menuGroup: 'system', menuGroupLabel: '시스템', icon: <ViewList /> }} /> */}

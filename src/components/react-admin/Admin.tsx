@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 
 const AdminApp = dynamic(() => import("./AdminApp"), {
-  ssr: false,
+  ssr: true,
 });
 
 export default AdminApp;
