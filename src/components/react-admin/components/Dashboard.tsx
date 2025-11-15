@@ -9,7 +9,9 @@ import { LocalStorage } from '@/lib/utils'
 import { Layout, Responsive, WidthProvider } from "react-grid-layout";
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ChartContainer, ChartConfig, ChartTooltip, ChartLegend, ChartTooltipContent, ChartLegendContent } from "@/components/ui/chart"
 
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import "react-grid-layout/css/styles.css";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -43,6 +45,32 @@ const COLS = {
     xs: 4,
 };
 
+
+
+
+const chartData = [
+    { month: "January", desktop: 186, mobile: 80 },
+    { month: "February", desktop: 305, mobile: 200 },
+    { month: "March", desktop: 237, mobile: 120 },
+    { month: "April", desktop: 73, mobile: 190 },
+    { month: "May", desktop: 209, mobile: 130 },
+    { month: "June", desktop: 214, mobile: 140 },
+]
+
+const chartConfig = {
+    desktop: {
+        label: "Desktop",
+        color: "#2563eb",
+    },
+    mobile: {
+        label: "Mobile",
+        color: "#60a5fa",
+    },
+} satisfies ChartConfig
+
+
+
+
 // ⭐ 위젯 설정 (여기서 한 번에 관리!)
 const DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     {
@@ -55,9 +83,33 @@ const DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
             </div>
         ),
     },
+
+    {
+        title: '사용자 통계 차트',
+        x: 6, y: 0, w: 12, h: 8, minW: 6, minH: 8,
+        component: (
+            <ChartContainer config={chartConfig} className="h-[260px] w-full">
+                <BarChart accessibilityLayer data={chartData}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                        tickFormatter={(value) => value.slice(0, 3)}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                    <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+                </BarChart>
+            </ChartContainer>
+        ),
+    },
+
     {
         title: '시스템 상태',
-        x: 6, y: 0, w: 6, h: 8, minW: 3, minH: 4,
+        x: 0, y: 10, w: 6, h: 8, minW: 3, minH: 4,
         component: (
             <div>
                 <p>서버 상태: 정상</p>
@@ -67,7 +119,7 @@ const DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     },
     {
         title: '최근 활동',
-        x: 0, y: 8, w: 4, h: 6, minW: 2, minH: 4,
+        x: 6, y: 10, w: 4, h: 6, minW: 2, minH: 4,
         component: (
             <div>
                 <p>최근 로그인: 10분 전</p>
@@ -76,7 +128,7 @@ const DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     },
     {
         title: '알림',
-        x: 4, y: 8, w: 4, h: 6, minW: 2, minH: 4,
+        x: 0, y: 18, w: 4, h: 6, minW: 2, minH: 4,
         component: (
             <div>
                 <p>새 알림 3개</p>
@@ -85,7 +137,7 @@ const DASHBOARD_WIDGETS: DashboardWidgetConfig[] = [
     },
     {
         title: '퀵 액션',
-        x: 8, y: 8, w: 4, h: 6, minW: 2, minH: 4,
+        x: 4, y: 18, w: 4, h: 6, minW: 2, minH: 4,
         component: (
             <div>
                 <Button>새 사용자 추가</Button>
@@ -103,7 +155,7 @@ export const Dashboard: FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(1200);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
-    
+
     // 화면 크기에 따른 rowHeight 동적 계산
     const getRowHeight = (width: number) => {
         if (width < BREAKPOINTS.xs) return 20;
@@ -112,9 +164,9 @@ export const Dashboard: FC = () => {
         if (width < BREAKPOINTS.lg) return 35;
         return 40;
     };
-    
+
     const [rowHeight, setRowHeight] = useState(getRowHeight(1200));
-    
+
     // 컨테이너 너비 동적 측정
     useEffect(() => {
         const updateWidth = () => {
@@ -124,29 +176,29 @@ export const Dashboard: FC = () => {
                 setRowHeight(getRowHeight(width));
             }
         };
-        
+
         // ResizeObserver로 컨테이너 크기 변화 감지 (사이드바 토글 포함)
         const resizeObserver = new ResizeObserver(() => {
             updateWidth();
         });
-        
+
         if (containerRef.current) {
             resizeObserver.observe(containerRef.current);
         }
-        
+
         updateWidth();
         window.addEventListener('resize', updateWidth);
-        
+
         return () => {
             resizeObserver.disconnect();
             window.removeEventListener('resize', updateWidth);
         };
     }, []);
-    
+
     // 브레이크포인트별 레이아웃 생성
     const generateResponsiveLayouts = () => {
         const layouts: { [key: string]: Layout[] } = {};
-        
+
         // lg (큰 화면) - 원본 레이아웃
         layouts.lg = DASHBOARD_WIDGETS.map((widget, index) => ({
             i: `widget-${index}`,
@@ -157,7 +209,7 @@ export const Dashboard: FC = () => {
             minW: widget.minW || 2,
             minH: widget.minH || 3,
         }));
-        
+
         // md (중간 화면) - 너비 조정
         layouts.md = DASHBOARD_WIDGETS.map((widget, index) => ({
             i: `widget-${index}`,
@@ -168,7 +220,7 @@ export const Dashboard: FC = () => {
             minW: widget.minW || 2,
             minH: widget.minH || 3,
         }));
-        
+
         // sm (작은 화면) - 2열 레이아웃
         layouts.sm = DASHBOARD_WIDGETS.map((widget, index) => ({
             i: `widget-${index}`,
@@ -179,7 +231,7 @@ export const Dashboard: FC = () => {
             minW: 2,
             minH: widget.minH || 3,
         }));
-        
+
         // xs (매우 작은 화면) - 1열 레이아웃
         layouts.xs = DASHBOARD_WIDGETS.map((widget, index) => ({
             i: `widget-${index}`,
@@ -190,39 +242,39 @@ export const Dashboard: FC = () => {
             minW: 2,
             minH: widget.minH || 3,
         }));
-        
+
         return layouts;
     };
-    
+
     // LocalStorage에서 저장된 레이아웃 불러오기 또는 기본 레이아웃 생성
     const getInitialLayouts = (): { [key: string]: Layout[] } => {
         const savedLayouts = LocalStorage.get<{ [key: string]: Layout[] }>('userLayoutPosData');
-        
+
         if (savedLayouts) {
             console.log('Loaded saved layout from LocalStorage');
             return savedLayouts;
         }
-        
+
         console.log('Using default layout');
         return generateResponsiveLayouts();
     };
-    
+
     const [layouts, setLayouts] = useState(getInitialLayouts());
-    
+
     // 레이아웃 준비 완료 처리
     useEffect(() => {
         // 짧은 지연 후 레이아웃 표시 (초기 위치 계산 완료 후)
         const timer = setTimeout(() => {
             setIsLayoutReady(true);
         }, 100);
-        
+
         return () => clearTimeout(timer);
     }, []);
 
     // 레이아웃 변경 핸들러
     const handleLayoutChange = (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
         setLayouts(allLayouts);
-        
+
         // LocalStorage에 레이아웃 저장
         LocalStorage.set('userLayoutPosData', allLayouts);
         console.log('Layout saved to LocalStorage:', allLayouts);
@@ -235,7 +287,7 @@ export const Dashboard: FC = () => {
         setLayouts(defaultLayouts);
         LocalStorage.set('userLayoutPosData', defaultLayouts);
         console.log('Layout reset to default');
-        
+
         // 애니메이션을 위해 다시 활성화
         setTimeout(() => {
             setIsLayoutReady(true);
@@ -246,50 +298,50 @@ export const Dashboard: FC = () => {
         <div style={{ padding: '20px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }} ref={containerRef}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h1 style={{ margin: 0 }}>대시보드</h1>
-                <Button className={`bg-[${theme.palette.background}] text-[${theme.palette.text}]`} onClick={resetLayout} variant="outline">
+                <Button className={`cursor-pointer bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}]`} onClick={resetLayout} variant="outline">
                     레이아웃 초기화
                 </Button>
             </div>
-            
-            <div style={{ 
+
+            <div style={{
                 opacity: isLayoutReady ? 1 : 0,
                 transition: 'opacity 0.3s ease-in-out'
             }}>
                 <ResponsiveGridLayout
-                className="layout"
-                layouts={layouts}
-                breakpoints={BREAKPOINTS}
-                cols={COLS}
-                rowHeight={rowHeight}
-                onLayoutChange={handleLayoutChange}
-                draggableHandle=".drag-handle"
-                isResizable={true}
-                isDraggable={true}
-                compactType="vertical"
-                containerPadding={[0, 0]}
-                margin={[10, 10]}
-            >
-                {DASHBOARD_WIDGETS.map((widget, index) => (
-                    <div key={`widget-${index}`}>
-                        <Card className={`bg-[${theme.palette.background}] text-[${theme.palette.text}]`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <div 
-                                className="drag-handle" 
-                                style={{ 
-                                    cursor: 'move', 
-                                    padding: '10px', 
-                                    borderBottom: '1px solid #eee',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                {widget.title}
-                            </div>
-                            <div style={{ padding: '10px', flex: 1 }}>
-                                {widget.component}
-                            </div>
-                        </Card>
-                    </div>
-                ))}
-            </ResponsiveGridLayout>
+                    className="layout"
+                    layouts={layouts}
+                    breakpoints={BREAKPOINTS}
+                    cols={COLS}
+                    rowHeight={rowHeight}
+                    onLayoutChange={handleLayoutChange}
+                    draggableHandle=".drag-handle"
+                    isResizable={true}
+                    isDraggable={true}
+                    compactType="vertical"
+                    containerPadding={[0, 0]}
+                    margin={[10, 10]}
+                >
+                    {DASHBOARD_WIDGETS.map((widget, index) => (
+                        <div key={`widget-${index}`} className='h-auto'>
+                            <Card className={`bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}]`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <div
+                                    className="drag-handle"
+                                    style={{
+                                        cursor: 'move',
+                                        padding: '10px',
+                                        borderBottom: '1px solid #eee',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    {widget.title}
+                                </div>
+                                <div style={{ padding: '10px', flex: 1, overflow: 'hidden' }}>
+                                    {widget.component}
+                                </div>
+                            </Card>
+                        </div>
+                    ))}
+                </ResponsiveGridLayout>
             </div>
         </div>
     );

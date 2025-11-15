@@ -1,0 +1,514 @@
+{
+  "yearly": [
+    {
+      "year": 2021,
+      "visitors": 1245678,
+      "uniqueVisitors": 856234,
+      "pageViews": 3456789
+    },
+    {
+      "year": 2022,
+      "visitors": 1567890,
+      "uniqueVisitors": 1023456,
+      "pageViews": 4234567
+    },
+    {
+      "year": 2023,
+      "visitors": 1890234,
+      "uniqueVisitors": 1234567,
+      "pageViews": 5123456
+    },
+    {
+      "year": 2024,
+      "visitors": 2234567,
+      "uniqueVisitors": 1456789,
+      "pageViews": 6234567
+    },
+    {
+      "year": 2025,
+      "visitors": 2567890,
+      "uniqueVisitors": 1678901,
+      "pageViews": 7345678
+    }
+  ],
+  "monthly": [
+    {
+      "year": 2025,
+      "month": 1,
+      "monthName": "1월",
+      "visitors": 198456,
+      "uniqueVisitors": 134567,
+      "pageViews": 567890
+    },
+    {
+      "year": 2025,
+      "month": 2,
+      "monthName": "2월",
+      "visitors": 187234,
+      "uniqueVisitors": 128901,
+      "pageViews": 534567
+    },
+    {
+      "year": 2025,
+      "month": 3,
+      "monthName": "3월",
+      "visitors": 212345,
+      "uniqueVisitors": 145678,
+      "pageViews": 612345
+    },
+    {
+      "year": 2025,
+      "month": 4,
+      "monthName": "4월",
+      "visitors": 203456,
+      "uniqueVisitors": 139876,
+      "pageViews": 589012
+    },
+    {
+      "year": 2025,
+      "month": 5,
+      "monthName": "5월",
+      "visitors": 223567,
+      "uniqueVisitors": 152345,
+      "pageViews": 634567
+    },
+    {
+      "year": 2025,
+      "month": 6,
+      "monthName": "6월",
+      "visitors": 218901,
+      "uniqueVisitors": 149234,
+      "pageViews": 621890
+    },
+    {
+      "year": 2025,
+      "month": 7,
+      "monthName": "7월",
+      "visitors": 234567,
+      "uniqueVisitors": 159012,
+      "pageViews": 656789
+    },
+    {
+      "year": 2025,
+      "month": 8,
+      "monthName": "8월",
+      "visitors": 229012,
+      "uniqueVisitors": 155678,
+      "pageViews": 645123
+    },
+    {
+      "year": 2025,
+      "month": 9,
+      "monthName": "9월",
+      "visitors": 241234,
+      "uniqueVisitors": 163456,
+      "pageViews": 672345
+    },
+    {
+      "year": 2025,
+      "month": 10,
+      "monthName": "10월",
+      "visitors": 245678,
+      "uniqueVisitors": 166789,
+      "pageViews": 684567
+    },
+    {
+      "year": 2025,
+      "month": 11,
+      "monthName": "11월",
+      "visitors": 238901,
+      "uniqueVisitors": 162123,
+      "pageViews": 667890
+    },
+    {
+      "year": 2025,
+      "month": 12,
+      "monthName": "12월",
+      "visitors": 234567,
+      "uniqueVisitors": 159345,
+      "pageViews": 656234
+    }
+  ],
+  "daily": [
+    {
+      "date": "2025-11-01",
+      "dayOfWeek": "토",
+      "visitors": 7234,
+      "uniqueVisitors": 5123,
+      "pageViews": 21456
+    },
+    {
+      "date": "2025-11-02",
+      "dayOfWeek": "일",
+      "visitors": 8456,
+      "uniqueVisitors": 5890,
+      "pageViews": 24567
+    },
+    {
+      "date": "2025-11-03",
+      "dayOfWeek": "월",
+      "visitors": 9123,
+      "uniqueVisitors": 6234,
+      "pageViews": 26789
+    },
+    {
+      "date": "2025-11-04",
+      "dayOfWeek": "화",
+      "visitors": 8890,
+      "uniqueVisitors": 6012,
+      "pageViews": 25678
+    },
+    {
+      "date": "2025-11-05",
+      "dayOfWeek": "수",
+      "visitors": 9345,
+      "uniqueVisitors": 6456,
+      "pageViews": 27890
+    },
+    {
+      "date": "2025-11-06",
+      "dayOfWeek": "목",
+      "visitors": 9012,
+      "uniqueVisitors": 6234,
+      "pageViews": 26543
+    },
+    {
+      "date": "2025-11-07",
+      "dayOfWeek": "금",
+      "visitors": 9567,
+      "uniqueVisitors": 6678,
+      "pageViews": 28901
+    },
+    {
+      "date": "2025-11-08",
+      "dayOfWeek": "토",
+      "visitors": 7890,
+      "uniqueVisitors": 5456,
+      "pageViews": 22345
+    },
+    {
+      "date": "2025-11-09",
+      "dayOfWeek": "일",
+      "visitors": 8234,
+      "uniqueVisitors": 5678,
+      "pageViews": 23456
+    },
+    {
+      "date": "2025-11-10",
+      "dayOfWeek": "월",
+      "visitors": 9234,
+      "uniqueVisitors": 6345,
+      "pageViews": 27123
+    },
+    {
+      "date": "2025-11-11",
+      "dayOfWeek": "화",
+      "visitors": 9456,
+      "uniqueVisitors": 6512,
+      "pageViews": 28234
+    },
+    {
+      "date": "2025-11-12",
+      "dayOfWeek": "수",
+      "visitors": 9678,
+      "uniqueVisitors": 6689,
+      "pageViews": 29012
+    },
+    {
+      "date": "2025-11-13",
+      "dayOfWeek": "목",
+      "visitors": 9345,
+      "uniqueVisitors": 6456,
+      "pageViews": 27890
+    },
+    {
+      "date": "2025-11-14",
+      "dayOfWeek": "금",
+      "visitors": 9890,
+      "uniqueVisitors": 6890,
+      "pageViews": 29876
+    },
+    {
+      "date": "2025-11-15",
+      "dayOfWeek": "토",
+      "visitors": 8123,
+      "uniqueVisitors": 5601,
+      "pageViews": 23567
+    },
+    {
+      "date": "2025-11-16",
+      "dayOfWeek": "일",
+      "visitors": 8456,
+      "uniqueVisitors": 5823,
+      "pageViews": 24234
+    },
+    {
+      "date": "2025-11-17",
+      "dayOfWeek": "월",
+      "visitors": 9234,
+      "uniqueVisitors": 6378,
+      "pageViews": 27456
+    },
+    {
+      "date": "2025-11-18",
+      "dayOfWeek": "화",
+      "visitors": 9567,
+      "uniqueVisitors": 6612,
+      "pageViews": 28567
+    },
+    {
+      "date": "2025-11-19",
+      "dayOfWeek": "수",
+      "visitors": 9789,
+      "uniqueVisitors": 6789,
+      "pageViews": 29234
+    },
+    {
+      "date": "2025-11-20",
+      "dayOfWeek": "목",
+      "visitors": 9456,
+      "uniqueVisitors": 6534,
+      "pageViews": 28123
+    },
+    {
+      "date": "2025-11-21",
+      "dayOfWeek": "금",
+      "visitors": 9901,
+      "uniqueVisitors": 6923,
+      "pageViews": 30123
+    },
+    {
+      "date": "2025-11-22",
+      "dayOfWeek": "토",
+      "visitors": 8234,
+      "uniqueVisitors": 5712,
+      "pageViews": 24012
+    },
+    {
+      "date": "2025-11-23",
+      "dayOfWeek": "일",
+      "visitors": 8567,
+      "uniqueVisitors": 5934,
+      "pageViews": 24890
+    },
+    {
+      "date": "2025-11-24",
+      "dayOfWeek": "월",
+      "visitors": 9345,
+      "uniqueVisitors": 6423,
+      "pageViews": 27678
+    },
+    {
+      "date": "2025-11-25",
+      "dayOfWeek": "화",
+      "visitors": 9678,
+      "uniqueVisitors": 6701,
+      "pageViews": 28901
+    },
+    {
+      "date": "2025-11-26",
+      "dayOfWeek": "수",
+      "visitors": 9890,
+      "uniqueVisitors": 6845,
+      "pageViews": 29567
+    },
+    {
+      "date": "2025-11-27",
+      "dayOfWeek": "목",
+      "visitors": 9567,
+      "uniqueVisitors": 6612,
+      "pageViews": 28456
+    },
+    {
+      "date": "2025-11-28",
+      "dayOfWeek": "금",
+      "visitors": 10012,
+      "uniqueVisitors": 7001,
+      "pageViews": 30678
+    },
+    {
+      "date": "2025-11-29",
+      "dayOfWeek": "토",
+      "visitors": 8456,
+      "uniqueVisitors": 5878,
+      "pageViews": 24567
+    },
+    {
+      "date": "2025-11-30",
+      "dayOfWeek": "일",
+      "visitors": 8789,
+      "uniqueVisitors": 6089,
+      "pageViews": 25345
+    }
+  ],
+  "hourly": [
+    {
+      "date": "2025-11-15",
+      "hour": 0,
+      "visitors": 234,
+      "uniqueVisitors": 178,
+      "pageViews": 567
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 1,
+      "visitors": 189,
+      "uniqueVisitors": 145,
+      "pageViews": 423
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 2,
+      "visitors": 156,
+      "uniqueVisitors": 123,
+      "pageViews": 367
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 3,
+      "visitors": 134,
+      "uniqueVisitors": 108,
+      "pageViews": 312
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 4,
+      "visitors": 123,
+      "uniqueVisitors": 99,
+      "pageViews": 289
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 5,
+      "visitors": 145,
+      "uniqueVisitors": 117,
+      "pageViews": 334
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 6,
+      "visitors": 234,
+      "uniqueVisitors": 189,
+      "pageViews": 556
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 7,
+      "visitors": 367,
+      "uniqueVisitors": 289,
+      "pageViews": 823
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 8,
+      "visitors": 456,
+      "uniqueVisitors": 356,
+      "pageViews": 1034
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 9,
+      "visitors": 567,
+      "uniqueVisitors": 445,
+      "pageViews": 1289
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 10,
+      "visitors": 623,
+      "uniqueVisitors": 489,
+      "pageViews": 1423
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 11,
+      "visitors": 678,
+      "uniqueVisitors": 523,
+      "pageViews": 1567
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 12,
+      "visitors": 589,
+      "uniqueVisitors": 467,
+      "pageViews": 1345
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 13,
+      "visitors": 612,
+      "uniqueVisitors": 478,
+      "pageViews": 1401
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 14,
+      "visitors": 645,
+      "uniqueVisitors": 501,
+      "pageViews": 1489
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 15,
+      "visitors": 701,
+      "uniqueVisitors": 545,
+      "pageViews": 1612
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 16,
+      "visitors": 678,
+      "uniqueVisitors": 534,
+      "pageViews": 1567
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 17,
+      "visitors": 634,
+      "uniqueVisitors": 501,
+      "pageViews": 1456
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 18,
+      "visitors": 567,
+      "uniqueVisitors": 445,
+      "pageViews": 1289
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 19,
+      "visitors": 501,
+      "uniqueVisitors": 389,
+      "pageViews": 1123
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 20,
+      "visitors": 456,
+      "uniqueVisitors": 356,
+      "pageViews": 1034
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 21,
+      "visitors": 401,
+      "uniqueVisitors": 312,
+      "pageViews": 901
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 22,
+      "visitors": 345,
+      "uniqueVisitors": 267,
+      "pageViews": 778
+    },
+    {
+      "date": "2025-11-15",
+      "hour": 23,
+      "visitors": 289,
+      "uniqueVisitors": 223,
+      "pageViews": 645
+    }
+  ]
+}
