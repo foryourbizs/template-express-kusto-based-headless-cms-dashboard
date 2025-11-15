@@ -10,6 +10,7 @@ import { ReauthModal } from './ReauthModal';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useAuthMonitor } from '../hooks/useAuthMonitor';
 import { useLoadingState } from '../hooks/useLoadingState';
+import { useThemeMode } from '../AdminApp';
 
 /**
  * 커스텀 레이아웃 컴포넌트
@@ -18,6 +19,7 @@ import { useLoadingState } from '../hooks/useLoadingState';
 const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const { sidebarOpen, toggleSidebar } = useLayout();
   const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'));
+  const { darkMode } = useThemeMode();
   
   // React Admin 훅들
   const authProvider = useAuthProvider();
@@ -41,7 +43,9 @@ const LayoutContent: React.FC<{ children?: React.ReactNode }> = ({ children }) =
       flexDirection: 'column', // 세로 레이아웃으로 변경
       minHeight: '100vh',
       width: '100%',
-      overflow: 'auto' 
+      overflow: 'auto',
+      bgcolor: darkMode ? '#1a1a1a' : '#f5f5f5',
+      transition: 'background-color 0.3s ease',
     }}>
       <CssBaseline />
       

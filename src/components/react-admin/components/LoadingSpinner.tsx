@@ -7,17 +7,12 @@ import {
   useTheme,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useThemeMode } from '../AdminApp';
 
 interface LoadingSpinnerProps {
   open: boolean;
   message?: string;
 }
-
-const StyledBackdrop = styled(Backdrop)(({ theme }) => ({
-  zIndex: theme.zIndex.modal + 1,
-  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-  backdropFilter: 'blur(2px)',
-}));
 
 const LoadingContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -34,9 +29,20 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message = '로딩 중...' 
 }) => {
   const theme = useTheme();
+  const { darkMode } = useThemeMode();
 
   return (
-    <StyledBackdrop open={open}>
+    <Backdrop 
+      open={open}
+      sx={{
+        zIndex: theme.zIndex.modal + 1,
+        backgroundColor: darkMode 
+          ? 'rgba(0, 0, 0, 0.2)' 
+          : 'rgba(255, 255, 255, 0.2)',
+        backdropFilter: 'blur(8px)',
+        transition: 'background-color 0.3s ease',
+      }}
+    >
       <LoadingContainer>
         <CircularProgress
           size={48}
@@ -55,6 +61,6 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           {message}
         </Typography>
       </LoadingContainer>
-    </StyledBackdrop>
+    </Backdrop>
   );
 };

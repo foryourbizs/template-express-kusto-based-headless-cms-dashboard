@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Toolbar, Container, useTheme } from '@mui/material';
 import { Notification } from 'react-admin';
 import { MainErrorProvider } from '../common/MainErrorProvider';
+import { useThemeMode } from '../../AdminApp';
 
 interface MainProps {
   sidebarOpen: boolean;
@@ -15,6 +16,7 @@ interface MainProps {
  */
 export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) => {
   const theme = useTheme();
+  const { darkMode } = useThemeMode();
 
   return (
     <MainErrorProvider>
@@ -23,11 +25,11 @@ export const Main: React.FC<MainProps> = ({ sidebarOpen, isMobile, children }) =
         sx={{
           flexGrow: 1,
           width: '100%',
-          transition: theme.transitions.create(['margin'], {
+          transition: theme.transitions.create(['margin', 'background-color'], {
             easing: theme.transitions.easing.easeInOut,
             duration: theme.transitions.duration.standard,
           }),
-          backgroundColor: theme.palette.background.default,
+          backgroundColor: darkMode ? '#121212' : theme.palette.background.default,
           display: 'flex',
           flexDirection: 'column',
           overflow: 'auto', // 내부 스크롤 허용

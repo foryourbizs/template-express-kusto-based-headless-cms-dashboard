@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Link, useTheme } from '@mui/material';
+import { useThemeMode } from '../../AdminApp';
 
 /**
  * 푸터 컴포넌트
@@ -8,6 +9,7 @@ import { Box, Typography, Link, useTheme } from '@mui/material';
  */
 export const Footer: React.FC = () => {
   const theme = useTheme();
+  const { darkMode } = useThemeMode();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -15,11 +17,12 @@ export const Footer: React.FC = () => {
       component="footer"
       sx={{
         mt: 'auto', // flexbox로 하단에 자동 배치
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: darkMode ? '#1e1e1e' : theme.palette.background.paper,
         borderTop: `1px solid ${theme.palette.divider}`,
         py: { xs: 1.5, sm: 1 }, // 모바일에서 더 큰 패딩
         px: { xs: 1, sm: 2 },
         flexShrink: 0, // 축소되지 않도록 설정
+        transition: 'background-color 0.3s ease',
       }}
     >
       <Box

@@ -20,6 +20,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useResourceDefinitions, useRedirect } from 'react-admin';
 import { DRAWER_WIDTH } from '../../constants/layout';
 import { useLoadingState } from '../../hooks/useLoadingState';
+import { useThemeMode } from '../../AdminApp';
 
 interface SidebarProps {
   open: boolean;
@@ -52,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   const resourceDefinitions = useResourceDefinitions();
   const redirect = useRedirect();
   const { startNavigation, endNavigation } = useLoadingState();
+  const { darkMode } = useThemeMode();
 
   // 리소스를 메뉴 그룹별로 정리
   const organizeMenuItems = (): { ungrouped: MenuItem[]; groups: MenuGroup[] } => {
@@ -233,7 +235,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
   );
 
   const drawerContent = (
-    <Box sx={{ overflow: 'auto', height: '100%' }}>
+    <Box sx={{ 
+      overflow: 'auto', 
+      height: '100%',
+      bgcolor: darkMode ? '#1e1e1e' : theme.palette.background.paper,
+      transition: 'background-color 0.3s ease',
+    }}>
       {/* 로고/타이틀 영역 */}
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
@@ -306,8 +313,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
-              backgroundColor: theme.palette.background.paper,
+              backgroundColor: darkMode ? '#1e1e1e' : theme.palette.background.paper,
               borderRight: `1px solid ${theme.palette.divider}`,
+              transition: 'background-color 0.3s ease',
             },
           }}
         >
@@ -322,9 +330,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => 
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: DRAWER_WIDTH,
-              backgroundColor: theme.palette.background.paper,
+              backgroundColor: darkMode ? '#1e1e1e' : theme.palette.background.paper,
               borderRight: `1px solid ${theme.palette.divider}`,
-              transition: theme.transitions.create(['transform', 'width'], {
+              transition: theme.transitions.create(['transform', 'width', 'background-color'], {
                 easing: theme.transitions.easing.easeInOut,
                 duration: theme.transitions.duration.standard,
               }),
