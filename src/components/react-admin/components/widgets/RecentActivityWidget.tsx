@@ -4,7 +4,7 @@ import { ArrowForward } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import { useWidget } from './WidgetContext';
 interface Activity {
     id: number;
     type: string;
@@ -15,6 +15,7 @@ interface Activity {
 export const RecentActivityWidget: FC = () => {
     const theme = useTheme();
     const navigate = useNavigate();
+    const widget = useWidget('recent-activity');
     
     // 최근 활동 데이터 (최근 20개)
     const recentActivities: Activity[] = [
@@ -75,6 +76,9 @@ export const RecentActivityWidget: FC = () => {
                             {recentActivities.map((activity) => (
                                 <TableRow 
                                     key={activity.id}
+                                    onClick={() => {
+                                        widget.refresh();
+                                    }}
                                     style={{ 
                                         borderBottomColor: theme.palette.divider,
                                     }}

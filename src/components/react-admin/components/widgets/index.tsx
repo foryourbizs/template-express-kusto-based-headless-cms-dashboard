@@ -11,6 +11,7 @@ export interface DashboardWidget {
     id: string;
     title: string;
     component: ReactElement;
+    showRefresh?: boolean;
     layout: {
         x: number;
         y: number;
@@ -29,38 +30,47 @@ export const DASHBOARD_WIDGETS: DashboardWidget[] = [
         id: 'user-stats',
         title: '방문 합계',
         component: <UserStatsWidget />,
+        showRefresh: true,
         layout: { x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
     },
     {
         id: 'visitor-chart',
         title: '방문자 통계 차트',
         component: <VisitorChartWidget />,
+        showRefresh: true,
         layout: { x: 3, y: 0, w: 6, h: 9, minW: 4, minH: 8 },
     },
     {
         id: 'system-status',
         title: '시스템 상태',
         component: <SystemStatusWidget />,
+        showRefresh: true,
         layout: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 5 },
     },
     {
         id: 'recent-activity',
         title: '최근 활동',
         component: <RecentActivityWidget />,
+        showRefresh: true,
         layout: { x: 0, y: 3, w: 3, h: 8, minW: 2, minH: 7 },
     },
     {
         id: 'notifications',
         title: '알림',
         component: <NotificationsWidget />,
+        showRefresh: true,
         layout: { x: 9, y: 3, w: 3, h: 8, minW: 2, minH: 8 },
     },
     {
         id: 'quick-actions',
         title: '퀵 액션',
         component: <QuickActionsWidget />,
+        showRefresh: false,
         layout: { x: 3, y: 6, w: 6, h: 7, minW: 3, minH: 7 },
     },
 ];
 
-
+export { WidgetProvider } from './WidgetContext';
+export { WidgetWrapper } from './WidgetWrapper';
+export { WidgetHeader } from './WidgetHeader';
+export { WidgetContent } from './WidgetContent';

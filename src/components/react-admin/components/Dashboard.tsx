@@ -1,7 +1,10 @@
 import { FC, useState, ReactNode, useRef, useEffect } from 'react';
 import {
     useTheme,
+    IconButton,
+    CircularProgress,
 } from '@mui/material';
+import { Refresh } from '@mui/icons-material';
 
 import { useDataProvider } from 'react-admin';
 
@@ -12,7 +15,8 @@ import { Card } from "@/components/ui/card"
 import "react-grid-layout/css/styles.css";
 
 // 모듈화된 위젯 설정 임포트
-import { DASHBOARD_WIDGETS } from './widgets';
+import { DASHBOARD_WIDGETS, WidgetProvider, WidgetHeader, WidgetContent } from './widgets';
+import { useWidget } from './widgets/WidgetContext';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -232,56 +236,54 @@ export const Dashboard: FC = () => {
     };
 
     return (
-        <div style={{ padding: '20px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }} ref={containerRef}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h1 style={{ margin: 0 }}>대시보드</h1>
-                <Button className={`cursor-pointer bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}]`} onClick={resetLayout} variant="outline">
-                    레이아웃 초기화
-                </Button>
-            </div>
+        <WidgetProvider>
+            <div style={{ padding: '20px', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }} ref={containerRef}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h1 style={{ margin: 0 }}>대시보드</h1>
+                    <Button className={`cursor-pointer bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}]`} onClick={resetLayout} variant="outline">
+                        레이아웃 초기화
+                    </Button>
+                </div>
 
-            <div style={{
-                opacity: isLayoutReady ? 1 : 0,
-                transition: 'opacity 0.3s ease-in-out'
-            }}>
-                <ResponsiveGridLayout
-                    className="layout"
-                    layouts={layouts}
-                    breakpoints={BREAKPOINTS}
-                    cols={COLS}
-                    rowHeight={rowHeight}
-                    onLayoutChange={handleLayoutChange}
-                    draggableHandle=".drag-handle"
-                    isResizable={true}
-                    isDraggable={true}
-                    compactType="vertical"
-                    preventCollision={false}
-                    containerPadding={[0, 0]}
-                    margin={containerWidth < BREAKPOINTS.md ? [5, 5] : [10, 10]}
-                >
-                    {DASHBOARD_WIDGETS.map((widget, index) => (
-                        <div key={`widget-${index}`} className='h-auto'>
-                            <Card className={`bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}] gap-1 p-0 px-2 pb-4`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <div
-                                    className="drag-handle"
-                                    style={{
-                                        cursor: 'move',
-                                        padding: '10px',
-                                        borderBottom: '1px solid #eee',
-                                        fontWeight: 'bold'
-                                    }}
-                                >
-                                    {widget.title}
-                                </div>
-                                <div style={{ padding: '10px', paddingBottom:0, flex: 1, overflow: 'hidden' }}>
-                                    {widget.component}
-                                </div>
-                            </Card>
-                        </div>
-                    ))}
-                </ResponsiveGridLayout>
+                <div style={{
+                    opacity: isLayoutReady ? 1 : 0,
+                    transition: 'opacity 0.3s ease-in-out'
+                }}>
+                    <ResponsiveGridLayout
+                        className="layout"
+                        layouts={layouts}
+                        breakpoints={BREAKPOINTS}
+                        cols={COLS}
+                        rowHeight={rowHeight}
+                        onLayoutChange={handleLayoutChange}
+                        draggableHandle=".drag-handle"
+                        isResizable={true}
+                        isDraggable={true}
+                        compactType="vertical"
+                        preventCollision={false}
+                        containerPadding={[0, 0]}
+                        margin={containerWidth < BREAKPOINTS.md ? [5, 5] : [10, 10]}
+                    >
+                        {DASHBOARD_WIDGETS.map((widget, index) => (
+                            <div key={`widget-${index}`} className='h-auto'>
+                                <Card className={`bg-[${theme.palette.background.default}] text-[${theme.palette.text.primary}] gap-1 p-0 px-2 pb-4`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                    <WidgetHeader 
+                                        widgetId={widget.id}
+                                        title={widget.title}
+                                        showRefresh={widget.showRefresh}
+                                    />
+                                    <div style={{ padding: '10px', paddingBottom:0, flex: 1, overflow: 'hidden' }}>
+                                        <WidgetContent widgetId={widget.id}>
+                                            {widget.component}
+                                        </WidgetContent>
+                                    </div>
+                                </Card>
+                            </div>
+                        ))}
+                    </ResponsiveGridLayout>
+                </div>
             </div>
-        </div>
+        </WidgetProvider>
     );
 };
 
