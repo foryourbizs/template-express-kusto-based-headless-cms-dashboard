@@ -1,7 +1,7 @@
 const convertDatum = (datum: any) => {
   return {
     id: datum.id,
-    // type: datum.type, // JSON API의 type 필드는 React Admin에서 불필요하므로 제외
+    type: datum.type, // 추가!
     ...datum.attributes,
   };
 };
@@ -26,19 +26,23 @@ const includeConvertedDatum = (
   for (const key in relationships) {
     const relationData = relationships[key].data;
     if (Array.isArray(relationData)) {
-      includedDatum.relationships[key] = relationData
+      const relatedItems = relationData
         .map((relation) => {
           return includedHash.get(relation.type + relation.id);
         })
         .filter((relation) => {
           return relation;
         });
+      includedDatum.relationships[key] = relatedItems;
+      // 배열은 relationships 안에만 저장
     } else if (relationData) {
-      includedDatum.relationships[key] =
-        includedHash.get(relationData.type + relationData.id) ?? null;
+      const relatedItem = includedHash.get(relationData.type + relationData.id) ?? null;
+      includedDatum.relationships[key] = relatedItem;
+      // 단일 관계는 최상위에도 저장
+      includedDatum[key] = relatedItem;
     } else if (relationData === null) {
-      // include 했지만 relation 이 없는 경우
       includedDatum.relationships[key] = null;
+      includedDatum[key] = null;
     }
   }
   return includedDatum;

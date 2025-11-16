@@ -45,7 +45,7 @@ const SessionStatusField = () => {
 const IpAddressField = () => {
 	const record = useRecordContext();
 	const theme = useTheme();
-	
+
 	console.log(record.ipAddress)
 
 	if (!record || !record?.ipAddress) return <Typography variant="body2">-</Typography>;
@@ -212,10 +212,46 @@ const sessionColumns = [
 		key="id"
 		sx={{ fontFamily: 'monospace', fontSize: '13px' }}
 	/>,
-	<TextField
-		source="user.id"
-		label="사용자 ID"
+	<FunctionField
+		label="사용자명"
 		key="userId"
+		render={record => {
+			const username = record.user?.username || '-';
+			const userId = record.user?.id || '-';
+			const userUuid = record.userUuid || '-';
+			return (
+				<Box
+					sx={{
+						fontFamily: 'monospace',
+						fontSize: '13px',
+						cursor: 'pointer',
+						padding: '4px 8px',
+						borderRadius: '4px',
+						display: 'inline-block',
+						backgroundColor: 'rgba(173,137,146,0.08)',
+						color: '#AD8992',
+						transition: 'all 0.2s ease',
+						'&:hover': {
+							backgroundColor: 'rgba(173,137,146,0.15)',
+							transform: 'translateY(-1px)',
+							boxShadow: '0 2px 8px rgba(173,137,146,0.2)',
+						},
+					}}
+				>
+					<Typography
+						variant="body2"
+						title={username}
+						sx={{ fontWeight: 700 }}
+					>
+						{username}
+						<div><b>ID:</b> {userId}</div>
+						<div><b>UUID:</b> {userUuid}</div>
+					</Typography>
+
+
+				</Box>
+			);
+		}}
 	/>,
 	<FunctionField
 		label="IP 주소"
