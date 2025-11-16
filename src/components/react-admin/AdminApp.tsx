@@ -237,12 +237,12 @@ const AdminApp = () => {
 						{/* 통계 관리 */}
 						<Resource
 							name="privates/analytics/logs"
-							list={ObjectStoragesList}
+							list={AnalyticsLogsList}
 							options={{ label: '통계 데이터', menuGroup: 'analytics', menuGroupLabel: '통계', icon: <Storage /> }}
 						/>
 						<Resource
 							name="privates/analytics/visitors"
-							list={FilesList}
+							list={AnalyticsVisitorList}
 							options={{ label: '고유 방문자', menuGroup: 'analytics', menuGroupLabel: '통계', icon: <Storage /> }}
 						/>
 
