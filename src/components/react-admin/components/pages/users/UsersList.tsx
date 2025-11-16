@@ -10,8 +10,15 @@ import {
   FunctionField,
   ChipField,
   useRecordContext,
+  TextInput,
+  SelectInput,
+  BooleanInput,
+  DateInput,
+  NullableBooleanInput,
+  FilterList,
+  FilterListItem,
 } from 'react-admin';
-import { Chip } from '@mui/material';
+import { Chip, Box } from '@mui/material';
 
 const StatusField = () => {
   const record = useRecordContext();
@@ -40,14 +47,120 @@ const StatusField = () => {
   );
 };
 
+const userFilters = [
+  <SelectInput
+    key="status"
+    source="status"
+    label="계정 상태"
+    choices={[
+      { id: 'active', name: '활성' },
+      { id: 'inactive', name: '비활성' },
+      { id: 'unverified', name: '미인증' },
+      { id: 'suspended', name: '정지됨' },
+    ]}
+    alwaysOn
+    sx={{ minWidth: 150 }}
+  />,
+  <TextInput 
+    key="search" 
+    source="q" 
+    label="검색"  
+    placeholder="사용자명 또는 이메일"
+    sx={{ minWidth: 200 }}
+  />,
+
+  <TextInput 
+    key="username" 
+    source="username" 
+    label="사용자명"
+    sx={{ minWidth: 150 }}
+  />,
+  <TextInput 
+    key="email" 
+    source="email" 
+    label="이메일"
+    sx={{ minWidth: 200 }}
+  />,
+  <NullableBooleanInput
+    key="isActive"
+    source="isActive"
+    label="활성화"
+    sx={{ minWidth: 120 }}
+  />,
+  <NullableBooleanInput
+    key="isVerified"
+    source="isVerified"
+    label="이메일 인증"
+    sx={{ minWidth: 120 }}
+  />,
+  <NullableBooleanInput
+    key="isSuspended"
+    source="isSuspended"
+    label="정지 상태"
+    sx={{ minWidth: 120 }}
+  />,
+  <NullableBooleanInput
+    key="twoFactorEnabled"
+    source="twoFactorEnabled"
+    label="2FA 활성화"
+    sx={{ minWidth: 120 }}
+  />,
+  <DateInput
+    key="createdAtStart"
+    source="createdAt_gte"
+    label="생성일 (시작)"
+    sx={{ minWidth: 150 }}
+  />,
+  <DateInput
+    key="createdAtEnd"
+    source="createdAt_lte"
+    label="생성일 (종료)"
+    sx={{ minWidth: 150 }}
+  />,
+  <DateInput
+    key="lastLoginStart"
+    source="lastLoginAt_gte"
+    label="최근 로그인 (시작)"
+    sx={{ minWidth: 150 }}
+  />,
+  <DateInput
+    key="lastLoginEnd"
+    source="lastLoginAt_lte"
+    label="최근 로그인 (종료)"
+    sx={{ minWidth: 150 }}
+  />,
+];
+
 export const UsersList = () => {
   return (
     <List 
       sort={{ field: 'createdAt', order: 'DESC' }}
       perPage={25}
-      filters={[
-        // 추후 필터 추가 가능
-      ]}
+      filters={userFilters}
+      filterDefaultValues={{ status: 'active' }}
+      sx={{
+        '& .RaList-actions': {
+          alignItems: 'center',
+        },
+        '& .RaFilterForm-root': {
+          alignItems: 'center',
+        },
+        '& .MuiFormControl-root': {
+          marginTop: 0,
+          marginBottom: 0,
+        },
+        '& .ra-input': {
+            borderRadius: 0,
+        },
+        '& .RaFilterFormInput-hideButton': {
+            marginBottom: '0px',
+            borderRadius: 1,
+            border: '1px solid #ffffff',
+            opacity: 0.5,
+            padding: '6px',
+            marginLeft: '4px',
+        }
+      }}
     >
       <Datagrid 
         rowClick="show"
@@ -59,6 +172,7 @@ export const UsersList = () => {
           },
         }}
       >
+
         <TextField source="id" label="ID" />
         <TextField source="username" label="사용자명" />
         <EmailField source="email" label="이메일" />
@@ -77,6 +191,7 @@ export const UsersList = () => {
         <BooleanField source="twoFactorEnabled" label="2FA" />
         <DateField source="lastLoginAt" label="최근 로그인" showTime />
         <DateField source="createdAt" label="생성일" showTime />
+        
       </Datagrid>
     </List>
   );
