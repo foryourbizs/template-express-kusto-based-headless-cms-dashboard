@@ -267,39 +267,148 @@ export const GenericList = ({
   const defaultListSx: SxProps<Theme> = {
     '& .RaList-actions': {
       alignItems: 'start',
+      mb: 1.5,
     },
     '& .RaFilterForm-root': {
-      // display: 'flex',
-      alignItems: filterLayout === 'horizontal' ? 'center' : 'flex-start',
-      flexDirection: filterLayout === 'horizontal' ? 'column' : 'column',
-      flexWrap: filterLayout === 'horizontal' ? 'wrap' : 'nowrap',
-      gap: filterLayout === 'horizontal' ? '2' : '2',
+      display: 'flex',
+      alignItems: 'stretch',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: filterLayout === 'horizontal' ? 1 : 2,
+      backgroundColor: filterLayout === 'horizontal' ? 'background.paper' : 'transparent',
+      padding: filterLayout === 'horizontal' ? { xs: 1.5, sm: 2 } : 0,
+      borderRadius: filterLayout === 'horizontal' ? 1.5 : 0,
+      border: filterLayout === 'horizontal' ? '1px solid' : 'none',
+      borderColor: filterLayout === 'horizontal' ? 'divider' : 'transparent',
+      boxShadow: filterLayout === 'horizontal' ? '0 1px 8px rgba(0,0,0,0.05)' : 'none',
+      mb: filterLayout === 'horizontal' ? 2 : 0,
+    },
+    '& .RaFilterFormInput-body': {
+      display: 'flex',
+      alignItems: 'stretch',
+      gap: filterLayout === 'horizontal' ? 0.75 : 0.5,
+      flex: filterLayout === 'horizontal' ? { xs: '1 1 100%', sm: '0 1 auto' } : 'none',
+      minWidth: filterLayout === 'horizontal' ? { xs: '100%', sm: '180px' } : 'auto',
+      height: '100%',
     },
     '& .MuiFormControl-root': {
-      marginTop: 0,
-      marginBottom: 0,
+      marginTop: '0 !important',
+      marginBottom: '0 !important',
+      flex: 1,
+      minWidth: 0,
+      display: 'flex',
+    },
+    '& .MuiInputBase-root': {
+      backgroundColor: filterLayout === 'horizontal' ? 'action.hover' : 'background.paper',
+      borderRadius: filterLayout === 'horizontal' ? 1.5 : 1,
+      transition: 'all 0.2s ease-in-out',
+      height: filterLayout === 'horizontal' ? { xs: '38px', sm: '42px' } : 'auto',
+      '&:hover': {
+        backgroundColor: filterLayout === 'horizontal' ? 'action.selected' : 'action.hover',
+        boxShadow: filterLayout === 'horizontal' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+      },
+      '&.Mui-focused': {
+        backgroundColor: 'background.paper',
+        boxShadow: filterLayout === 'horizontal' ? '0 0 0 2px rgba(25, 118, 210, 0.2)' : 'none',
+      },
+    },
+    '& .MuiInputBase-input': {
+      padding: filterLayout === 'horizontal' ? { xs: '8px 12px', sm: '10px 14px' } : '16.5px 14px',
+      fontSize: filterLayout === 'horizontal' ? '0.875rem' : '1rem',
+      height: 'auto',
+    },
+    '& .MuiInputLabel-root': {
+      fontWeight: filterLayout === 'horizontal' ? 500 : 400,
+      fontSize: filterLayout === 'horizontal' ? '0.875rem' : '1rem',
     },
     '& .ra-input': {
       borderRadius: 0,
     },
     '& .RaFilterFormInput-hideButton': {
-      marginBottom: filterLayout === 'horizontal' ? '0px' : '0px',
-      borderRadius: 1,
-      border: '1px solid #ffffff',
-      opacity: 0.5,
-      padding: '6px',
-      marginLeft: filterLayout === 'horizontal' ? '6px' : '2px',
-      
+      margin: '0 !important',
+      padding: '0 !important',
+      borderRadius: 1.5,
+      border: '1px solid',
+      borderColor: filterLayout === 'horizontal' ? 'divider' : 'action.disabled',
+      opacity: filterLayout === 'horizontal' ? 0.7 : 0.5,
+      transition: 'all 0.2s ease-in-out',
+      backgroundColor: filterLayout === 'horizontal' ? 'background.paper' : 'transparent',
+      flexShrink: 0,
+      display: 'inline-flex !important',
+      alignItems: 'center !important',
+      justifyContent: 'center !important',
+      alignSelf: 'stretch !important',
+      minWidth: filterLayout === 'horizontal' ? { xs: '38px', sm: '42px' } : 'auto',
+      width: filterLayout === 'horizontal' ? { xs: '38px', sm: '42px' } : 'auto',
+      height: filterLayout === 'horizontal' ? { xs: '38px !important', sm: '42px !important' } : 'auto',
+      '& .MuiSvgIcon-root': {
+        fontSize: filterLayout === 'horizontal' ? { xs: '1.1rem', sm: '1.25rem' } : '1.5rem',
+      },
+      '&:hover': {
+        opacity: 1,
+        backgroundColor: filterLayout === 'horizontal' ? 'action.hover' : 'action.selected',
+        borderColor: filterLayout === 'horizontal' ? 'primary.main' : 'action.disabled',
+        transform: 'scale(1.05)',
+      },
     },
     ...listSx,
   };
 
   // 기본 Datagrid 스타일
   const defaultDatagridSx: SxProps<Theme> = {
+    // 반응형 테이블 래퍼
+    '& .RaDatagrid-tableWrapper': {
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      // 모바일에서 부드러운 스크롤
+      WebkitOverflowScrolling: 'touch',
+      // 스크롤바 스타일링
+      '&::-webkit-scrollbar': {
+        height: '8px',
+      },
+      '&::-webkit-scrollbar-track': {
+        backgroundColor: 'action.hover',
+        borderRadius: '4px',
+      },
+      '&::-webkit-scrollbar-thumb': {
+        backgroundColor: 'action.disabled',
+        borderRadius: '4px',
+        '&:hover': {
+          backgroundColor: 'action.active',
+        },
+      },
+    },
+    // 테이블 자체
+    '& table': {
+      minWidth: { xs: '100%', sm: '100%', md: 'auto' },
+      tableLayout: { xs: 'auto', md: 'auto' },
+    },
+    // 헤더 셀
     '& .RaDatagrid-headerCell': {
       fontWeight: 700 as any,
       backgroundColor: 'action.hover' as any,
+      padding: { xs: '12px 8px', sm: '16px 12px', md: '16px' },
+      fontSize: { xs: '0.813rem', sm: '0.875rem', md: '0.875rem' },
+      whiteSpace: { xs: 'nowrap', md: 'normal' },
       ...(headerCellSx as any),
+    },
+    // 바디 셀
+    '& .RaDatagrid-rowCell': {
+      padding: { xs: '12px 8px', sm: '16px 12px', md: '16px' },
+      fontSize: { xs: '0.813rem', sm: '0.875rem', md: '0.875rem' },
+      whiteSpace: { xs: 'nowrap', md: 'normal' },
+      overflow: { xs: 'hidden', md: 'visible' },
+      textOverflow: { xs: 'ellipsis', md: 'clip' },
+    },
+    // 체크박스 컬럼 최소화
+    '& .RaDatagrid-headerCell:first-of-type, & .RaDatagrid-rowCell:first-of-type': {
+      padding: { xs: '4px', sm: '8px', md: '16px' },
+      width: { xs: '40px', sm: '48px', md: 'auto' },
+    },
+    // 액션 버튼 컬럼
+    '& .column-actions': {
+      whiteSpace: 'nowrap',
+      textAlign: 'right',
     },
     ...datagridSx,
   };
