@@ -213,7 +213,7 @@ const sessionColumns = [
 		sx={{ fontFamily: 'monospace', fontSize: '13px' }}
 	/>,
 	<TextField
-		source="users.uuid"
+		source="user.id"
 		label="사용자 ID"
 		key="userId"
 	/>,
@@ -263,6 +263,11 @@ export const UserSessionsList = () => {
 			perPage={25}
 			rowClick="show"
 			enableBulkActions={false}
+			queryOptions={{
+				meta: {
+					include: ['user']
+				}
+			}}
 			datagridProps={{
 				rowStyle: (record) => {
 					const isActive = record.attributes?.active;

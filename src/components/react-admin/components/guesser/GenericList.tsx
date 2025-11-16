@@ -171,6 +171,18 @@ export interface GenericListProps {
    * @default false
    */
   autoFocusFilter?: boolean;
+
+  /**
+   * 쿼리 옵션 (includes, meta 등)
+   * @example { meta: { include: ['users', 'roles'] } }
+   */
+  queryOptions?: {
+    meta?: {
+      include?: string[];
+      [key: string]: any;
+    };
+    [key: string]: any;
+  };
 }
 
 /**
@@ -248,6 +260,7 @@ export const GenericList = ({
   alwaysShowFilters = false,
   disableExport = false,
   autoFocusFilter = false,
+  queryOptions,
 }: GenericListProps) => {
   
   // 기본 List 스타일
@@ -311,6 +324,7 @@ export const GenericList = ({
     storeKey,
     disableSyncWithLocation: storeKey === false,
     exporter: disableExport ? false : undefined,
+    queryOptions,
     ...listProps,
   };
 
