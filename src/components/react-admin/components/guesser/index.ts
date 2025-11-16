@@ -6,3 +6,10 @@
 
 export { GenericList } from './GenericList';
 export type { GenericListProps } from './GenericList';
+
+export { GenericShow } from './GenericShow';
+export type { 
+    GenericShowProps,
+    ShowField,
+    ShowSection
+} from './GenericShow';

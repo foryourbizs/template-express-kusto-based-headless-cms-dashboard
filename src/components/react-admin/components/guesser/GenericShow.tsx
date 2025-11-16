@@ -1,7 +1,11 @@
+"use client";
+
 import React from 'react';
 import {
     Show,
     SimpleShowLayout,
+    TabbedShowLayout,
+    Tab,
     TextField,
     DateField,
     BooleanField,
@@ -41,7 +45,7 @@ export interface ShowField {
 // 섹션 정의
 export interface ShowSection {
     title: string;
-    icon?: React.ReactNode;
+    icon?: React.ReactElement; // ReactNode -> ReactElement로 변경
     fields: ShowField[];
     columns?: number; // 그리드 컬럼 수 (기본값: 2)
 }
@@ -54,6 +58,14 @@ export interface GenericShowProps {
     enableEdit?: boolean;
     enableDelete?: boolean;
     customActions?: React.ComponentType[];
+    useTabs?: boolean; // 탭 레이아웃 사용 여부
+    queryOptions?: {
+        meta?: {
+            include?: string[];
+            [key: string]: any;
+        };
+        [key: string]: any;
+    };
 }
 
 // 필드 렌더링 컴포넌트
@@ -109,7 +121,16 @@ const FieldRenderer: React.FC<{ field: ShowField }> = ({ field }) => {
                 );
             case 'json':
                 return (
-                    <Paper elevation={1} sx={{ p: 2, backgroundColor: 'grey.50', maxHeight: 200, overflow: 'auto' }}>
+                    <Paper 
+                        elevation={1} 
+                        sx={{ 
+                            p: 2, 
+                            backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
+                            maxHeight: 200, 
+                            overflow: 'auto',
+                            border: (theme) => `1px solid ${theme.palette.divider}`,
+                        }}
+                    >
                         <Typography
                             component="pre"
                             variant="body2"
@@ -118,6 +139,7 @@ const FieldRenderer: React.FC<{ field: ShowField }> = ({ field }) => {
                                 fontFamily: 'monospace',
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-word',
+                                color: (theme) => theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800',
                             }}
                         >
                             {record[field.source] ? JSON.stringify(record[field.source], null, 2) : '데이터 없음'}
@@ -194,22 +216,61 @@ export const GenericShow: React.FC<GenericShowProps> = ({
     headerComponent: HeaderComponent,
     enableEdit = true,
     enableDelete = false,
-    customActions = []
-}) => (
-    <Show 
-        actions={<ShowActions enableEdit={enableEdit} enableDelete={enableDelete} customActions={customActions} />} 
-        title={title}
-    >
-        <Box sx={{ width: '100%', maxWidth: 1200 }}>
-            {/* 헤더 컴포넌트 */}
-            {HeaderComponent && <HeaderComponent />}
-            
-            {/* 섹션들 */}
-            {sections.map((section, index) => (
-                <SectionRenderer key={`${section.title}-${index}`} section={section} />
-            ))}
-        </Box>
-    </Show>
-);
+    customActions = [],
+    useTabs = false,
+    queryOptions,
+}) => {
+    // 탭 레이아웃 사용
+    if (useTabs) {
+        return (
+            <Show 
+                actions={<ShowActions enableEdit={enableEdit} enableDelete={enableDelete} customActions={customActions} />} 
+                title={title}
+                queryOptions={queryOptions}
+            >
+                {HeaderComponent && <HeaderComponent />}
+                <TabbedShowLayout>
+                    {sections.map((section, index) => (
+                        <Tab key={`${section.title}-${index}`} label={section.title} icon={section.icon}>
+                            <Box 
+                                sx={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: `repeat(${section.columns || 2}, 1fr)`, 
+                                    gap: 2,
+                                    '@media (max-width: 768px)': {
+                                        gridTemplateColumns: '1fr'
+                                    }
+                                }}
+                            >
+                                {section.fields.map((field, fieldIndex) => (
+                                    <FieldRenderer key={`${field.source}-${fieldIndex}`} field={field} />
+                                ))}
+                            </Box>
+                        </Tab>
+                    ))}
+                </TabbedShowLayout>
+            </Show>
+        );
+    }
+
+    // 기본 카드 레이아웃
+    return (
+        <Show 
+            actions={<ShowActions enableEdit={enableEdit} enableDelete={enableDelete} customActions={customActions} />} 
+            title={title}
+            queryOptions={queryOptions}
+        >
+            <Box sx={{ width: '100%', maxWidth: 1200 }}>
+                {/* 헤더 컴포넌트 */}
+                {HeaderComponent && <HeaderComponent />}
+                
+                {/* 섹션들 */}
+                {sections.map((section, index) => (
+                    <SectionRenderer key={`${section.title}-${index}`} section={section} />
+                ))}
+            </Box>
+        </Show>
+    );
+};
 
 export default GenericShow;
