@@ -15,7 +15,7 @@ export const ObjectStoragesList = () => {
         <DateField key="createdAt" source="createdAt" label="생성일" />,
       ]}
       defaultSort={{ field: 'createdAt', order: 'DESC' }}
-      rowClick="edit"
+      rowClick="show"
       perPage={25}
     />
   );

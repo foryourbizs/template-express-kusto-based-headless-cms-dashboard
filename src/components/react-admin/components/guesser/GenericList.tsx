@@ -291,12 +291,35 @@ export const GenericList = ({
       padding: { xs: '8px 12px', sm: '8px 16px' },
       minHeight: { xs: '48px', sm: '56px' },
     },
+    // 페이지네이션 버튼 스타일
+    '& .MuiPagination-ul': {
+      flexWrap: 'nowrap',
+      gap: 0.5,
+    },
+    '& .MuiPaginationItem-root': {
+      minWidth: { xs: '32px', sm: '32px' },
+      height: { xs: '32px', sm: '32px' },
+      margin: 0,
+      padding: { xs: '0 6px', sm: '0 6px' },
+    },
+    // 페이지당 항목 수 선택 스타일
+    '& .MuiTablePagination-select': {
+      minWidth: 'auto',
+      width: 'auto !important',
+      paddingRight: '24px !important',
+    },
+    '& .MuiTablePagination-selectLabel': {
+      margin: 0,
+    },
+    '& .MuiTablePagination-displayedRows': {
+      margin: 0,
+    },
     '& .RaFilterForm-root': {
       display: 'flex',
       alignItems: 'stretch',
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: filterLayout === 'horizontal' ? 1 : 2,
+      gap: filterLayout === 'horizontal' ? { xs: 1.5, sm: 1 } : 2,
       backgroundColor: filterLayout === 'horizontal' ? 'background.paper' : 'transparent',
       padding: filterLayout === 'horizontal' ? { xs: 1.5, sm: 2 } : 0,
       borderRadius: filterLayout === 'horizontal' ? 1.5 : 0,
@@ -306,21 +329,31 @@ export const GenericList = ({
       mb: filterLayout === 'horizontal' ? 2 : 0,
     },
     '& .RaFilterForm-filterFormInput': {
-      marginBottom: 1,
+      marginBottom: 0,
+      // 각 필터가 자체 크기를 유지하도록
+      flexShrink: 0,
+      // 모든 사이즈에서 세로 간격 추가
+      '&:not(:last-child)': {
+        marginBottom: 1,
+      },
+    },
+    '& .MuiTablePagination-root': {
+      
+    },
+    '& .MuiToolbar-root': {
+      display: 'flex',
     },
     '& .RaFilterFormInput-body': {
       display: 'flex',
       alignItems: 'stretch',
       gap: filterLayout === 'horizontal' ? 0.75 : 0.5,
-      flex: filterLayout === 'horizontal' ? { xs: '1 1 100%', sm: '0 1 auto' } : 'none',
-      minWidth: filterLayout === 'horizontal' ? { xs: '100%', sm: '180px' } : 'auto',
+      flex: 'none', // flex를 none으로 설정하여 자체 크기 유지
       height: '100%',
     },
     '& .MuiFormControl-root': {
       marginTop: '0 !important',
       marginBottom: '0 !important',
-      flex: 1,
-      minWidth: 0,
+      flex: 'none', // flex를 none으로 변경
       display: 'flex',
     },
     '& .MuiInputBase-root': {
@@ -328,6 +361,7 @@ export const GenericList = ({
       borderRadius: filterLayout === 'horizontal' ? 1.5 : 1,
       transition: 'all 0.2s ease-in-out',
       height: filterLayout === 'horizontal' ? { xs: '38px', sm: '42px' } : 'auto',
+      width: '100%', // 부모 크기에 맞춤
       '&:hover': {
         backgroundColor: filterLayout === 'horizontal' ? 'action.selected' : 'action.hover',
         boxShadow: filterLayout === 'horizontal' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',

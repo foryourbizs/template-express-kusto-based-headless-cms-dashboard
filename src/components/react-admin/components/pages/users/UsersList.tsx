@@ -66,7 +66,7 @@ const userFilters = [
       { id: 'unverified', name: '미인증' },
       { id: 'suspended', name: '정지됨' },
     ]}
-    alwaysOn
+    alwaysOn={true}
     sx={{ minWidth: 150 }}
   />,
   <TextInput 
