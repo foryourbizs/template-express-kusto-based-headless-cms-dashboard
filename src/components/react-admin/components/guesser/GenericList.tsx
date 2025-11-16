@@ -305,6 +305,9 @@ export const GenericList = ({
       boxShadow: filterLayout === 'horizontal' ? '0 1px 8px rgba(0,0,0,0.05)' : 'none',
       mb: filterLayout === 'horizontal' ? 2 : 0,
     },
+    '& .RaFilterForm-filterFormInput': {
+      marginBottom: 1,
+    },
     '& .RaFilterFormInput-body': {
       display: 'flex',
       alignItems: 'stretch',
@@ -408,7 +411,7 @@ export const GenericList = ({
     // 테이블 자체
     '& table': {
       minWidth: { xs: '600px', sm: '100%', md: 'auto' },
-      width: { xs: 'max-content', sm: '100%', md: 'auto' },
+      width: { xs: 'max-content', sm: '100%', md: '100%' },
       tableLayout: 'auto',
       borderCollapse: 'separate',
       borderSpacing: '0',
@@ -416,7 +419,7 @@ export const GenericList = ({
     // 헤더 셀
     '& .RaDatagrid-headerCell': {
       fontWeight: 700 as any,
-      backgroundColor: { xs: 'grey.100', sm: 'action.hover' } as any,
+      // backgroundColor: { xs: 'grey.200', sm: 'action.hover' } as any,
       padding: { xs: '12px 8px', sm: '14px 12px', md: '16px' },
       fontSize: { xs: '0.75rem', sm: '0.813rem', md: '0.875rem' },
       whiteSpace: 'nowrap',
