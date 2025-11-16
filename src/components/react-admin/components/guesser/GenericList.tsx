@@ -265,9 +265,31 @@ export const GenericList = ({
   
   // 기본 List 스타일
   const defaultListSx: SxProps<Theme> = {
+    // List 컨테이너 여백
+    '& .RaList-main': {
+      padding: { xs: 0, sm: 0 },
+      margin: { xs: 0, sm: 0 },
+      overflowX: 'hidden',
+    },
+    '& .RaList-content': {
+      padding: { xs: 0, sm: 0 },
+      boxShadow: { xs: 'none', sm: 'inherit' },
+      borderRadius: { xs: 0, sm: 1 },
+      backgroundColor: { xs: 'transparent', sm: 'background.paper' },
+      overflowX: 'hidden',
+    },
     '& .RaList-actions': {
       alignItems: 'start',
       mb: 1.5,
+      padding: { xs: '0 12px', sm: 0 },
+    },
+    '& .RaList-toolbar': {
+      padding: { xs: '8px 12px', sm: '8px 16px' },
+      minHeight: { xs: '48px', sm: '56px' },
+    },
+    '& .RaPagination-toolbar': {
+      padding: { xs: '8px 12px', sm: '8px 16px' },
+      minHeight: { xs: '48px', sm: '56px' },
     },
     '& .RaFilterForm-root': {
       display: 'flex',
@@ -356,12 +378,17 @@ export const GenericList = ({
 
   // 기본 Datagrid 스타일
   const defaultDatagridSx: SxProps<Theme> = {
-    // 반응형 테이블 래퍼
+    // 반응형 테이블 래퍼 - 테이블만 가로 스크롤
     '& .RaDatagrid-tableWrapper': {
-      overflowX: 'auto',
+      overflowX: 'auto !important',
       overflowY: 'hidden',
-      // 모바일에서 부드러운 스크롤
       WebkitOverflowScrolling: 'touch',
+      margin: { xs: 0, sm: 0 },
+      padding: { xs: 0, sm: 0 },
+      backgroundColor: { xs: 'background.paper', sm: 'transparent' },
+      borderRadius: { xs: 0, sm: 0 },
+      maxWidth: '100%',
+      width: '100%',
       // 스크롤바 스타일링
       '&::-webkit-scrollbar': {
         height: '8px',
@@ -380,35 +407,81 @@ export const GenericList = ({
     },
     // 테이블 자체
     '& table': {
-      minWidth: { xs: '100%', sm: '100%', md: 'auto' },
-      tableLayout: { xs: 'auto', md: 'auto' },
+      minWidth: { xs: '600px', sm: '100%', md: 'auto' },
+      width: { xs: 'max-content', sm: '100%', md: 'auto' },
+      tableLayout: 'auto',
+      borderCollapse: 'separate',
+      borderSpacing: '0',
     },
     // 헤더 셀
     '& .RaDatagrid-headerCell': {
       fontWeight: 700 as any,
-      backgroundColor: 'action.hover' as any,
-      padding: { xs: '12px 8px', sm: '16px 12px', md: '16px' },
-      fontSize: { xs: '0.813rem', sm: '0.875rem', md: '0.875rem' },
-      whiteSpace: { xs: 'nowrap', md: 'normal' },
+      backgroundColor: { xs: 'grey.100', sm: 'action.hover' } as any,
+      padding: { xs: '12px 8px', sm: '14px 12px', md: '16px' },
+      fontSize: { xs: '0.75rem', sm: '0.813rem', md: '0.875rem' },
+      whiteSpace: 'nowrap',
+      borderBottom: { xs: '2px solid', sm: '1px solid' },
+      borderColor: { xs: 'primary.main', sm: 'divider' },
+      position: { xs: 'sticky', sm: 'sticky' },
+      top: { xs: 0, sm: 0 },
+      zIndex: { xs: 10, sm: 10 },
+      lineHeight: 1.3,
+      letterSpacing: { xs: '0.02em', sm: 'normal' },
+      textTransform: { xs: 'none', sm: 'none' },
       ...(headerCellSx as any),
     },
     // 바디 셀
     '& .RaDatagrid-rowCell': {
-      padding: { xs: '12px 8px', sm: '16px 12px', md: '16px' },
-      fontSize: { xs: '0.813rem', sm: '0.875rem', md: '0.875rem' },
-      whiteSpace: { xs: 'nowrap', md: 'normal' },
-      overflow: { xs: 'hidden', md: 'visible' },
-      textOverflow: { xs: 'ellipsis', md: 'clip' },
+      padding: { xs: '12px 8px', sm: '14px 12px', md: '16px' },
+      fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.875rem' },
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: { xs: '150px', sm: '250px', md: 'none' },
+      lineHeight: 1.5,
+      borderBottom: '1px solid',
+      borderColor: 'divider',
+      backgroundColor: 'background.paper',
+    },
+    // 행 hover 효과
+    '& .RaDatagrid-row': {
+      transition: 'background-color 0.2s',
+      '&:hover': {
+        backgroundColor: { xs: 'action.hover', sm: 'action.selected' },
+        '& .RaDatagrid-rowCell': {
+          backgroundColor: { xs: 'action.hover', sm: 'action.selected' },
+        },
+      },
     },
     // 체크박스 컬럼 최소화
     '& .RaDatagrid-headerCell:first-of-type, & .RaDatagrid-rowCell:first-of-type': {
-      padding: { xs: '4px', sm: '8px', md: '16px' },
+      padding: { xs: '8px 4px', sm: '8px 6px', md: '16px' },
       width: { xs: '40px', sm: '48px', md: 'auto' },
+      minWidth: { xs: '40px', sm: '48px', md: 'auto' },
+    },
+    // 체크박스 크기 조정
+    '& .MuiCheckbox-root': {
+      padding: { xs: '6px', sm: '8px', md: '9px' },
+      '& .MuiSvgIcon-root': {
+        fontSize: { xs: '1.25rem', sm: '1.35rem', md: '1.5rem' },
+      },
     },
     // 액션 버튼 컬럼
     '& .column-actions': {
       whiteSpace: 'nowrap',
       textAlign: 'right',
+      padding: { xs: '8px 6px', sm: '12px 8px', md: '16px' },
+      '& .MuiIconButton-root': {
+        padding: { xs: '6px', sm: '7px', md: '8px' },
+        '& .MuiSvgIcon-root': {
+          fontSize: { xs: '1.15rem', sm: '1.2rem', md: '1.25rem' },
+        },
+      },
+    },
+    // 빈 상태
+    '& .RaDatagrid-empty': {
+      padding: { xs: 3, sm: 4, md: 5 },
+      textAlign: 'center',
     },
     ...datagridSx,
   };
