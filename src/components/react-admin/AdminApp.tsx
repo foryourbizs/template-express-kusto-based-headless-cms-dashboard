@@ -23,6 +23,8 @@ import { UsersList, UsersEdit, UsersCreate, UsersShow } from './components/pages
 import { UserSessionsList, UserSessionsShow } from './components/pages/user-sessions';
 import { ObjectStoragesList, ObjectStoragesEdit, ObjectStoragesCreate, ObjectStoragesShow } from './components/pages/object-storages';
 import { FilesList, FilesEdit, FilesCreate, FilesShow } from './components/pages/files';
+import { AnalyticsLogsList } from './components/pages/analytics-logs';
+import { AnalyticsVisitorList } from './components/pages/analytics-visitors';
 
 // Icons
 import {
@@ -230,6 +232,20 @@ const AdminApp = () => {
 							create={FilesCreate}
 							options={{ label: '파일', menuGroup: 'objects', menuGroupLabel: '오브젝트', icon: <AttachFile /> }}
 						/>
+
+
+						{/* 통계 관리 */}
+						<Resource
+							name="privates/analytics/logs"
+							list={ObjectStoragesList}
+							options={{ label: '통계 데이터', menuGroup: 'analytics', menuGroupLabel: '통계', icon: <Storage /> }}
+						/>
+						<Resource
+							name="privates/analytics/visitors"
+							list={FilesList}
+							options={{ label: '고유 방문자', menuGroup: 'analytics', menuGroupLabel: '통계', icon: <Storage /> }}
+						/>
+
 
 
 					</Admin>

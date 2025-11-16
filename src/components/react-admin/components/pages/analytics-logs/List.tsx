@@ -3,7 +3,7 @@
 import { TextField, DateField, NumberField } from 'react-admin';
 import { GenericList } from '../../guesser/GenericList';
 
-export const FilesList = () => {
+export const AnalyticsLogsList = () => {
   return (
     <GenericList
       queryOptions={{
@@ -17,6 +17,7 @@ export const FilesList = () => {
       ]}
       defaultSort={{ field: 'timestamp', order: 'DESC' }}
       rowClick="show"
+      actions={false}
       perPage={50}
     />
   );
