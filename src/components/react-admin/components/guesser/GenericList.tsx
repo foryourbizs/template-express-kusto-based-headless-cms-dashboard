@@ -266,13 +266,14 @@ export const GenericList = ({
   // 기본 List 스타일
   const defaultListSx: SxProps<Theme> = {
     '& .RaList-actions': {
-      alignItems: 'center',
+      alignItems: 'start',
     },
     '& .RaFilterForm-root': {
+      // display: 'flex',
       alignItems: filterLayout === 'horizontal' ? 'center' : 'flex-start',
-      flexDirection: filterLayout === 'horizontal' ? 'row' : 'column',
+      flexDirection: filterLayout === 'horizontal' ? 'column' : 'column',
       flexWrap: filterLayout === 'horizontal' ? 'wrap' : 'nowrap',
-      gap: filterLayout === 'horizontal' ? 1 : 2,
+      gap: filterLayout === 'horizontal' ? '2' : '2',
     },
     '& .MuiFormControl-root': {
       marginTop: 0,
