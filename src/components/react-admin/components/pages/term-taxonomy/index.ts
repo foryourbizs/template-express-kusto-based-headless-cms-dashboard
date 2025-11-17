@@ -1,0 +1,1 @@
+export { TermTaxonomyList } from './List';
