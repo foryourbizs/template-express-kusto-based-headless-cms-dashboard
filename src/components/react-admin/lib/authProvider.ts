@@ -51,6 +51,7 @@ export const authProvider: AuthProvider = {
                     id: username,
                     password: password
                 }),
+                skipAuth: true, // 로그인 요청에는 accessToken을 포함하지 않음
             });
 
             if (!response) {

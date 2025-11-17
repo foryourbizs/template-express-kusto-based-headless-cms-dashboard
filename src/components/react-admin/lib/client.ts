@@ -6,8 +6,8 @@ import { includeAndConvert } from './util';
 export const requester = async (url: string, options: any = {}) => {
   options.credentials = "include";
   
-  // JWT 토큰을 헤더에 추가
-  const accessToken = localStorage.getItem("accessToken");
+  // JWT 토큰을 헤더에 추가 (skipAuth가 true이면 제외)
+  const accessToken = !options.skipAuth ? localStorage.getItem("accessToken") : null;
   
   // FormData 요청인지 확인
   const isFormData = options.body instanceof FormData;
@@ -18,6 +18,9 @@ export const requester = async (url: string, options: any = {}) => {
     ...(accessToken && { "Authorization": `Bearer ${accessToken}` }),
     ...options.headers,
   };
+  
+  // skipAuth 옵션은 내부용이므로 fetch에 전달하지 않음
+  delete options.skipAuth;
 
   const response = await fetch(url, options);
 
