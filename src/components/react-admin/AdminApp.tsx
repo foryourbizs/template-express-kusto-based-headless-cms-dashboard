@@ -34,6 +34,9 @@ import {
 	Storage,
 	AttachFile,
 } from '@mui/icons-material';
+import { TermList } from "./components/pages/term";
+import { PostList } from "./components/pages/posts";
+import { TermTaxonomyList } from "./components/pages/term-taxonomy";
 
 // 테마 컨텍스트 생성
 interface ThemeContextType {
@@ -232,6 +235,26 @@ const AdminApp = () => {
 							create={FilesCreate}
 							options={{ label: '파일', menuGroup: 'objects', menuGroupLabel: '오브젝트', icon: <AttachFile /> }}
 						/>
+
+						{/* 시스템 */}
+						<Resource
+							name="privates/terms"
+							list={TermList}
+							options={{ label: '대분류', menuGroup: 'systems', menuGroupLabel: '시스템', icon: <Storage /> }}
+						/>
+
+						{/* 포스트 */}
+						<Resource
+							name="privates/posts"
+							list={PostList}
+							options={{ label: '게시 아이템', menuGroup: 'posts', menuGroupLabel: '게시', icon: <Storage /> }}
+						/>
+						<Resource
+							name="privates/terms/taxonomy"
+							list={TermTaxonomyList}
+							options={{ label: '게시 분류', menuGroup: 'posts', menuGroupLabel: '게시', icon: <Storage /> }}
+						/>
+
 
 
 						{/* 통계 관리 */}
