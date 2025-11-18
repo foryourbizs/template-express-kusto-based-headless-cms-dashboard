@@ -151,17 +151,23 @@ const ExpiresAtField = () => {
  */
 const sessionFilters = [
 	<TextInput
-		key="search"
-		source="q"
-		label="검색"
-		placeholder="IP 주소 또는 사용자 ID"
+		key="userUuid"
+		source="userUuid"
+		label="사용자 UUID"
+		placeholder="사용자 UUID로 검색"
 		alwaysOn
 		sx={{ minWidth: 250 }}
 	/>,
 	<TextInput
-		key="userId"
-		source="userId"
+		key="user.id"
+		source="user.id"
 		label="사용자 ID"
+		sx={{ minWidth: 150 }}
+	/>,
+	<TextInput
+		key="user.username"
+		source="user.username"
+		label="사용자명"
 		sx={{ minWidth: 150 }}
 	/>,
 	<TextInput

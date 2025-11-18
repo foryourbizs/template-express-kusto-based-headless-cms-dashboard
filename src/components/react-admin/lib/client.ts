@@ -189,14 +189,14 @@ export const provider = (props: { url: string; settings?: any }): DataProvider =
         }
 
         
-        // 값이 객체가 아닌 경우에만 필터 추가
+        // 값이 객체가 아닌 경우 필터 추가
         if (value !== null && value !== undefined && typeof value !== 'object') {
           searchParams.set(`filter[${key}]`, value);
         } else if (typeof value === 'object' && value !== null) {
-          // 객체인 경우 각 속성을 개별 필터로 추가 (일반적인 경우)
+          // 객체인 경우 dot notation으로 변환 (예: user.id, user.username)
           Object.keys(value).forEach((subKey) => {
             if (value[subKey] !== null && value[subKey] !== undefined) {
-              searchParams.set(`filter[${subKey}]`, value[subKey]);
+              searchParams.set(`filter[${key}.${subKey}]`, value[subKey]);
             }
           });
         }

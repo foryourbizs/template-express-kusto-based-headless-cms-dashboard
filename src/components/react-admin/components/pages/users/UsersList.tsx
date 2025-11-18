@@ -70,22 +70,17 @@ const userFilters = [
     sx={{ minWidth: 150 }}
   />,
   <TextInput 
-    key="search" 
-    source="q" 
-    label="검색"  
-    placeholder="사용자명 또는 이메일"
-    sx={{ minWidth: 200 }}
-  />,
-  <TextInput 
     key="username" 
     source="username" 
     label="사용자명"
+    placeholder="사용자명으로 검색"
     sx={{ minWidth: 150 }}
   />,
   <TextInput 
     key="email" 
     source="email" 
     label="이메일"
+    placeholder="이메일로 검색"
     sx={{ minWidth: 200 }}
   />,
   <NullableBooleanInput
