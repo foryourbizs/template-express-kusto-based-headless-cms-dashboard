@@ -13,3 +13,6 @@ export type {
     ShowField,
     ShowSection
 } from './GenericShow';
+
+export { GenericCreateUpdate } from './GenericCreateUpdate';
+export type { GenericCreateUpdateProps } from './GenericCreateUpdate';
