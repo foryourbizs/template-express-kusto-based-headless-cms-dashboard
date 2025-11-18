@@ -80,6 +80,11 @@ const customKoreanMessages = {
 			empty: '아직 항목이 없습니다.',
 			invite: '새로 만들고 싶으신가요?',
 		},
+		boolean: {
+			true: '예',
+			false: '아니오',
+			null: '해당 없음',
+		},
 	},
 };
 

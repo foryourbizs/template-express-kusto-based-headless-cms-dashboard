@@ -56,25 +56,13 @@ const StatusField = () => {
  * 사용자 목록 필터 정의
  */
 const userFilters = [
-  <SelectInput
-    key="status"
-    source="status"
-    label="계정 상태"
-    choices={[
-      { id: 'active', name: '활성' },
-      { id: 'inactive', name: '비활성' },
-      { id: 'unverified', name: '미인증' },
-      { id: 'suspended', name: '정지됨' },
-    ]}
-    alwaysOn={true}
-    sx={{ minWidth: 150 }}
-  />,
   <TextInput 
     key="username" 
-    source="username" 
+    source="username_like" 
     label="사용자명"
     placeholder="사용자명으로 검색"
     sx={{ minWidth: 150 }}
+    alwaysOn
   />,
   <TextInput 
     key="email" 
