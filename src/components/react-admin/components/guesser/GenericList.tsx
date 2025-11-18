@@ -7,6 +7,8 @@ import {
   ListProps,
   FilterProps,
   SortPayload,
+  Pagination,
+  PaginationProps,
 } from 'react-admin';
 import { ReactElement, ReactNode } from 'react';
 import { SxProps, Theme } from '@mui/material';
@@ -17,7 +19,7 @@ import { SxProps, Theme } from '@mui/material';
  * @example
  * ```tsx
  * <GenericList
- *   resource="privates/users"
+ *   resource="privates/users"<
  *   columns={[
  *     <TextField source="username" label="사용자명" />,
  *     <EmailField source="email" label="이메일" />
@@ -64,6 +66,18 @@ export interface GenericListProps {
    * @default 25
    */
   perPage?: number;
+
+  /**
+   * 페이지네이션 컴포넌트 설정
+   * false로 설정하면 페이지네이션 비활성화
+   */
+  pagination?: ReactElement | false;
+
+  /**
+   * 커스텀 페이지네이션 Props
+   * @example { rowsPerPageOptions: [10, 25, 50, 100] }
+   */
+  paginationProps?: Partial<PaginationProps>;
 
   /**
    * 행 클릭 동작
@@ -242,6 +256,8 @@ export const GenericList = ({
   filterDefaultValues = {},
   defaultSort = { field: 'id', order: 'DESC' as const },
   perPage = 25,
+  pagination,
+  paginationProps,
   rowClick = 'show',
   enableBulkActions = false,
   bulkActionButtons,
@@ -531,6 +547,19 @@ export const GenericList = ({
     return enableBulkActions ? undefined : false;
   };
 
+  // 페이지네이션 컴포넌트 처리
+  const resolvePagination = () => {
+    if (pagination !== undefined) {
+      return pagination;
+    }
+    // paginationProps가 있으면 커스텀 Pagination 컴포넌트 생성
+    if (paginationProps) {
+      return <Pagination {...paginationProps} />;
+    }
+    // 기본값 undefined (React Admin 기본 페이지네이션 사용)
+    return undefined;
+  };
+
   // List Props 병합
   const mergedListProps: Partial<ListProps> = {
     sort: defaultSort,
@@ -545,6 +574,7 @@ export const GenericList = ({
     disableSyncWithLocation: storeKey === false,
     exporter: disableExport ? false : undefined,
     queryOptions,
+    pagination: resolvePagination(),
     ...listProps,
   };
 

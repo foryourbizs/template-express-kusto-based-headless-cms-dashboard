@@ -179,6 +179,8 @@ const CustomActions = () => (
 | `filterDefaultValues` | `Record<string, any>` | `{}` | 필터 기본값 |
 | `defaultSort` | `SortPayload` | `{ field: 'id', order: 'DESC' }` | 기본 정렬 설정 |
 | `perPage` | `number` | `25` | 페이지당 항목 수 |
+| `pagination` | `ReactElement \| false` | `undefined` | 커스텀 페이지네이션 컴포넌트 (false면 비활성화) |
+| `paginationProps` | `Partial<PaginationProps>` | `undefined` | 페이지네이션 Props (rowsPerPageOptions 등) |
 | `rowClick` | `string \| function \| false` | `'show'` | 행 클릭 동작 (`'edit'`, `'show'`, `false`) |
 | `enableBulkActions` | `boolean` | `false` | 대량 작업 활성화 |
 | `bulkActionButtons` | `ReactElement \| false` | `undefined` | 커스텀 대량 작업 버튼 |
@@ -395,6 +397,38 @@ export const FilesList = () => (
   datagridProps={{
     isRowSelectable: (record) => record.canDelete && !record.isSystem,
   }}
+/>
+```
+
+### 페이지네이션 커스터마이징
+
+```tsx
+// 페이지당 항목 수 옵션 변경
+<GenericList
+  columns={[...]}
+  paginationProps={{
+    rowsPerPageOptions: [10, 25, 50, 100, 200]
+  }}
+  perPage={50}
+/>
+
+// 페이지네이션 비활성화
+<GenericList
+  columns={[...]}
+  pagination={false}
+/>
+
+// 커스텀 페이지네이션 컴포넌트
+import { Pagination } from 'react-admin';
+
+<GenericList
+  columns={[...]}
+  pagination={
+    <Pagination 
+      rowsPerPageOptions={[5, 10, 25]} 
+      labelRowsPerPage="페이지당"
+    />
+  }
 />
 ```
 

@@ -62,10 +62,23 @@ const customKoreanMessages = {
 			unselect: '선택 해제',
 			select_all: '모두 선택',
 			select_row: '행 선택',
+			clear_input_value: '입력값 지우기',
+			clear_array_input: '목록 지우기',
 		},
 		sort: {
 			ASC: '오름차순',
 			DESC: '내림차순',
+		},
+		navigation: {
+			...koreanMessages.ra.navigation,
+			no_results: '현재 필터 조건에 맞는 결과가 없습니다.',
+			no_filtered_results: '현재 필터 조건에 맞는 결과가 없습니다.',
+			clear_filters: '필터 초기화',
+		},
+		page: {
+			...koreanMessages.ra.page,
+			empty: '아직 항목이 없습니다.',
+			invite: '새로 만들고 싶으신가요?',
 		},
 	},
 };
