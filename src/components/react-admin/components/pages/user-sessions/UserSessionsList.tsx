@@ -46,7 +46,7 @@ const IpAddressField = () => {
 	const record = useRecordContext();
 	const theme = useTheme();
 
-	console.log(record.ipAddress)
+	// console.log(record.ipAddress)
 
 	if (!record || !record?.ipAddress) return <Typography variant="body2">-</Typography>;
 
@@ -240,6 +240,7 @@ const sessionColumns = [
 				>
 					<Typography
 						variant="body2"
+						component="div"
 						title={username}
 						sx={{ fontWeight: 700 }}
 					>
@@ -294,7 +295,7 @@ export const UserSessionsList = () => {
 		<GenericList
 			columns={sessionColumns}
 			filters={sessionFilters}
-			filterDefaultValues={{ active: true }}
+			filterDefaultValues={{}}
 			defaultSort={{ field: 'createdAt', order: 'DESC' }}
 			perPage={25}
 			rowClick="show"

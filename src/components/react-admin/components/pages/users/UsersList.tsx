@@ -175,7 +175,6 @@ export const UsersList = () => {
     <GenericList
       columns={userColumns}
       filters={userFilters}
-      filterDefaultValues={{ status: 'active' }}
       defaultSort={{ field: 'createdAt', order: 'DESC' }}
       perPage={25}
       rowClick="show"
